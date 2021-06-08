@@ -1,0 +1,48 @@
+# main links : horizontal top banner
+main:
+  #- title: "Quick-Start Guide"
+  #  url: https://mmistakes.github.io/minimal-mistakes/docs/quick-start-guide/
+  - title: "About"
+    url: /PowerTools
+  - title: "Contact"
+    url: /contact
+  - title: "Posts"
+    url: /year-archive-grid
+  # - title: "Sample Collections"
+  #   url: /collection-archive/
+  - title: "Sitemap"
+    url: /sitemap
+  
+  
+pages:
+  - title: "Overview"
+    url: /PowerTools
+  - title: "Getting Started"
+    url: /PowerTools-Setup
+  - title: "NWS PowerTool"
+    url: /NWS-PowerTool
+    children:
+      - title: "Sync"
+        url: /Sync
+      - title: "IntelliPaste"
+        url: /IntelliPaste
+  - title: "People Connector"
+    url: /People-Connector
+  - title: "Teams Shortcuts"
+    url: /Teams-Shortcuts
+  - title: "Teamsy"
+    url: /Teamsy
+  - title: "Connections Enhancer"
+    url: /Connections-Enhancer
+  - title: "Outlook Shortcuts"
+    url: /Outlook-Shortcuts
+  - title: Extras
+    children:
+      - title: "Mute PowerTool"
+        url: /Mute-PowerTool
+      - title: "Outlooky"
+        url: /Outlooky
+      - title: "Chromy"
+        url: /Chromy
+      - title: "Cursor Highlighter"
+        url: /Cursor-Highlighter
