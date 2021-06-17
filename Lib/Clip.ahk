@@ -6,14 +6,9 @@ GroupAdd, PlainEditor, ahk_exe Notepad.exe
 GroupAdd, PlainEditor, ahk_exe notepad++.exe
 GroupAdd, PlainEditor, ahk_exe atom.exe
 ; -------------------------------------------------------------------------------------------------------------------
-Clip_Paste(sText,restore := True) {
-; Syntax: Clip_Paste(sText,restore := True)
-If (restore)
-    ClipBackup:= ClipboardAll
-Clipboard := sText
-WinClip.Paste()
-If (restore) 
-    Clip_Restore(ClipBackup)
+Clip_Paste(sText) {
+; Syntax: Clip_Paste(sText)
+WinClip.Paste(sText)
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Clip_Set(sText){
@@ -78,11 +73,15 @@ Clip_SetHtml(sHtml,sText:=""){
 ; If no Text display is passed as argument sText := sHtml
 If (sText="")
     sText := sHtml
-If RegExMatch(sHtml,"^http")
+If RegExMatch(sHtml,"^http") {
+    WinClip.SetText(sHtml)
     sHtml = <a href="%sHtml%">%sText%</a>
-;SetClipboardHTML(sHtml,HtmlHead,sText)
+} else
+    WinClip.SetText(sText)
+;SetClipboardHTML(sHtml,HtmlHead,sText) ; does not work with WinClip.GetHtml
+; WinClip.iSetHTML does not work (asked here https://www.autohotkey.com/boards/viewtopic.php?f=6&t=29314&p=393505#p393505)
 WinClip.SetHTML(sHtml)
-WinClip.SetText(sText)
+
 Clip_Wait()
 } ; eofun
 
@@ -91,7 +90,7 @@ Clip_PasteHtml(sHtml,sText:="",restore := True) {
 ; Syntax: Clip_PasteHtml(sHtml,sText,restore := True)
 ; If sHtml is a link (starts with http), the Html link will be wrapped around it i.e. sHtml = <a href="%sHtml%">%sText%</a>
 
-; WinClip.iSetHTML does not work (asked here https://www.autohotkey.com/boards/viewtopic.php?f=6&t=29314&p=393505#p393505)
+
 If (restore)
     ClipBackup:= ClipboardAll
 Clip_SetHtml(sHtml,sText)

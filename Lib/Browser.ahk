@@ -2,6 +2,7 @@
 Browser_WinActive(){
 GroupAdd, Browser, ahk_exe iexplore.exe
 GroupAdd, Browser, ahk_exe chrome.exe
+GroupAdd, Browser, ahk_exe sidekick.exe
 GroupAdd, Browser, ahk_exe firefox.exe
 GroupAdd, Browser, ahk_exe palemoon.exe
 GroupAdd, Browser, ahk_exe waterfox.exe

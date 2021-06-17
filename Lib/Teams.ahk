@@ -1231,9 +1231,9 @@ If ! (Title="Calendar | Microsoft Teams") {
 SendInput !+n ; schedule a meeting alt+shift+n
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_NewConversation2(){
+Teams_NewConversation(){
 ; Using hotkeys - broken
-SendInput ^{f6} ; Activate posts tab https://support.microsoft.com/en-us/office/use-a-screen-reader-to-explore-and-navigate-microsoft-teams-47614fb0-a583-49f6-84da-6872223e74a0#picktab=windows
+;SendInput ^{f6} ; Activate posts tab https://support.microsoft.com/en-us/office/use-a-screen-reader-to-explore-and-navigate-microsoft-teams-47614fb0-a583-49f6-84da-6872223e74a0#picktab=windows
 ; workaround will flash the search bar if posts/content panel already selected but works now even if you have just selected the channel on the left navigation panel
 ;SendInput {Esc} ; in case expand box is already opened
 SendInput !+c ;  compose box alt+shift+c: necessary to get second hotkey working (regression with new conversation button)
@@ -1245,11 +1245,11 @@ SendInput +{Tab} ; move cursor back to subject line via shift+tab
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_NewConversation(){
+Teams_NewConversation2(){
 ; Using FindText
 ok := Teams_Click("NewConversation")
 If !(ok) {
-    TrayTip Teams Meeting Reaction: ERROR, FindText failed!
+    TrayTip Teams Shortcuts: ERROR, FindText failed!
     Run, "https://tdalon.github.io/ahk/Teams-Meeting-Reactions"
     return
 }
