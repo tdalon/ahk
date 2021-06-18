@@ -448,11 +448,11 @@ If (sEmailList = "") {
 
 ; ----------------------------------------------------------------------
 People_PeopleView(sSelection){
-; TODO fill CompanyId =
 If GetKeyState("Ctrl") {
 	Run, "https://connectionsroot/blogs/tdalon/entry/people_connector_peopleview" ; TODO
 	return
 }
+CompanyId := PowerTools_RegRead("PeopleViewCompanyId")
 sEmailList := People_GetEmailList(sSelection)
 Loop, parse, sEmailList, ";"
 {

@@ -88,7 +88,7 @@ Menu, MainMenu, add, Open Delve Profile, DelveProfile
 Menu, MainMenu, add, &Bing Search, BingSearch
 Menu, MainMenu, add, &LinkedIn Search By Name, LinkedInSearchByName
 Menu, MainMenu, add, Stream Profile, StreamProfile
-If (PT_Config = "Conti")
+If !(PowerTools_RegRead("PeopleViewCompanyId") = "")
     Menu, MainMenu, add, People&View OrgChart (MySuccess), PeopleView
 Menu, MainMenu,Add ; Separator
 Menu, MainMenu, add, Copy Office &Uids, Emails2Uids

@@ -78,20 +78,6 @@ Default:
     sUrl := "https://tdalon.github.io/ahk/PowerTools"	
 }
 
-If (Config="Conti"){
-    Switch ScriptName 
-    {
-    Case "ConnectionsEnhancer":
-        sUrl = https://connectionsroot/blogs/tdalon/entry/connext_enhancer
-    Case "PeopleConnector":
-        sUrl = https://connectionsroot/blogs/tdalon/entry/people_connector
-    Case "OutlookShortcuts":
-        sUrl = https://connectionsroot/blogs/tdalon/entry/outlook_autohotkey_script
-    Case "NWS":
-        sUrl := "https://connectionsroot/wikis/home/wiki/Wc4f94c47297c_42c8_878f_525fd907cb68/page/NWS%20PowerTool"
-    }  
-}
-
 If doOpen
     Run, %sUrl%
 return sUrl
