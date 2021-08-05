@@ -20,7 +20,7 @@ When running these executables, you might get some Windows warning that it is un
 
 ### Run from the AutoHotkey sources
 
-Alternatively, you could run the tools from the AutoHotkey source: simply clone the [repository]((https://github.com/tdalon/ahk/)).
+Alternatively, you could run the tools from the AutoHotkey source: simply clone the [repository]((https://github.com/tdalon/ahk/).
 
 But I don't ensure that the current version of the repository runs properly, because I am human and might have forgotten to push some files. <a href="https://tdalon.github.io/ahk/contact/"><i class="fa fa-address-card" aria-hidden="true"></i></a>[Contact me](Contact) if you want to run from the AHK source and stumble upon some troubles.
 
