@@ -570,3 +570,79 @@ PowerTools_RegWrite(Param,ParamVal)
 return ParamVal
 
 } ;eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+GetSelection(type:="text",doRestoreClip:=True){
+If (doRestoreClip = True)
+OldClipboard:= ClipboardAll
+Clipboard:=""
+while(Clipboard){
+Sleep,10
+}
+SendInput,^c
+ClipWait 1
+If ErrorLevel {
+Clipboard:= OldClipboard
+return
+}
+If (type = "text") {
+sSelection := clipboard
+} Else If (type ="html") {
+sSelection := WinClip.GetHTML()
+}
+sSelection := Trim(sSelection,"`n`r`t`s")
+If (doRestoreClip = True)
+Clipboard := OldClipboard
+return sSelection
+} ;eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Menu_Show(hMenu, MenuLoop:=0, X:=0, Y:=0, Flags:=0) {
+Local
+If (hMenu="WM_ENTERMENULOOP")
+Return True
+Fn := Func("ShowMenu").Bind("WM_ENTERMENULOOP"), n := MenuLoop=0 ? 0 : OnMessage(0x211,Fn,-1)
+DllCall("SetForegroundWindow","Ptr",A_ScriptHwnd)
+R := DllCall("TrackPopupMenu", "Ptr",hMenu, "Int",Flags, "Int",X, "Int",Y, "Int",0
+, "Ptr",A_ScriptHwnd, "Ptr",0, "UInt"),                     OnMessage(0x211,Fn, 0)
+DllCall("PostMessage", "Ptr",A_ScriptHwnd, "Int",0, "Ptr",0, "Ptr",0)
+Return R
+} ;eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Menu_TrayParams() {
+Local
+VarSetCapacity(var,84,0), v:=&var,   DllCall("GetCursorPos","Ptr",v+76)
+X:=NumGet(v+76,"Int"), Y:=NumGet(v+80,"Int"),  NumPut(40,v+0,"Int64")
+hMonitor := DllCall("MonitorFromPoint", "Int64",NumGet(v+76,"Int64"), "Int",0, "Ptr")
+DllCall("GetMonitorInfo", "Ptr",hMonitor, "Ptr",v)
+DllCall("GetWindowRect", "Ptr",WinExist("ahk_class Shell_SecondaryTrayWnd"), "Ptr",v+68)
+DllCall("SubtractRect", "Ptr",v+52, "Ptr",v+4, "Ptr",v+68)
+DllCall("GetWindowRect", "Ptr",WinExist("ahk_class Shell_TrayWnd"), "Ptr",v+36)
+DllCall("SubtractRect", "Ptr",v+20, "Ptr",v+52, "Ptr",v+36)
+Loop % (8, offset:=0)
+v%A_Index% := NumGet(v+0, offset+=4, "Int")
+Return ( v3>v7 ? [v7, Y, 0x18] : v4>v8 ? [X, v8, 0x24]
+: v5>v1 ? [v5, Y, 0x10] : v6>v2 ? [X, v6, 0x04] : [0,0,0] )
+} ;eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+DownloadToString(url, encoding="utf-8")
+{
+static a := "AutoHotkey/" A_AhkVersion
+if (!DllCall("LoadLibrary", "str", "wininet") || !(h := DllCall("wininet\InternetOpen", "str", a, "uint", 1, "ptr", 0, "ptr", 0, "uint", 0, "ptr")))
+return 0
+c := s := 0, o := ""
+if (f := DllCall("wininet\InternetOpenUrl", "ptr", h, "str", url, "ptr", 0, "uint", 0, "uint", 0x80003000, "ptr", 0, "ptr"))
+{
+while (DllCall("wininet\InternetQueryDataAvailable", "ptr", f, "uint*", s, "uint", 0, "ptr", 0) && s>0)
+{
+VarSetCapacity(b, s, 0)
+DllCall("wininet\InternetReadFile", "ptr", f, "ptr", &b, "uint", s, "uint*", r)
+o .= StrGet(&b, r>>(encoding="utf-16"||encoding="cp1200"), encoding)
+}
+DllCall("wininet\InternetCloseHandle", "ptr", f)
+}
+DllCall("wininet\InternetCloseHandle", "ptr", h)
+return o
+} ;eofun
