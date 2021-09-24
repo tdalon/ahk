@@ -10,7 +10,7 @@ LastCompiled = 20210209191841
 SetTitleMatchMode 2 ;allow partial match to window titles
 
 If !a_iscompiled {
-	IcoFile := RegExReplace(A_ScriptFullPath,"\..*",".ico")
+	IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
 	If (FileExist(IcoFile)) {
 		Menu,Tray,Icon, %IcoFile%
 	}

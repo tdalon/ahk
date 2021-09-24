@@ -15,7 +15,12 @@ If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html#openfolder"
 	return
 }
-Run, %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
+BackgroundDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
+If !FileExist(BackgroundDir) {
+    FileCreateDir, %BackgroundDir%
+}
+Run, %BackgroundDir%
+
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 

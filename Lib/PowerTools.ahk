@@ -92,10 +92,6 @@ Case "ConnectionsEnhancer":
     sFileName = Connections-Enhancer-Changelog
 Case "TeamsShortcuts":
     sFileName = Teams-Shortcuts-Changelog
-Case "MO":
-    sUrl := "http://github.conti.de/ContiSource/ahk/wiki/MO-(Release-Notes)"
-    Run, %sUrl%
-    return
 Case "PeopleConnector":
     sFileName = People-Connector-Changelog
 Case "NWS":
@@ -432,7 +428,7 @@ Menu, Tray, Add, News, MenuCb_PTNews
 
 
 If !a_iscompiled {
-	IcoFile := RegExReplace(A_ScriptFullPath,"\..*",".ico")
+    IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
 	If (FileExist(IcoFile)) 
 		Menu,Tray,Icon, %IcoFile%
 }

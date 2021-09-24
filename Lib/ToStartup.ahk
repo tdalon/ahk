@@ -2,8 +2,10 @@
 ; ToStartup(sFile,False) : remove sFile from Startup
 ; ToStartup(sFile) returns True if File Shortcut exists in startup and False else
 ToStartup(sFile,Toggle := ""){
-sLnk := RegExReplace(sFile,"\..*",".lnk")
+sLnk := PathX(sFile, "Ext:.lnk").Full
+;sLnk := RegExReplace(sFile,"\..*",".lnk")
 sLnk := RegExReplace(sLnk,".*\\",A_Startup . "\")
+; sLnk := PathX(sFile, "Dir:%A_Startup%").Full
 
 If (Toggle="")
     return FileExist(sLnk)
