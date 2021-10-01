@@ -214,7 +214,7 @@ FileDelete %sFile%
 FileAppend , %sText%, %sFile%
 
 ; create shortcut
-sLnk := RegExReplace(sFile,"\..*",".lnk")
+sLnk := PathX(sFile, "Ext:.lnk").Full
 FileCreateShortcut, %sFile%, %sLnk%,,,, %TeamsExe%
 
 } ; eofun
@@ -1406,27 +1406,32 @@ Teams_Mute(State := 2){
 ;    2*: (Default): Toggle mute state
 
 ; N.B.: ControlSend does not work for Teams window e.g. ControlSend, ahk_parent, ^+m, ahk_id %WinId% - Teams window must be active
-If (State = 2) ; Toggle mute
-    WinId := Teams_GetMainWindow() ; mute hotkey can be run from Main window - prefer main window because it is easier and more robust
+; hotkey does not work anymore from main window
+/* If (State = 2) ; Toggle mute
+    WinId := Teams_GetMainWindow() ; mute hotkey can be run from Main window - prefer main window because it is easier and more robust - 
 Else {
-    WinId := Teams_GetMeetingWindow() ; need tget meeting window to check mute state
-}
+    WinId := Teams_GetMeetingWindow() ; need to get meeting window to check mute state
+} 
+*/
 
+WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
-
+;MsgBox % WinId
 WinGet, curWinId, ID, A
 WinActivate, ahk_id %WinId%
 
 If (State <> 2)
     IsMuted := !(Teams_FindText("Mute"))
-
+MsgBox %IsMuted%
 Switch State 
 {
     Case 0:
+        
+        Tooltip("Teams Unmute Mic...") 
         If !IsMuted
             return
-        Tooltip("Teams Unmute Mic...") 
+        
     Case 1:
         If IsMuted
             return
@@ -1436,9 +1441,20 @@ Switch State
 }
 
 SendInput ^+m ;  ctrl+shift+m 
+Sleep 500 ; pause before reactivating previous window
 WinActivate, ahk_id %curWinId%
 
 } ; eofun
+
+
+Teams_Leave() {
+    WinId := Teams_GetMeetingWindow()
+    If !WinId ; empty
+        return
+    WinActivate, ahk_id %WinId%
+    SendInput ^+b ; ctrl+shift+b
+    return
+}
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_PushToTalk(){
@@ -1532,6 +1548,7 @@ If !WinId ; empty
 WinGet, curWinId, ID, A
 WinActivate, ahk_id %WinId%
 SendInput ^+o ; toggle video Ctl+Shift+o
+Sleep 500
 ;SendInput ^+p ; toggle background blur
 WinActivate, ahk_id %curWinId%
 Tooltip("Teams Toggle Video...") 

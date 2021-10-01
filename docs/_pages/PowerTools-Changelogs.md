@@ -16,3 +16,7 @@ excerpt: "Changelog, Release Notes for the PowerTools."
 
 
 * [Bundler](PowerTools-Bundler-Changelog)
+
+
+* 2021-09
+  - Fix: if setup in path with a folder with . in its name

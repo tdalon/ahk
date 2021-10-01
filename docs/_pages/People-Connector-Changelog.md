@@ -5,6 +5,9 @@ excerpt: "Release notes for People Connector PowerTool."
 ---
 
 [People Connector](People-Connector) Changelog
+
+* 2021-09-30
+  - Bug fix: Add to Teams Favorites, Call shortcut broken if . in folder name.
 * 2021-05-05
 	- Fix: copy email from Teams visit card / no selection -> take from clipboard
 * 2021-04-27
@@ -15,7 +18,7 @@ excerpt: "Release notes for People Connector PowerTool."
 	- Fix issue from Connections visit card selection from Status update. Source Url contains profile link of the Status Update poster.-> Limit email parsing to HTML body.
 * 2021-01-27
 	- Added open Delve main page as default to D accelerator key, besides former open Delve Profile.
-*2021-01-26
+* 2021-01-26
 	- Fix: Uid with domain returned OfficeId instead of Windows Id
 * 2021-01-25
 	- Fix: from Connections Name. Support profile links with ?key= (besides ?userid=)
