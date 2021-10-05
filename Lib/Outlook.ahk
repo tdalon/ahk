@@ -5,7 +5,7 @@ Outlook_PersonalizeMentions(sName:=""){
 }
 If (sName="") {
     SendInput +{Left}
-    sLastLetter := GetSelection()
+    sLastLetter := Clip_GetSelection()
     SendInput {Right}
 } Else
     sLastLetter := SubStr(sName,0)
@@ -18,11 +18,11 @@ If (sLastLetter = ")") {
   
 ; Remove numbers from mention
 SendInput +{Left}
-sLastLetter := GetSelection()
+sLastLetter := Clip_GetSelection()
 If RegExMatch(sLastLetter,"\d")
     SendInput {Delete}
 SendInput +{Left}
-sLastLetter := GetSelection()
+sLastLetter := Clip_GetSelection()
 If RegExMatch(sLastLetter,"\d")
     SendInput {Delete}
 SendInput {Right}

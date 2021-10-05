@@ -357,9 +357,9 @@ return
 
 ; ######################################################################
 PersonalizeMentions:
-; Does not work!
+; Does not work! #TODO
 Send ^a
-sHtml := GetSelection("html")
+sHtml := Clip_GetSelectionHtml()
 sPat = Us)<span .* itemtype="http://schema.skype.com/Mention".*>(.*)</span>
 sNewHtml := sHtml
 Pos = 1 

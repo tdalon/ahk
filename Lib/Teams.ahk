@@ -549,7 +549,7 @@ If GetKeyState("Ctrl") {
 }
 
 savedClipboard := ClipboardAll
-sSelectionHtml := GetSelection("Html",False)
+sSelectionHtml := Clip_GetSelectionHtml(False)
 
 If (sSelectionHtml="") { ; no selection -> default reply
     Send !+r ; Alt+Shift+r
@@ -568,14 +568,14 @@ If InStr(sSelectionHtml,"data-tid=""messageBodyContent""") { ; Full thread selec
     If RegExMatch(sSelectionHtml,sPat,sMatch)
         sQuoteBodyHtml := sMatch1 
     Else { ; fallback
-        sQuoteBodyHtml := GetSelection("text",False) ; removes formatting
+        sQuoteBodyHtml := Clip_GetSelection(False) ; removes formatting
     }
     
     sHtmlThread := sSelectionHtml
     ;MsgBox %sQuoteBodyHtml% ; DBG
 } Else { ; partial thread selection
 
-    sQuoteBodyHtml := GetSelection("text",False) ; removes formatting
+    sQuoteBodyHtml := Clip_GetSelection(False) ; removes formatting
     If (!sQuoteBodyHtml) {
         MsgBox Selection empty!
         Clipboard := savedClipboard
@@ -585,7 +585,7 @@ If InStr(sSelectionHtml,"data-tid=""messageBodyContent""") { ; Full thread selec
     ;SendInput +{Up} ; Shift + Up Arrow: select all thread -> not needed anymore. covered by Ctrl+A
     SendInput ^a ; Select all thread
     Sleep 200
-    sHtmlThread := GetSelection("html",False)
+    sHtmlThread := Clip_GetSelectionHtml(False)
 }
 
 ; Extract Teams Link
@@ -696,7 +696,7 @@ Teams_CopyLink(){
 SendInput +{Up} ; Shift + Up Arrow: select all thread
 Sleep 200
 SendInput ^a
-sSelection := GetSelection()
+sSelection := Clip_GetSelection()
 ; Last part between <> is the thread link
 RegExMatch(sSelection,"U).*<(.*)>$",sMatch)
 SendInput {Esc}
@@ -734,9 +734,9 @@ If GetKeyState("Ctrl") {
 	return
 }
 SendInput +{Left}
-sLastLetter := GetSelection("html")
+sLastLetter := Clip_GetSelectionHtml()
 IsRealMention := InStr(sLastLetter,"http://schema.skype.com/Mention") 
-sLastLetter := GetSelection()    
+sLastLetter := Clip_GetSelection()    
 SendInput {Right}
 
 If (IsRealMention) {
@@ -746,7 +746,7 @@ If (IsRealMention) {
         SendInput ^{Left}
 
     SendInput +{Left} 
-    sLastLetter := GetSelection()   
+    sLastLetter := Clip_GetSelection()   
     If (sLastLetter = "-")
         SendInput ^{Left}{Backspace}
     Else 
