@@ -1,9 +1,6 @@
 ; Login Lib
-#Include <Encrypt>
 ; for password from registry
 
-; #Include <Encrypt> 
-; For speed reason encryption is not used. Password is saved in HCU registry key - only accessible by current user
 
 ; ----------------------------------------------------------------------
 Login_GetPassword(){
@@ -16,32 +13,6 @@ If ErrorLevel
     return
 return sPassword
 }
-
-; ----------------------------------------------------------------------
-Login_SetPassword(){
-InputBox, sPassword, Password, Enter Password for Login, Hide, 200, 125
-If ErrorLevel
-    return
-
-sKey := Login_GetPasswordKey()
-sPassword := Encrypt(sPassword,sKey)
-   
-; cmdkey /add:windows /user:%A_UserName% /pass:%sPassword%
-return sPassword
-} ; eofun
-; ----------------------------------------------------------------------
-
-Login_GetPasswordKey(){
-RegRead, sPasswordKey, HKEY_CURRENT_USER\Software\PowerTools, PasswordKey
-If (sPasswordKey=""){
-    InputBox, sPasswordKey, Password Key, Enter Password Key for Password encryption, Hide, 200, 125
-    If ErrorLevel
-        return
-}
-RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, PasswordKey, %sPasswordKey%    
-
-return sPasswordKey
-} ; eofun
 
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------

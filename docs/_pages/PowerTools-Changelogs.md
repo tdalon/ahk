@@ -17,7 +17,8 @@ excerpt: "Changelog, Release Notes for the PowerTools."
 
 * [Bundler](PowerTools-Bundler-Changelog)
 
-
+* 2021-10-14
+  - Remove Login_setPassword/Encrypt/Maths dependency
 * 2021-10-05
   - Refactoring: Lib/GetSelection moved to Library/Clip
 * 2021-09

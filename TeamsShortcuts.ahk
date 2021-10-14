@@ -2,10 +2,10 @@
 ; Author: Thierry Dalon
 ; See user documentation here: https://connectionsroot/blogs/tdalon/entry/teams_shortcuts_ahk
 ; Code Project Documentation is available on GitHub here: https://github.com/tdalon/ahk
-; Source : https://github.com/tdalon/ahk/blob/master/TeamsShortcuts.ahk
+; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20210805202605
+LastCompiled = 20211014103643
 
 #Include <Teams>
 #Include <PowerTools>

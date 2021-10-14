@@ -16,7 +16,10 @@ WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("GET", sUrl, false) ; Async=false
 
  ; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
-sAuth := b64Encode(A_UserName . ":" . sPassword) ; user:password in base64 
+JiraUserName :=  PowerTools_RegRead("JiraUserName")
+If !JiraUserName
+	JiraUserName := A_UserName
+sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
 WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
 WebRequest.setRequestHeader("Content-Type", "application/json")
 
@@ -66,19 +69,6 @@ Run, %sSearchUrl%
 
 }
 ; ----------------------------------------------------------------------
-
-
-b64Encode(string)
-; ref: https://github.com/jNizM/AHK_Scripts/blob/master/src/encoding_decoding/base64.ahk
-{
-    VarSetCapacity(bin, StrPut(string, "UTF-8")) && len := StrPut(string, &bin, "UTF-8") - 1 
-    if !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", 0, "uint*", size))
-        throw Exception("CryptBinaryToString failed", -1)
-    VarSetCapacity(buf, size << 1, 0)
-    if !(DllCall("crypt32\CryptBinaryToString", "ptr", &bin, "uint", len, "uint", 0x1, "ptr", &buf, "uint*", size))
-        throw Exception("CryptBinaryToString failed", -1)
-    return StrGet(&buf)
-}
 
 
 ; ----------------------------------------------------------------------

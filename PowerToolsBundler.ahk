@@ -7,7 +7,8 @@
 
 LastCompiled = 20210319215922
 
-IcoFile := RegExReplace(A_ScriptFullPath,"\..*",".ico")
+;IcoFile := RegExReplace(A_ScriptFullPath,"\..*",".ico")
+IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
 If (FileExist(IcoFile)) 
 	Menu,Tray,Icon, %IcoFile%
 
@@ -70,7 +71,6 @@ Menu, ActionsMenu, Add, Open &News`tCtrl+N, OpenNews
 Menu, SettingsMenu, Add, Load Config, LoadConfig
 Menu, SettingsMenu, Add, Open ini file, OpenIni
 
-Menu, SettingsMenu, Add,Set Password, Login_SetPassword
 Menu, SettingsMenu, Add, Notification at Startup, MenuCb_ToggleSettingNotificationAtStartup
 
 RegRead, SettingNotificationAtStartup, HKEY_CURRENT_USER\Software\PowerTools, NotificationAtStartup
@@ -141,13 +141,13 @@ Loop {
 
 ; Update PowerTools.ini - only once
 IniFile =  %A_ScriptDir%\PowerTools.ini
-sUrl = https://github.com/tdalon/ahk/raw/master/PowerTools.ini
+sUrl = https://github.com/tdalon/ahk/raw/main/PowerTools.ini
 If Not FileExist(IniFile) {
     UrlDownloadToFile, %sUrl%, %IniFile%
 } Else {
     guExe = %A_ScriptDir%\github_updater.exe
     If Not FileExist(guExe)
-        UrlDownloadToFile, https://github.com/tdalon/ahk/raw/master/PowerTools/github_updater.exe, %guExe%
+        UrlDownloadToFile, https://github.com/tdalon/ahk/raw/main/PowerTools/github_updater.exe, %guExe%
     UrlDownloadToFile, %sUrl%, PowerTools.ini.github
     sCmd = %guExe% PowerTools.ini
     RunWait, %sCmd%,,Hide
@@ -320,7 +320,7 @@ return
 ; -------------------------------------------------------------------------------------------------------------------
 
 DevMode:
-;DevList = ConNextEnhancer,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts
+;DevList = ConnectionsEnhancer,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts
 Loop, Parse, AppList, `,
 {  
     ScriptFullPath = %A_ScriptDir%\%A_LoopField%.ahk

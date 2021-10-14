@@ -3,7 +3,7 @@
 ; See help/homepage: https://tdalon.github.io/ahk/People-Connector
 
 ; Calls: ExtractEmails, TrayTipAutoHide, ToStartup
-LastCompiled = 20210322071601
+LastCompiled = 20211014103643
 
 #SingleInstance force ; for running from editor
 
@@ -21,7 +21,6 @@ SubMenuSettings := PowerTools_MenuTray()
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; SETTINGS
-Menu, SubMenuSettings, Add,Set Password, Login_SetPassword
 Menu, SubMenuSettings, Add, Notification at Startup, MenuCb_ToggleSettingNotificationAtStartup
 
 RegRead, SettingNotificationAtStartup, HKEY_CURRENT_USER\Software\PowerTools, NotificationAtStartup
@@ -98,9 +97,9 @@ Menu, MainMenu, add, Uids to Emails, winUids2Emails
 Menu, MainMenu, add, Copy Emails, CopyEmails
 Menu, MainMenu,Add ; Separator
 If (PowerTools_ConnectionsRootUrl != "") {
-    Menu, SubMenuCNMentions, add, &Emails, ConNextMentions2Emails
-    Menu, SubMenuCNMentions, add, &Teams Chat, ConNextMentions2TeamsChat
-    Menu, SubMenuCNMentions, add, &Mentions (extract), ConNextMentions2Emails
+    Menu, SubMenuCNMentions, add, &Emails, ConnectionsMentions2Emails
+    Menu, SubMenuCNMentions, add, &Teams Chat, ConnectionsMentions2TeamsChat
+    Menu, SubMenuCNMentions, add, &Mentions (extract), ConnectionsMentions2Emails
     Menu, MainMenu, add, (Connections) Mentions to, :SubMenuCNMentions
 }
 Menu, MainMenu, add, Emails to Excel, Emails2Excel
@@ -266,19 +265,18 @@ TrayTipAutoHide("People Connector","Mentions were copied to clipboard in RTF!")
 return
 
 
-ConNextMentions2Mentions:
-;sHtml := GetSelection("html")
+ConnectionsMentions2Mentions:
 sHtml := Connections_Mentions2Mentions(sSelection)
 Clip_SetHtml(sHtml)
 TrayTipAutoHide("Copy Mentions", "Mentions were copied to the clipboard in RTF!")
 return
 
-ConNextMentions2TeamsChat:
+ConnectionsMentions2TeamsChat:
 sEmailList := Connections_Mentions2Emails(sSelection)
 Teams_Emails2ChatDeepLink(sEmailList)
 return
 
-ConNextMentions2Emails:
+ConnectionsMentions2Emails:
 sEmailList := Connections_Mentions2Emails(sSelection)
 Clip_Set(sEmailList)
 TrayTipAutoHide("Copy Emails", "Emails were copied to the clipboard!")
@@ -508,11 +506,6 @@ return
 
 PeopleView:
 People_PeopleView(sSelection[1])
-return
-
-; ----------------------------------------------------------------------
-ConNextAuth:
-CNAuth()
 return
 
 ; ----------------------------------------------------------------------

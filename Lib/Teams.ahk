@@ -1191,6 +1191,7 @@ If (useFindText) {
     } ; End Loop
 
     If (WinCount2 = 1) { ; only one other window
+        RegExMatch(WinListFT2,"\{([^}]*)\}$",WinId)
         PowerTools_RegWrite("TeamsMeetingWinId",WinId1)
         If (restore)
             WinActivate, ahk_id %curWinId%
@@ -1783,6 +1784,9 @@ Case "MeetingActionShare":
     Text:="|<>*161$22.zzzzzzzw003U0060A0M1s1UDk61hUM0k1U3060A0M0k1U3060A0M001k00DzzzzzzzU"
 Case "MeetingActionUnShare":
     Text:="|<>*153$22.zzzzzzzw003U006000M421U8E60G0M0k1U3060G0M241UE86000M001k00DzzzzzzzU"
+
+
+
 Case "Muted","Unmute":
     ;Text:="|<>*113$22.zzzyzVzxw3zvU7zq0Tzg1zzM7zykTztVzzX7zy6Tz8BDwkQzv0rzbBzzDnzyA7zy7jzwzTznyzzjxzzzy" ; does not work
 Case "Mute","Unmuted":

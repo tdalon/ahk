@@ -80,11 +80,7 @@ Case "m","me","meet": ; get meeting window
     ;Teams_NewMeeting()
     return
 Case "l","le","leave": ; leave meeting
-    WinId := Teams_GetMeetingWindow()
-    If !WinId ; empty
-        return
-    WinActivate, ahk_id %WinId%
-    SendInput ^+b ; ctrl+shift+b
+    Teams_Leave()
     return
 Case "raise","hand","ha","rh","ra":  
     Teams_RaiseHand()

@@ -1,7 +1,7 @@
 ; Author: Thierry Dalon
-; Source: https://github.com/tdalon/ahk/blob/master/OutlookShortcuts.ahk
+; Source: https://github.com/tdalon/ahk/blob/main/OutlookShortcuts.ahk
 
-LastCompiled = 20210209191841
+LastCompiled = 20211014103642
 
 #Include <PowerTools>
 #Include <Clip>
