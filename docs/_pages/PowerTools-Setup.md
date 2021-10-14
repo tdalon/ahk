@@ -30,14 +30,14 @@ Most of the users I know don't bother about the AutoHotkey source. Providing the
 
 <a href="https://downgit.github.io/#/home?url=https://downgit.github.io/#/home?url=https://github.com/tdalon/ahk/tree/main/PowerTools"  target="_blank"><button class="btn"><i class="fa fa-download"></i> Download</button></a>
 
-The recommended way to install the PowerTools is to download the whole [PowerTools Directory](https://github.com/tdalon/ahk/raw/master/PowerTools/) [here](https://downgit.github.io/#/home?url=https://github.com/tdalon/ahk/tree/master/PowerTools).
+The recommended way to install the PowerTools is to download the whole [PowerTools Directory](https://github.com/tdalon/ahk/raw/main/PowerTools/) [here](https://downgit.github.io/#/home?url=https://github.com/tdalon/ahk/tree/main/PowerTools).
 This includes the subdirectory with images used for ImageSearch related features like the [Teams Meeting Reactions Shortcuts](Teams-Meeting-Reactions).
 
 ## One-by-one Setup
 
 N.B.: For features based on ImageSearch (like [Teams Shortcuts](Teams-Shortcuts) [Meeting Live reactions](Teams-Meeting-Reactions), the *img* subdirectory is also required. Therefore I recommend to always [download all](#download-all) and run what you want only.
 
-Still you can download for each PowerTool the .exe file by going here: [repo root](https://github.com/tdalon/ahk/)->[PowerTools](https://github.com/tdalon/ahk/tree/master/PowerTools) and clicking on the .exe file you want and then click the Download button. If you do so, copy it in a separate fresh directory because some auxiliary files will be downloaded or created on the same level (e.g. PowerBundler, git_updater, ini file...).
+Still you can download for each PowerTool the .exe file by going here: [repo root](https://github.com/tdalon/ahk/)->[PowerTools](https://github.com/tdalon/ahk/tree/main/PowerTools) and clicking on the .exe file you want and then click the Download button. If you do so, copy it in a separate fresh directory because some auxiliary files will be downloaded or created on the same level (e.g. PowerBundler, git_updater, ini file...).
 
 ## First run
 
@@ -60,7 +60,7 @@ You can disable these in the Settings. This is a setting for all PowerTools, not
 ## Manage via PowerTools Bundler
 
 If you want to manage multiple PowerTools together, the best way is to use the [PowerTools Bundler](PowerTools-Bundler).
-You can download the standalone version by clicking directly [here](https://github.com/tdalon/ahk/raw/master/PowerTools/PowerToolsBundler.exe).
+You can download the standalone version by clicking directly [here](https://github.com/tdalon/ahk/raw/main/PowerTools/PowerToolsBundler.exe).
 
 ## Update procedure
 

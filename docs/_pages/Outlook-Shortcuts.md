@@ -24,6 +24,6 @@ See separate page here [PowerTools Setup](PowerTools-Setup).
 
 ## Main code
 
-The main file for this utility is the [OutlookShortcuts.ahk](https://github.com/tdalon/ahk/blob/master/OutlookShortcuts.ahk)
+The main file for this utility is the [OutlookShortcuts.ahk](https://github.com/tdalon/ahk/blob/main/OutlookShortcuts.ahk)
 
-It is also provided as a compiled standalone executable in the [PowerTools subdirectory](https://github.com/tdalon/ahk/tree/master/PowerTools).
+It is also provided as a compiled standalone executable in the [PowerTools subdirectory](https://github.com/tdalon/ahk/tree/main/PowerTools).

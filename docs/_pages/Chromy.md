@@ -17,10 +17,10 @@ You can combine it with a Chrome extension to empower and control Chrome command
 
 ## Download
 
-It can be compiled/ is also provided as standalone [Chromy.exe](https://github.com/tdalon/ahk/blob/master/PowerTools/Chromy.exe).
+It can be compiled/ is also provided as standalone [Chromy.exe](https://github.com/tdalon/ahk/blob/main/PowerTools/Chromy.exe).
 
 ## YouTube Video
 
 ## Source
 
-The main ahk file is [Chromy.ahk](https://github.com/tdalon/ahk/blob/master/Chromy.ahk)
+The main ahk file is [Chromy.ahk](https://github.com/tdalon/ahk/blob/main/Chromy.ahk)

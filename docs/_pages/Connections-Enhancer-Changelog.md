@@ -26,7 +26,7 @@ excerpt: "Release notes for HCL Connections Enhancer PowerTool."
   - New [SendMentions Feature](https://tdalon.blogspot.com/2020/11/connections-enhancer-send-mentions.html)
 * 2020-11-24
     - Bug Fix RegEx ReConnectionsRootUrl
-	- Embed ConNext icon for Conti Config
+	- Embed Connections icon for Conti Config
 * 2020-10-30
 	- Fix Connections_Email2Key. used in PeopleConnector->Open Connections Network
 * 2020-10-01

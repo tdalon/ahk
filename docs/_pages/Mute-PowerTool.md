@@ -34,6 +34,6 @@ Pending: Screencast Demo of it.
 
 ## Source code
 
-Main script: [Mute.ahk](https://github.com/tdalon/ahk/blob/master/Mute.ahk) in this repository.
+Main script: [Mute.ahk](https://github.com/tdalon/ahk/blob/main/Mute.ahk) in this repository.
 
-It can be compiled/ is also provided as standalone [Mute.exe](https://github.com/tdalon/ahk/blob/master/PowerTools/Mute.exe).
+It can be compiled/ is also provided as standalone [Mute.exe](https://github.com/tdalon/ahk/blob/main/PowerTools/Mute.exe).

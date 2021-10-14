@@ -8,7 +8,7 @@ excerpt: "The NWS PowerTool is a utility implemented in AutoHotkey that improve 
 
 ## Source code
 
-Main script: [NWS.ahk](https://github.com/tdalon/ahk/blob/master/NWS.ahk) in this repository.
+Main script: [NWS.ahk](https://github.com/tdalon/ahk/blob/main/NWS.ahk) in this repository.
 
 ## How to install
 

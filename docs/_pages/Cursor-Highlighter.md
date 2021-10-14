@@ -2,14 +2,14 @@
 permalink: /Cursor-Highlighter
 title: "Cursor Highlighter"
 excerpt: "Cursor Highlighter by Luc Boisvert - included in the PowerTools suite."
-header.image: "https://raw.githubusercontent.com/tdalon/ahk/master/Cursor%20Highlighter.ico"
+header.image: "https://raw.githubusercontent.com/tdalon/ahk/main/Cursor%20Highlighter.ico"
 ---
 The Cursor Highlighter is not a tool I have personally developed but I include it within the PowerTools suite and provide it as compiled exe so you can directly make use of it without AutoHotkey setup.
 Its author is [Luc Boisvert](https://sites.google.com/site/boisvertlab/computer-stuff/online-teaching/cursor-highlighter-changelog).
 
 ## Direct Download
 
-[Cursor Highlighter.exe](https://github.com/tdalon/ahk/raw/master/PowerTools/Cursor%20Highlighter.exe)
+[Cursor Highlighter.exe](https://github.com/tdalon/ahk/raw/main/PowerTools/Cursor%20Highlighter.exe)
 
 ## [Luc's Homepage](https://sites.google.com/site/boisvertlab/computer-stuff/online-teaching)
 

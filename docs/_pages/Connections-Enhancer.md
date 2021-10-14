@@ -44,5 +44,5 @@ Changelog is available here [Changelog](Connections-Enhancer-(Changelog))
 
 ## Main code
 
-Main code is the [ConnectionsEnhancer.ahk](https://github.com/tdalon/ahk/blob/master/ConnectionsEnhancer.ahk).
-Main Library is [Lib/Connections.ahk](https://github.com/tdalon/ahk/blob/master/Lib/Connections.ahk)
+Main code is the [ConnectionsEnhancer.ahk](https://github.com/tdalon/ahk/blob/main/ConnectionsEnhancer.ahk).
+Main Library is [Lib/Connections.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Connections.ahk)

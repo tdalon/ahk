@@ -27,7 +27,7 @@ This includes:
 ## [How to setup the PowerTools](PowerTools-Setup)
 
 See detailed explanation with video tutorial [here](PowerTools-Setup).
-The Exe versions are available in the [PowerTools subdirectory](https://github.com/tdalon/ahk/tree/master/PowerTools).
+The Exe versions are available in the [PowerTools subdirectory](https://github.com/tdalon/ahk/tree/main/PowerTools).
 
 ## How to update the PowerTools
 

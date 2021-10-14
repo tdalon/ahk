@@ -39,5 +39,5 @@ A demo can be seen in this [YouTube video](https://www.youtube.com/watch?v=cyN5B
 
 ## Main code
 
-The main file for this utility is the [PeopleConnector.ahk](https://github.com/tdalon/ahk/blob/master/PeopleConnector.ahk)
-It is also provided as a compiled standalone executable in the [PowerTools subdirectory](https://github.com/tdalon/ahk/tree/master/PowerTools).
+The main file for this utility is the [PeopleConnector.ahk](https://github.com/tdalon/ahk/blob/main/PeopleConnector.ahk)
+It is also provided as a compiled standalone executable in the [PowerTools subdirectory](https://github.com/tdalon/ahk/tree/main/PowerTools).

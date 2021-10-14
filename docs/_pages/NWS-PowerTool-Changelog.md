@@ -5,6 +5,8 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2021-10-05
+  - Fix: Quick Search if Connections not used
 * 2021-04-30
 	- Fix: IntelliPaste Teams conversation links in with encoded url e.g. for comments in Connections not to be broken
 * 2021-04-21
@@ -59,7 +61,7 @@ excerpt: "Release notes for NWS PowerTool."
 * 2021-01-05
 	- IntelliPaste for Jira: remove Jira_FormatLinks (Jira like Confluence supports now RichText pasting)
 	- Bug fix VPNConnect
-	- IntelliPaste Stream video for ConNext revert div align to p align center
+	- IntelliPaste Stream video for Connections revert div align to p align center
 * 2021-01-04
 	- CapsLock Search Engines: add CapsLock+C for global connections searcj if ConnectionsRootUrl defined in Settings
 	- CapsLock+N for NWS Search only for Config="Conti"
@@ -131,16 +133,16 @@ excerpt: "Release notes for NWS PowerTool."
 * 2020-08-05
     * PowerTools.ini
     * Bug fix IntelliPaste set Custom Hotkey
-    * IntelliPaste: for ConNext blog listbox/choice to display blog name
-    * [ConNext Quick Search](https://connectionsroot/blogs/tdalon/entry/connext_search_ahk): empty tag in forum search url
-    * [ConNext Quick Search](https://connectionsroot/blogs/tdalon/entry/connext_search_ahk): close previous window
+    * IntelliPaste: for Connections blog listbox/choice to display blog name
+    * [Connections Quick Search](https://connectionsroot/blogs/tdalon/entry/Connections_search_ahk): empty tag in forum search url
+    * [Connections Quick Search](https://connectionsroot/blogs/tdalon/entry/Connections_search_ahk): close previous window
 * 2020-08-04
     * IntelliPaste: breadcrumb for Teams files (previously only for folders) - [listbox](https://tdalon.blogspot.com/ahk-listbox) option to select with or without breadcrumb
     * Option for domain: portable for Vitesco
 * 2020-08-03
-    * ConNext Quick Search: wiki. replace %20 by space for Def Search from url query
+    * Connections Quick Search: wiki. replace %20 by space for Def Search from url query
 * 2020-07-23
-    * IntelliPaste: add setting to ask for icons for ConNext entries or not
+    * IntelliPaste: add setting to ask for icons for Connections entries or not
     * IntelliPaste: do not ask for icon if window title contains " | Microsoft Teams" (Teams open in browser)
 * 2020-07-22
     * Create Ticket from Social Support also works from the Systray icon menu.
@@ -151,7 +153,7 @@ excerpt: "Release notes for NWS PowerTool."
     * bug fix: sync if .ini file not filled properly (#TBD still there)->proper error message
     * fixed intellipaste for wiki search link. Get wiki name
 * 2020-07-03
-    * IntelliPaste: ConNext search links (Forum/Blog/Wiki) display query info in link display text
+    * IntelliPaste: Connections search links (Forum/Blog/Wiki) display query info in link display text
     * IntelliPaste: SharePoint old links remove ?Web=1 (fix icon for links ending e.g. with .pptx?Web=1)
 * 2020-06-25
     * fix: IntelliPaste Teams link to conversation
@@ -166,16 +168,16 @@ excerpt: "Release notes for NWS PowerTool."
 * 2020-06-03
     * Fix IntelliPaste: no icon
 * 2020-05-28
-    * ConNext Quick Search Blog and Wiki: initialize search with query used in the url
+    * Connections Quick Search Blog and Wiki: initialize search with query used in the url
 * 2020-05-26
     * IntelliPaste: do not paste on Cancel link text
-    * IntelliPaste: link to ConNext Blog comment and Wiki comment are supported
+    * IntelliPaste: link to Connections Blog comment and Wiki comment are supported
 * 2020-05-18
-    * QuickSearch (Win+F) - ConNext Search Forum: support options -o (openQuestions) -a (answeredQuestions)
+    * QuickSearch (Win+F) - Connections Search Forum: support options -o (openQuestions) -a (answeredQuestions)
     * Added QuickSearch to F1 Menu
 * 2020-05-13
     * CapsLock + B: run Bing search engine on selection
-    * Settings -> Phone Number (see https://connectionsroot/blogs/tdalon/entry/connext2ticket_ahk)
+    * Settings -> Phone Number (see https://connectionsroot/blogs/tdalon/entry/Connections2ticket_ahk)
 * 2020-05-07
     * From SharePoint DocLib in Browser to Sync Location: fix regexp + create IniFile if it does not exist
 * 2020-04-28
@@ -185,7 +187,7 @@ excerpt: "Release notes for NWS PowerTool."
 * 2020-04-14
     * ODB Sync File Explorer: support Teams with name including icons (replaced by ??)
 * 2020-04-03
-    * FIX: IntelliPaste in ConNext comment: link is not cleaned-up
+    * FIX: IntelliPaste in Connections comment: link is not cleaned-up
     * IntelliPaste: won't ask if icon is wanted if no icon are available
 * 2020-03-25
     * SP/ODB: Ctrl+O for office files opened in Browser via Internet Explorer (bug Edge Chromium) - else open local file.

@@ -70,9 +70,9 @@ excerpt: "Release notes for People Connector PowerTool."
 * 2020-07-16
     * Bug fix: Firstname last letter truncated if no multiple lines were selected
 * 2020-07-06
-    * Get Name will only consider first line in case multiple lines are selected e.g. Name selection on forum entry in ConNext
+    * Get Name will only consider first line in case multiple lines are selected e.g. Name selection on forum entry in Connections
 * 2020-07-03
-    * Open Connections Profile now checks if input is an email. If not, search by name. (Menu ConNext Search Profile by name removed). Works for example also from Teams on name selection.
+    * Open Connections Profile now checks if input is an email. If not, search by name. (Menu Connections Search Profile by name removed). Works for example also from Teams on name selection.
     * Look-up from Name with Lastname, Firstname (e.g. Teams) will convert to Firstname Lastname
 * 2020-07-02
     * Open LinkedIn or Bing search from email selection e.g. in Teams (convert email to name)
