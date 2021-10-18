@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20211014103643
+LastCompiled = 20211014192529
 
 #Include <Teams>
 #Include <PowerTools>
@@ -150,7 +150,8 @@ return
 
 
 ; ##########################   Hotkeys   ##########################################
-#IfWinActive,ahk_exe Teams.exe
+;#IfWinActive,ahk_exe Teams.exe
+#If Teams_IsWinActive()
 
 #1:: ; <--- Personalize Mention
 PersonalizeMention:

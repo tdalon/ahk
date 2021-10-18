@@ -1680,6 +1680,16 @@ If (ErrorLevel = 0)
 
 ; -------------------------------------------------------------------------------------------------------------------
 
+Teams_IsWinActive(){
+; Check if Active window is Teams client or a Browser/App window with a Teams url opened
+If WinActive("ahk_exe Teams.exe")
+    return True
+SetTitleMatchMode, RegEx
+If WinActive("| Microsoft Teams$")
+    return True
+return false
+}
+
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_MeetingReaction(Reaction) {
 ; Reaction can be Like | Applause| Heart | Laugh
