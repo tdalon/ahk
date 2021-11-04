@@ -151,16 +151,17 @@ return
 
 ; ##########################   Hotkeys   ##########################################
 ;#IfWinActive,ahk_exe Teams.exe
+
 #If Teams_IsWinActive()
 
-#1:: ; <--- Personalize Mention
+~#1:: ; <--- Personalize Mention
 PersonalizeMention:
 Teams_PersonalizeMention()
 return
 
 ;--- Compose in Expand mode
 ; Alt + N
-!n::  ; <--- New Expanded Conversation
+~!n::  ; <--- New Expanded Conversation
 NewConversation:
 Teams_NewConversation()
 return
@@ -168,7 +169,7 @@ return
 
 ; View Unread
 ; Win+U
-#u:: ; <--- View Unread
+~#u:: ; <--- View Unread
 ViewUnread:
 If GetKeyState("Ctrl") {
 	Run, "https://connectionsroot/blogs/tdalon/entry/teams_shortcuts_ahk" 
@@ -182,7 +183,7 @@ return
 
 ; View Saved
 ; Win+S
-#s:: ; <--- View Saved
+~#s:: ; <--- View Saved
 ViewSaved:
 If GetKeyState("Ctrl") {
 	Run, "https://connectionsroot/blogs/tdalon/entry/teams_shortcuts_ahk" 
@@ -196,7 +197,7 @@ return
 
 ; Pop-out chat
 ; Win+P
-#p:: ; <--- Pop-out chat
+~#p:: ; <--- Pop-out chat
 Pop:
 If GetKeyState("Ctrl") {
 	Run, "https://connectionsroot/blogs/tdalon/entry/teams_shortcuts_ahk" 
@@ -209,7 +210,7 @@ Send {Enter}
 return
 
 ; Alt+e
-!e:: ; <--- Edit
+~!e:: ; <--- Edit
 Send {Enter}
 Send {Tab}
 Send {Enter}
@@ -219,42 +220,42 @@ Send {Enter}
 return	
 
 ; Alt+.
-!.:: ; <--- (...) Actions menu
+~!.:: ; <--- (...) Actions menu
 Send {Enter}
 Send {Tab}
 Send {Enter}
 return	
 
-#t::
+~#t::
 Menu, TeamsShortcutsMenu, Show
 return
 
 ; Win+C
-#c:: ; <--- Copy Link
-TeamsCopyLink()
+~#c:: ; <--- Copy Link
+Teams_CopyLink()
 return	
 ; -------------------------------------------------------------------------------------------------------------------
 ; Alt+R - 
-!r:: ; <--- Smart Reply with quotation and link to current thread
+~!r:: ; <--- Smart Reply with quotation and link to current thread
 SmartReply:
 Teams_SmartReply()
 return
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Alt+Q
-!q:: ; <--- Quote conversation
+~!q:: ; <--- Quote conversation
 QuoteConversation:
 Teams_SmartReply(False)
 return
 ; -------------------------------------------------------------------------------------------------------------------
 
-!m:: ; <--- Create eMail with link to current conversation
+~!m:: ; <--- Create eMail with link to current conversation
 ShareByMail:
 If GetKeyState("Ctrl") {
 	;Run, "https://connectionsroot/blogs/tdalon/entry/teams_smart_reply"
 	return
 }
-rc := TeamsCopyLink()
+rc := Teams_CopyLink()
 If (rc =false)
 	return
 
@@ -282,7 +283,7 @@ Send ^v
 return
 
 ; ----------------------------------------------------------------------
-#q::
+~#q::
 SendMentions:
 If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/teams-shortcuts-send-mentions"

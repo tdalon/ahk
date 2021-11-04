@@ -678,7 +678,7 @@ Clipboard := savedClipboard
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-TeamsCopyLink(){
+Teams_CopyLink(){
 Send {Enter}
 Send {Tab}
 Send {Enter}
@@ -690,9 +690,8 @@ IfMsgBox Cancel
     return False
 return true
 } ; eofun
-
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_CopyLink(){
+Teams_CopyLink2(){
 SendInput +{Up} ; Shift + Up Arrow: select all thread
 Sleep 200
 SendInput ^a
@@ -1453,7 +1452,7 @@ Teams_Leave() {
     If !WinId ; empty
         return
     WinActivate, ahk_id %WinId%
-    SendInput ^+b ; ctrl+shift+b
+    SendInput ^+h ; ctrl+shift+h
     return
 }
 
@@ -1682,12 +1681,13 @@ If (ErrorLevel = 0)
 
 Teams_IsWinActive(){
 ; Check if Active window is Teams client or a Browser/App window with a Teams url opened
+
 If WinActive("ahk_exe Teams.exe")
     return True
 SetTitleMatchMode, RegEx
-If WinActive("| Microsoft Teams$")
+If WinActive("\| Microsoft Teams$")
     return True
-return false
+return False
 }
 
 ; -------------------------------------------------------------------------------------------------------------------
