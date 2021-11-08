@@ -84,35 +84,6 @@ return sResponse
 
 
 
-Confluence_Get2(sUrl,showError := False){
-; Syntax:
-;    sResponse := Confluence_Get(sUrl)
-
-sPassword := Login_GetPassword() 
-If (sPassword="")
-    sResponse := "Error: No password"
-Else {
-    WebRequest := ComObjCreate("Msxml2.XMLHTTP")
-    WebRequest.Open("GET", sUrl, false,"thierry.dalon@etelligent.ai",sPassword) ; Async=false
-    WebRequest.Send()
-
-    ; Debug
-    ;sText := WebRequest.Status . WebRequest.ResponseText
-
-    If (WebRequest.Status=200)
-        sResponse := WebRequest.ResponseText
-    Else
-        sResponse := "Error on XmlHttpRequest: " .  WebRequest.StatusText
-    ;sResponse := (WebRequest.Status=200?WebRequest.ResponseText:"Error on XmlHttpRequest: " .  WebRequest.StatusText)
-}
-
-If (showError) and (sResponse ~= "Error.*") {
-    ; MsgBox 0x10, Error, %sResponse%
-    TrayTip Connections Get Error!, %sResponse%
-}
-return sResponse
-}
-
 ; -------------------------------------------------------------------------------------------------------------------
 ; Confluence Expand Link
 ExpandLink(sLink){
