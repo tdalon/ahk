@@ -1,13 +1,13 @@
 ---
 layout: home
 author_profile: true
-title: "Welcome to my ahk Homepage!"
+title: "Welcome to the PowerTools Homepage!"
 ---
 
 This is the project homepage for my collection of AutoHotkey-based scripts and utilities located in [this GitHub repository](https://github.com/tdalon/ahk).
 
 This includes the so-called [PowerTools](PowerTools) suite for Windows.
-These tools will improve your productivity and make your life easier, specially if you use Microsoft Office 365 Tools (Outlook, Teams, SharePoint,...) or HCL Connections.
+These tools will improve your productivity and make your life easier, especially if you use Microsoft Office 365 Tools (Outlook, Teams, SharePoint, OneDrive,...) or HCL Connections.
 
 AutoHotkey only runs for **Windows OS**.
 

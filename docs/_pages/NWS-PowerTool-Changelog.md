@@ -5,6 +5,9 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2021-10-07
+  - Confluence/Jira Get: use JiraUserName in Settings (if defined)
+  - Confluence Get: support authentification
 * 2021-10-05
   - Fix: Quick Search if Connections not used
 * 2021-04-30

@@ -1,7 +1,7 @@
 ---
 permalink: /PowerTools
 title: "PowerTools"
-excerpt: "Suite of Tools implemented with AutoHotkey that enables the use of Microsoft Office 365 tools like Microsoft Teams, SharePoint, OneDrive, HCL Connections and others and enhance your productivity on a Windows OS."
+excerpt: "Suite of Tools implemented with AutoHotkey that empowers the use of Microsoft Office 365 tools like Microsoft Teams, SharePoint, OneDrive or HCL Connections enhance your productivity on Windows OS."
 ---
 
 [This repository](https://github.com/tdalon/ahk) provides several tools bundled together under the term "PowerTools".

@@ -85,5 +85,5 @@ If some features does not work properly, check-out if tuning [these parameters](
 
 ## Source code
 
-Main code is contained in [TeamsShortcuts.ahk](https://github.com/tdalon/ahk/blob/master/TeamsShortcuts.ahk)
-Main Library used is [Lib/Teams.ahk](https://github.com/tdalon/ahk/blob/master/Lib/Teams.ahk)
+Main code is contained in [TeamsShortcuts.ahk](https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk)
+Main Library used is [Lib/Teams.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teams.ahk)

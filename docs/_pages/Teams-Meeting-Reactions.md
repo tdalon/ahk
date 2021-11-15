@@ -18,7 +18,7 @@ It is based on AutoHotkey [FindText](https://www.autohotkey.com/boards/viewtopic
 
 ## How to use
 
-You can run the Meeting reactions using the Launcher with the keywords as defined in [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/master/Lib/Teamsy.ahk).
+You can run the Meeting reactions using the Launcher with the keywords as defined in [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teamsy.ahk).
 Current keywords as of date of documentation (might not be consistent with current implementation):
 
 Keyword  |  Reaction
@@ -41,7 +41,7 @@ If the FindText does not work, you can overwrite the Text string to be searched 
 
 ## Code
 
-This feature is implemented in [/ahk/Lib/Teams.ahk](https://github.com/tdalon/ahk/blob/master/Lib/Teams.ahk) -> Teams_MeetingReaction (function)
+This feature is implemented in [/ahk/Lib/Teams.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teams.ahk) -> Teams_MeetingReaction (function)
 
 ## Potential improvements
 

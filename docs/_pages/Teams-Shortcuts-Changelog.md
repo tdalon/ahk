@@ -5,6 +5,20 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 ---
 
 [Teams Shortcuts](Teams-Shortcuts) Changelog
+
+
+* 2021-11-11
+  - Change Hotkey Win+1->Alt+1 (Conflict with Windows native hotkey)
+* 2021-11-04
+  - [Fix hotkey conflict handling](https://tdalon.blogspot.com/2021/11/ahk-regex-pipe.html): escape | in regex
+* 2021-10-28
+  - [Fix hotkey conflict handling](https://tdalon.blogspot.com/2021/10/ahk-hotkey-conflict.html)
+* 2021-10-20
+  - Leave meeting hotkey changed from Ctrl+Shift+B to Ctrl+Shift+H by Microsoft
+* 2021-10-18
+  - [Extend Teams Shortcuts functionality to Browser (multiple tenant handling)](https://tdalon.blogspot.com/2021/10/teams-shortcuts-browser-support.html)
+* 2021-09-20
+  - Bug fix: Open background folder if directory does not exist
 * 2021-05-12
 	- [Taskbar Flashing Hotkey](https://tdalon.blogspot.com/2021/05/teams-pitfall-flashing-taskbar.html)
 * 2021-04-19

@@ -23,9 +23,9 @@ See [all blog posts tagged with #teamsy](https://tdalon.blogspot.com/search/labe
 
 ## Prerequisites
 
-Teamsy Launcher is a available as small standalone .exe application. [Download link](https://github.com/tdalon/ahk/raw/master/PowerTools/TeamsyLauncher.exe)
+Teamsy Launcher is a available as small standalone .exe application. [Download link](https://github.com/tdalon/ahk/raw/main/PowerTools/TeamsyLauncher.exe)
 
-You can also run it from its AutoHotkey source [TeamsyLauncher.ahk](https://github.com/tdalon/ahk/blob/master/TeamsyLauncher.ahk) provided you take all the dependencies/ downlad the [full repository](https://github.com/tdalon/ahk).
+You can also run it from its AutoHotkey source [TeamsyLauncher.ahk](https://github.com/tdalon/ahk/blob/main/TeamsyLauncher.ahk) provided you take all the dependencies/ downlad the [full repository](https://github.com/tdalon/ahk).
 
 Contrary to [Teamsy](Teamsy) it does not require any third-party launcher application but include the Launcher feature.
 
@@ -43,9 +43,9 @@ You can also run the Launcher by double-clicking on the System Tray icon.
 
 The list of supported commands/ keywords are the same as for [Teamsy](Teamsy).
 
-This is implemented in the main associated library [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/master/Lib/Teamsy.ahk)
+This is implemented in the main associated library [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teamsy.ahk)
 Here you can find the syntax for keywords and command. (I hope the code is clear enough.)
-<script src="http://gist-it.appspot.com/https://github.com/tdalon/ahk/raw/master/Lib/Teamsy.ahk"></script>
+<script src="http://gist-it.appspot.com/https://github.com/tdalon/ahk/raw/main/Lib/Teamsy.ahk"></script>
 
 ## Feature Highlights
 
@@ -57,10 +57,10 @@ See [Teamsy](Teamsy)
 
 ## Source Code
 
-The main ahk file is [TeamsyLauncher.ahk](https://github.com/tdalon/ahk/blob/master/TeamsyLauncher.ahk)
-The keywords and commands are implemented in [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/master/Lib/Teamsy.ahk)
+The main ahk file is [TeamsyLauncher.ahk](https://github.com/tdalon/ahk/blob/main/TeamsyLauncher.ahk)
+The keywords and commands are implemented in [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teamsy.ahk)
 
-The main associated library is [Lib/Teams.ahk](https://github.com/tdalon/ahk/blob/master/Lib/Teams.ahk)
+The main associated library is [Lib/Teams.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teams.ahk)
 
 ## [Changelog](Teamsy-Changelog)
 
