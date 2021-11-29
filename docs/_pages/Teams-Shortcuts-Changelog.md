@@ -6,7 +6,8 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 [Teams Shortcuts](Teams-Shortcuts) Changelog
 
-
+* 2021-11-29
+  - [Workaround](https://tdalon.blogspot.com/2021/11/teams-shortcuts-personalize-mention-fix.html) for issue with Personalize Mentions in flat standalone chats
 * 2021-11-11
   - Change Hotkey Win+1->Alt+1 (Conflict with Windows native hotkey)
 * 2021-11-04
