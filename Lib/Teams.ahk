@@ -732,32 +732,48 @@ If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/2020/11/teams-shortcuts-personalize-mentions.html"
 	return
 }
-SendInput +{Left}
-sLastLetter := Clip_GetSelectionHtml()
-IsRealMention := InStr(sLastLetter,"http://schema.skype.com/Mention") 
-sLastLetter := Clip_GetSelection()    
+SendInput +{Left} ; Shift+Left
+;sLastLetter := Clip_GetSelectionHtml()
+;MsgBox %sLastLetter% ; DBG
+;IsRealMention := InStr(sLastLetter,"http://schema.skype.com/Mention") 
+
+sLastLetter := Clip_GetSelection()  
 SendInput {Right}
 
-If (IsRealMention) {
-    If (sLastLetter = ")")
-        SendInput {Backspace}^{Left}
-    Else 
-        SendInput ^{Left}
 
-    SendInput +{Left} 
-    sLastLetter := Clip_GetSelection()   
-    If (sLastLetter = "-")
-        SendInput ^{Left}{Backspace}
-    Else 
-        SendInput {Backspace}
-} Else {
-    ; do not personalize if no match to avoid ambiguity which name was mentioned if shorten to firstname and reprompt for matching
+; remove (company)
+If (Asc(sLastLetter) = 8203) { ; standalone chat returns zero-width space - get selection does not work (return null)
+    SendInput {Ctrl down}{Backspace}{Backspace}{Left}{Backspace}{Right}{Ctrl up}
     return
-    If (sLastLetter = ")") 
-        SendInput {Backspace}^{Backspace}{Backspace} ; remove ()
+    ; hard coded with one space in company name #TODO
+    ; does not handle
+    
+    /* 
+    ; Get selection does not work in flat chats (returns null) 
+    SendInput {Left}
+    sLeft := Clip_GetSelection()
+    MsgBox Left:%sLeft% ;DBG
+    
+    If RegExMatch(sLeft,".*\)$") ; ending with )
+        If InStr(sLeft,"(") 
+            SendInput {Backspace} ; Company Name without space
+        Else
+            SendInput {Backspace}{Backspace} ; Name with one space; #TODO support multiple spaces 
+    */
 
-    SendInput ^{Left}^{Backspace}^{Backspace}^{Right}
-}
+}  Else If (sLastLetter = ")") ; group chat / get selection works
+    SendInput {Backspace}^{Left}
+Else 
+    SendInput ^{Left} ; Ctrl Left
+
+; handling - in names
+SendInput +{Left} 
+sLastLetter := Clip_GetSelection()   
+If (sLastLetter = "-")
+    SendInput ^{Left}{Backspace}
+Else 
+    SendInput {Backspace}
+
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Emails2Mentions(sEmailList,doPerso :=""){
