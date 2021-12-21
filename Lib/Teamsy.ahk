@@ -91,6 +91,10 @@ Case "li","like":
 Case "ap","clap":
     Teams_MeetingReaction("Applause")
     return
+Case "clap2":
+    Teams_MeetingReaction("Applause")
+    SoundPlay, C:\Users\thierry.dalon\Broadcast\Audio\Fast_Clapping.mp3
+    return
 Case "la","lol","laugh":
     Teams_MeetingReaction("Laugh")
     return
