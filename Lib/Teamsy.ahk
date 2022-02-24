@@ -72,11 +72,8 @@ Case "ca","cal","calendar":
     WinActivate, ahk_id %WinId%
     SendInput ^4; open calendar
     return
-Case "m","me","meet": ; get meeting window
-    WinId := Teams_GetMeetingWindow()
-    If !WinId ; empty
-        return
-    WinActivate, ahk_id %WinId%
+Case "m","me","meet": ; activate meeting window
+    Teams_ActivateMeetingWindow()
     ;Teams_NewMeeting()
     return
 Case "l","le","leave": ; leave meeting
@@ -110,7 +107,7 @@ Case "sh","share":
 Case "sh+":  
     Teams_Share(1)
     return
-Case "sh-":  
+Case "sh-","unsh":  
     Teams_Share(0)
     return
 Case "mu","mute":  

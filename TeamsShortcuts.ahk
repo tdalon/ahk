@@ -59,7 +59,7 @@ Loop, Parse, ParamList, `,
 Menu, SubMenuSettings, Add, Parameters, :SubMenuParams
 
 
-HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk,Clear Flash 
+HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk,Clear Cache,Activate Meeting Window 
 
 ; Hotkeys: Activate, Meeting Action Menus and Settings Menus
 Loop, Parse, HotkeyIDList, `,
@@ -135,7 +135,7 @@ Menu, TeamsShortcutsMenu, add, &Quote Conversation (Alt+Q), QuoteConversation
 Menu, TeamsShortcutsMenu, add, &New Expanded Conversation (Alt+N), NewConversation
 Menu, TeamsShortcutsMenu, add, Create E&mail with link to current conversation (Win+M), ShareByMail
 Menu, TeamsShortcutsMenu, add, Send Mentions (Win+Q), SendMentions
-Menu, TeamsShortcutsMenu, add, Personalize &Mention (Win+1), PersonalizeMention
+Menu, TeamsShortcutsMenu, add, Personalize &Mention (Alt+1), PersonalizeMention
 Menu, TeamsShortcutsMenu, add, View &Unread (Win+U), ViewUnread
 Menu, TeamsShortcutsMenu, add, View &Saved (Win+S), ViewSaved
 Menu, TeamsShortcutsMenu, add, &Pop-out Chat (Win+P), Pop
@@ -154,7 +154,7 @@ return
 
 #If Teams_IsWinActive()
 
-~#1:: ; <--- Personalize Mention
+~!1:: ; <--- Personalize Mention
 PersonalizeMention:
 Teams_PersonalizeMention()
 return

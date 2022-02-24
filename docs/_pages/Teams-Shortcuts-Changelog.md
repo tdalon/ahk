@@ -5,7 +5,13 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 ---
 
 [Teams Shortcuts](Teams-Shortcuts) Changelog
-
+* 2022-02-24
+  - Added global Hotkey to Activate Meeting Window
+* 2022-02-22
+  - fix: if FindText does not work, restore previous meeting window
+* 2022-01-12
+	- Teams Share: fix if main monitor index is not 1. restore / move meeting window to secondary monitor
+  - Teams Share: update to new share design (2 Tab)
 * 2021-11-29
   - [Workaround](https://tdalon.blogspot.com/2021/11/teams-shortcuts-personalize-mention-fix.html) for issue with Personalize Mentions in flat standalone chats
 * 2021-11-11

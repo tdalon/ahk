@@ -1145,9 +1145,8 @@ TeamsMeetingWinId := PowerTools_RegRead("TeamsMeetingWinId")
 
 ; Shortcut if same Meeting as previous function call
 If (useFindText) and WinExist("ahk_id " TeamsMeetingWinId) {
-    If !(Teams_FindText("Resume")) and (Teams_FindText("Leave")) {
+    If !(Teams_FindText("Resume")) ; and (Teams_FindText("Leave")) 
         return TeamsMeetingWinId
-    } 
 }
 
 WinCount := 0
@@ -1234,7 +1233,10 @@ return WinId1
 
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
-
+Teams_ActivateMeetingWindow(){
+WinId := Teams_GetMeetingWindow()
+WinActivate, ahk_id %WinId%
+} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_NewMeeting(){
@@ -1306,23 +1308,32 @@ SendInput {enter}
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Share(ShareMode := 2){
+; ShareMode = 0 : unshare
+; ShareMode =1 : share
+; ShareMode =2: toggle share
 WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
 SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
-If (MonitorCount > 1)
+If (MonitorCount > 1) {
     IsActive := WinActive("ahk_id " . WinId)
-Else 
+    IsActive := Not (IsActive = 0)
+} Else 
     IsActive := False ; Set to False if only one monitor is used
 WinActivate, ahk_id %WinId%
 
 
 ok := Teams_FindText("MeetingActionShare")
 IsSharing := !(ok)
+
 If (ShareMode = 1) and (IsSharing) ; already sharing
     Return
 
-SendInput ^+e ; ctrl+shift+e 
+If (ShareMode = 0) and !(IsSharing) ; already not sharing
+    Return
+
+SendInput ^+e ; ctrl+shift+e - toggle share
+
 ; Wait for share tray to open
 Delay := PowerTools_GetParam("TeamsShareDelay")
 Sleep %Delay% 
@@ -1330,25 +1341,26 @@ Sleep %Delay%
 ;    Sleep, 500
 
 If !(IsSharing)
-    SendInput {Tab}{Enter} ; Select first screen
-If (IsActive) and !(IsSharing) { ; only if IsActive and not sharing
+    SendInput {Tab}{Tab}{Enter} ; Select first screen - New Share design requires 2 {Tab}
+
+
+/* 
+If (IsActive) and !(IsSharing) { ; only if IsActive (=>multiple monitors) and not sharing before = sharing now
 ; Bring back meeting window (multiple screen setup) - it is else minimized while sharing by Teams
     WinWaitNotActive, ahk_id %WinId%
-    
-    WinActivate, ahk_id %WinId% ; requires activate to move
-    MonIndex := Monitor_GetMonitorIndex(WinId)
-    If (MonIndex=1) {
-        SendInput #+{Right}; Win+Shift+Right Arrow
-        ;Monitor_WinMove(WinId)    
-    }   
-}
+    ;Sleep 2000
+    ;MsgBox  %IsActive% %IsSharing% %WinId% ; DBG
+    Monitor_MoveToSecondary(WinId)   ; does not work -> unshare weird bug    
+} 
+*/
+
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ClearCache(){
 If GetKeyState("Ctrl") {
-    sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html"
+    sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html" 
     Run, "%sUrl%"
 	return
 }
@@ -1810,9 +1822,6 @@ Case "MeetingActionShare":
     Text:="|<>*161$22.zzzzzzzw003U0060A0M1s1UDk61hUM0k1U3060A0M0k1U3060A0M001k00DzzzzzzzU"
 Case "MeetingActionUnShare":
     Text:="|<>*153$22.zzzzzzzw003U006000M421U8E60G0M0k1U3060G0M241UE86000M001k00DzzzzzzzU"
-
-
-
 Case "Muted","Unmute":
     ;Text:="|<>*113$22.zzzyzVzxw3zvU7zq0Tzg1zzM7zykTztVzzX7zy6Tz8BDwkQzv0rzbBzzDnzyA7zy7jzwzTznyzzjxzzzy" ; does not work
 Case "Mute","Unmuted":
