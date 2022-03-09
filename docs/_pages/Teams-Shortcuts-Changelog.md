@@ -5,6 +5,10 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 ---
 
 [Teams Shortcuts](Teams-Shortcuts) Changelog
+* 2022-03-08
+  - Support PushToTalk Ctrl+Space global hotkey
+  - Added Open Background Settings
+  - Fix: Quick Share (new Background option)
 * 2022-02-24
   - Added global Hotkey to Activate Meeting Window
 * 2022-02-22

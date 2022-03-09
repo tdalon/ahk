@@ -1341,7 +1341,7 @@ Sleep %Delay%
 ;    Sleep, 500
 
 If !(IsSharing)
-    SendInput {Tab}{Tab}{Enter} ; Select first screen - New Share design requires 2 {Tab}
+    SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
 
 
 /* 
@@ -1449,17 +1449,17 @@ If !WinId ; empty
 WinGet, curWinId, ID, A
 WinActivate, ahk_id %WinId%
 
-If (State <> 2)
+If (State <> 2) {
     IsMuted := !(Teams_FindText("Mute"))
-MsgBox %IsMuted%
+    ;MsgBox %IsMuted% ; DBG
+}
+
 Switch State 
 {
     Case 0:
-        
         Tooltip("Teams Unmute Mic...") 
         If !IsMuted
             return
-        
     Case 1:
         If IsMuted
             return
@@ -1473,6 +1473,48 @@ Sleep 500 ; pause before reactivating previous window
 WinActivate, ahk_id %curWinId%
 
 } ; eofun
+
+Teams_MeetingShortcuts(sKeyword) {
+WinId := Teams_GetMeetingWindow()
+If !WinId ; empty
+    return
+;MsgBox % WinId
+WinGet, curWinId, ID, A
+WinActivate, ahk_id %WinId%
+
+Switch sKeyword
+{
+    Case "mu","mute":
+        Tooltip("Teams Toggle Mic...") 
+        SendInput ^+m ;  ctrl+shift+m 
+    Case "bg","bl","blur":
+        Tooltip("Teams Background Settings...") ; toggle background blur
+        SendInput ^+p ;  ctrl+shift+p 
+        return ; need human action to change setting; do not restore window
+    Case "lobby": ; Admit people from lobby notification
+        Tooltip("Teams Admit from Lobby...") ; toggle background blur
+        SendInput ^+y ;  ctrl+shift+y
+        return ; need human action to change setting; do not restore window
+    Case "share-accept":
+        Tooltip("Teams Accept Share...") 
+        SendInput ^+a ;  ctrl+shift+A
+    Case "share-decline":
+        Tooltip("Teams Decline Share...") 
+        SendInput ^+d ;  ctrl+shift+D
+    Case "share":
+        Tooltip("Teams Start Share...") 
+        SendInput ^+e ;  Start screen share session Ctrl+Shift+E
+    Case "share-toolbar":
+        Tooltip("Teams Start Share...") 
+        SendInput ^+e{Space} ; Go to sharing toolbar Ctrl+Shift+Spacebar
+}
+
+
+Sleep 500 ; pause before reactivating previous window
+WinActivate, ahk_id %curWinId%
+
+
+} ; eofung
 
 
 Teams_Leave() {

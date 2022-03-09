@@ -43,7 +43,7 @@ Case "bgf","obg","backgrounds":
     Teams_OpenBackgroundFolder()
     return
 Case "bg","bgs","background":
-    Teams_MeetingAction("Backgrounds")
+    Teams_MeetingShortcuts("bg")
     return
 Case "together","tm","to":
     Teams_MeetingAction("TogetherMode")
