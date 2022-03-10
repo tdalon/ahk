@@ -7,31 +7,11 @@
 ;global PowerTools_ConnectionsRootUrl
 ;PowerTools_ConnectionsRootUrl := Connections_GetRootUrl()
 ; ----------------------------------------------------------------------
-CNAuth() {
-sPassword := Login_SetPassword()
-If (sPassword="")
-    return 
-PowerTools_ConnectionsRootUrl := PowerTools_RegRead("ConnectionsRootUrl")
-
-WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-sUrl = https://%PowerTools_ConnectionsRootUrl%/profiles/atom/profile.do?email=xx ; TODO
-WebRequest.Open("GET", sUrl, false) ; Async=false	
-WebRequest.SetCredentials(A_UserName, sPassword, 0)
-WebRequest.SetCredentials(A_UserName, sPassword, 1)
-WebRequest.Send()
-
-If (WebRequest.Status=200)
-    TrayTipAutoHide("Connections Auth", "Authentification was successful!")
-Else {
-    sText := "Authentification failed! " . WebRequest.StatusText
-    TrayTip Connections Auth, %sText%
-}
-} ; eof
 
 ; ----------------------------------------------------------------------
 CNGetOld(sUrl, showError := true) {
 ; Syntax: sResponse := CNGet(sUrl)
-; Run HttpGet request on a ConNext page using provided Password authentification
+; Run HttpGet request on a Connections page using provided Password authentification
 ; Output is ResponseText. in case of error it starts with "Error 
 ; If (sResponse ~= "Error.*")
 
@@ -61,7 +41,7 @@ Else {
 
 If (showError) and (sResponse ~= "Error.*") {
     ; MsgBox 0x10, Error, %sResponse%
-    TrayTip ConNext Get Error!, %sResponse%
+    TrayTip Connections Get Error!, %sResponse%
 }
 return sResponse
 
@@ -260,7 +240,7 @@ CNEvent2Emails(sUrl){
 ; Input sUrl or sEventUuid
 	; Test https://connectionsroot/communities/service/html/communityview?communityUuid=1f40ae3f-215e-48b2-86f5-7b43b7229d2c#fullpageWidgetId=W2a25ef83ef5c_4f39_b65b_578387091606&eventInstUuid=ed9fccde-6c68-4705-aa05-104f5dda28ee 
 	; more than 100
-	; MsgBox 0x10, ConNext Enhancer: Error, You need to be in Edit mode!	
+	; MsgBox 0x10, Connections Enhancer: Error, You need to be in Edit mode!	
 	If (InStr(sUrl, "http")) {
         sPat = &eventInstUuid=(.*)
         If (!RegExMatch(sUrl,sPat,sEventUuid)) {
@@ -318,7 +298,7 @@ RegExMatch(sHtml,"<content [^>]*>([^<]*)</content>",sBody)
 oEmail.BodyFormat := 2 ;olFormatHTML 
 sBody := html_decode(sBody1)
 ; Add link to event
-EventLink = <a href="%sEventUrl%">Link to ConNext Event</a><br>
+EventLink = <a href="%sEventUrl%">Link to Connections Event</a><br>
 sBody := EventLink . sBody
 html := "<html><body>" . sBody . "</body></html>"
 oEmail.HTMLBody := html
@@ -375,7 +355,7 @@ oEmail := ComObjActive("Outlook.Application").CreateItem(0)
 
 oEmail.BodyFormat := 2 ;olFormatHTML 
 sBody := html_decode(sBody1)
-EventLink = <a href="%sEventUrl%">Link to ConNext Event</a><br>
+EventLink = <a href="%sEventUrl%">Link to Connections Event</a><br>
 sBody := EventLink . sBody
 
 html := "<html><body>" . sBody . "</body></html>"
@@ -451,7 +431,7 @@ If (EntryCount = pagesize) {
     GoTo, LoopPage    
 }
 TrayTipAutoHide("Connections Enhancer", TotalCount . " entries were extracted from response.")
-;MsgBox 0x40, ConNext Enhancer, %TotalCount%  were extracted.  
+;MsgBox 0x40, Connections Enhancer, %TotalCount%  were extracted.  
 
 return sXml
 }
@@ -459,14 +439,14 @@ return sXml
 ; Called by NWS: Ctrl+E in browser
 Connections_Edit(sUrl){
 PowerTools_ConnectionsRootUrl := PowerTools_RegRead("ConnectionsRootUrl")
-If InStr(sUrl,"://" . PowerTools_ConnectionsRootUrl . "/blogs") { ; ConNext Blog
+If InStr(sUrl,"://" . PowerTools_ConnectionsRootUrl . "/blogs") { ; Connections Blog
 	If InStr(sUrl,"method=edit") 
 		return
 	
 	sUrl := StrReplace(sUrl,"/blogs/","/blogs/roller-ui/authoring/weblog.do?method=edit&weblog=")
 	sUrl := StrReplace(sUrl,"/entry/","&entry=")
 	
-} Else If InStr(sUrl,"://" . PowerTools_ConnectionsRootUrl . "/wikis") { ; ConNext Wiki - not in edit mode	
+} Else If InStr(sUrl,"://" . PowerTools_ConnectionsRootUrl . "/wikis") { ; Connections Wiki - not in edit mode	
 	If InStr(sUrl,"/edit") 
 		return
 	; Remove link to section part
@@ -484,12 +464,12 @@ SendInput {Enter}
 Connections_Save(sUrl){
 PowerTools_ConnectionsRootUrl := PowerTools_RegRead("ConnectionsRootUrl")
 ReCNRoot := StrReplace(PowerTools_ConnectionsRootUrl, ".","\.")
-If RegExMatch(sUrl,"://" . ReCNRoot . "/blogs/.*weblog\.do\?method=edit") { ; ConNext Blog in edit mode
+If RegExMatch(sUrl,"://" . ReCNRoot . "/blogs/.*weblog\.do\?method=edit") { ; Connections Blog in edit mode
 	SendInput ^+J ; or F12
     SendInput {Tab}document.getElementById('postEntryID').click(){Enter}
 	return
     SendInput ^+J
-} Else If RegExMatch(sUrl,"://" . ReCNRoot . "/wikis/.*/edit") { ; ConNext Wiki - in edit mode	
+} Else If RegExMatch(sUrl,"://" . ReCNRoot . "/wikis/.*/edit") { ; Connections Wiki - in edit mode	
 	SendInput ^+J{Tab}
 	Sleep 3000
     SendInput document.getElementById('edit_saveclose').click(){Enter}
@@ -670,8 +650,8 @@ sUrl := StrReplace(sUrl,"http://","https://")
 ; Link to Blog entries: https://connectionsroot/blogs/tdalon?tags=chrome&lang=en
 ; Wiki page: https://connectionsroot/wikis/home?lang=en#!/wiki/Wa8a86fe4ac2b_4e9d_8e98_17d4671c70f8 
 ; => remove ?lang=en#!
-; Comment permalink https://connectionsroot/blogs/tdalon/entry/connext_link_format?lang=en#threadid=356630b7-2c83-4d94-b033-d8ca24f456d7
-; => https://connectionsroot/blogs/tdalon/entry/connext_link_format#threadid=356630b7-2c83-4d94-b033-d8ca24f456d7
+; Comment permalink https://connectionsroot/blogs/tdalon/entry/Connections_link_format?lang=en#threadid=356630b7-2c83-4d94-b033-d8ca24f456d7
+; => https://connectionsroot/blogs/tdalon/entry/Connections_link_format#threadid=356630b7-2c83-4d94-b033-d8ca24f456d7
 
 ; Language might be en-us => add - to the word		; de_de
 
@@ -970,7 +950,7 @@ Choice := ButtonBox("ConnectionsEnhancer:Setting:TocStyle","Choose your TOC Styl
 If ( Choice = "ButtonBox_Cancel") or ( Choice = "Timeout")
     return
 PowerTools_RegWrite("CNTocStyle",Choice)
-TrayTipAutoHide("ConNextEnhancer Setting", "TOC Style was set to " . Choice)
+TrayTipAutoHide("ConnectionsEnhancer Setting", "TOC Style was set to " . Choice)
 }
 
 ; ----------------------------------------------------------------------
@@ -1196,7 +1176,7 @@ return SubStr(sEmailList,2) ; remove starting ;
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-; Returns true if current window can be an opened connext editor
+; Returns true if current window can be an opened Connections editor
 Connections_IsWinEdit(sUrl := "") {
 If !sUrl ; empty
 	sUrl := Browser_GetUrl()
@@ -1221,6 +1201,9 @@ return Connections_IsUrl(sUrl)
 
 Connections_IsUrl(sUrl,sType:="") {
 PowerTools_ConnectionsRootUrl := PowerTools_RegRead("ConnectionsRootUrl")
+If (PowerTools_ConnectionsRootUrl = "")
+	return false
+
 If (sType = "")
 	return InStr(sUrl,"://" . PowerTools_ConnectionsRootUrl)
 	
@@ -1287,7 +1270,7 @@ return sHtml
 ; -------------------------------------------------------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 Connections_CleanLinks(sHtml){
-; Clean ConNext Url from lang tags
+; Clean Connections Url from lang tags
 sHtml := StrReplace(sHtml,"http://" . PowerTools_ConnectionsRootUrl . "/","https://" . PowerTools_ConnectionsRootUrl . "/")
 sHtml  := RegExReplace(sHtml , "[&|\?]lang=[\w-_]+(#!)?" , "")	
 ; Remove lastMod part from links
