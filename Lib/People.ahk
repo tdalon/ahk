@@ -55,15 +55,21 @@ While Pos := RegExMatch(sInput,sPat,sMatch,Pos+StrLen(sMatch)){
     sEmailList := sEmailList . sMatch1 . ";"
 }
 
+FunStr := "Connections_Profile2Email"
+If IsFunc(FunStr)
+{
 sPat = https?://%PowerTools_ConnectionsRootUrl%/profiles/html/profileView.do\?(userid|key)=[0-9A-Za-z\-]*
 sPat := StrReplace(sPat,".","\.")
 Pos = 1 
 While Pos := RegExMatch(sInput,sPat,sMatch,Pos+StrLen(sMatch)){
-    sEmail := Connections_Profile2Email(sMatch)
+    ; dynamic call to break dependency https://www.autohotkey.com/board/topic/34194-how-to-handle-the-error-call-to-non-existent-function/ SKAN answer
+    sEmail := %FunStr%(sMatch)
     If InStr(sEmailList,sEmail . ";")
         continue
     sEmailList := sEmailList . sEmail . ";"
 }
+} ; end if IsFunc
+
 return SubStr(sEmailList,1,-1) ; remove ending ;
 } ; eof
 ; ----------------------------------------------------------------------
@@ -438,12 +444,16 @@ sEmailList := People_GetEmailList(sSelection)
 If (sEmailList = "") {
     ;TODO Warning
 } Else {
+    FunStr := "Connections_Email2Key"
+    If IsFunc(FunStr)
+    {
     Loop, parse, sEmailList, ";"
     {
-         sKey:= Connections_Email2Key(A_LoopField)
+         sKey:= %FunStr%(A_LoopField)
          Run,  https://%PowerTools_ConnectionsRootUrl%/profiles/html/networkView.do?widgetId=friends&key=%sKey%
     }	; End Loop 
 }
+} ; end of IsFunc 
 } ; eofun
 
 ; ----------------------------------------------------------------------
@@ -499,4 +509,3 @@ UnHtml(html) {
    oHTML.write(html)
    return % oHTML.documentElement.innerText 
 }
-
