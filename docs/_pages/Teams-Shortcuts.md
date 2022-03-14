@@ -67,6 +67,10 @@ See [main blog post](https://tdalon.blogspot.com/2020/11/teams-shortcuts-smart-r
 
 <div style="text-align:center"><img src="/ahk/assets/images/TeamsShortcuts_SmartReply.gif" alt="Teams Shortcuts Smart Reply"></div>
 
+### Personalize Mentions (Alt+1)
+
+
+
 ### Send Mentions
 
 See [main blog post](https://tdalon.blogspot.com/2020/11/teams-shortcuts-send-mentions.html)

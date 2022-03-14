@@ -10,7 +10,7 @@ excerpt: "Microsoft Teams Application Launcher Plugin and Commander"
 
 Teamsy is a
  * Microsoft Teams *Plugin for an Application Launcher* like [Launchy](http://launchy.net/) or [Executor](http://executor.dk/) and
- * a *Teams Commander* i.e. it can also be used from the command line to send commands to Microsoft Teams; for example, as bridge between a StreamDeck and Microsoft Teams.
+ * a *Teams Commander* i.e. it can also be used from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html) to send commands to Microsoft Teams; for example, as bridge between a Stream Deck and Microsoft Teams.
 
 You can also run Teamsy from the [Teamsy Launcher](Teamsy-Launcher) or the [Teams Shortcuts](Teams-Shortcuts) PowerTool.
 
@@ -28,7 +28,7 @@ See [all blog posts tagged with #teamsy](https://tdalon.blogspot.com/search/labe
 Teamsy is a available as standalone .exe application. [Download link](https://github.com/tdalon/ahk/raw/main/PowerTools/Teamsy.exe)
 You can also run it from its AutoHotkey source [Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Teamsy.ahk) provided you take all the dependencies/ downlad the [full repository](https://github.com/tdalon/ahk).
 
-You can run Teamsy from the command line.
+You can run Teamsy from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html).
 I personally use Teamsy from an Application launcher e.g. [Launchy](http://launchy.net/) or [Executor](http://executor.dk/).
 I [recommend](https://tdalon.blogspot.com/2020/08/executor-my-preferred-app-launcher.html) [Executor](http://executor.dk/).
 

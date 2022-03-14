@@ -14,7 +14,10 @@ It is based on AutoHotkey [FindText](https://www.autohotkey.com/boards/viewtopic
 <p style="text-align: center;"><iframe width="560" height="315" src="https://www.youtube.com/embed/sPy07IzEGu4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></p>
 
 
-## [Related Blog post](https://tdalon.blogspot.com/2021/03/teams-meeting-reactions-shortcuts.html)
+## Related Blog posts
+
+* [Teams Meeting Reactions](https://tdalon.blogspot.com/2021/03/teams-meeting-reactions-shortcuts.html)
+* [Teams Audio Effects](https://tdalon.blogspot.com/2021/12/teams-audio-effects.html)
 
 ## How to use
 
@@ -31,6 +34,15 @@ ap, clap  |  Applause
 This make it so much easier to LOL in a meeting (click to enlarge):
 
 <div style="text-align:center"><a href="https://tdalon.github.io/ahk/assets/images/Teams_Lol.gif"><img src="/ahk/assets/images/Teams_Lol.gif" alt="Teams Meeting Reaction LOL"></a></div>
+
+## Live reactions with Audio
+
+See [Teams Audio Effects](https://tdalon.blogspot.com/2021/12/teams-audio-effects.html)
+
+You can combine built-in live reactions with additional audio effects.
+
+<div style="text-align:center"><a href="https://tdalon.github.io/ahk/assets/images/Teams_MeetingLiveReactions_Audio.gif"><img src="/ahk/assets/images/Teams_Lol.gif" alt="Teams Meeting Reaction LOL"></a></div>
+
 
 ## How to setup/ troubleshooting
 
