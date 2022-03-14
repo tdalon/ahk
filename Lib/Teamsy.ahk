@@ -45,6 +45,9 @@ Case "bgf","obg","backgrounds":
 Case "bg","bgs","background":
     Teams_MeetingShortcuts("bg")
     return
+Case "lo","lobby":
+    Teams_MeetingShortcuts("lobby")
+    return
 Case "together","tm","to":
     Teams_MeetingAction("TogetherMode")
     return

@@ -1,14 +1,14 @@
-; Homepage: 
+; Homepage: https://tdalon.github.io/ahk/Teamsy
+; You need to compile it to run from the command line
 ; You can compile it via running the Ahk2Exe command e.g. D:\Programs\AutoHotkey\Compiler\Ahk2Exe.exe /in "Teamsy.ahk" /icon "icons\Teams.ico"
-LastCompiled = 20210416063521
-#Include <Teams>
+; You can also compile it from the PowerTools Bundler
+LastCompiled = 20220309095456
+#Include <PowerTools>
 #Include <Teamsy>
-#Include <Monitor>
 
 #SingleInstance force ; for running from editor
 
-If (A_Args.Length() = 0)  {
-    
+If (A_Args.Length() = 0)  { 
     PowerTools_MenuTray()
     PowerTools_Help("Teamsy") ; open help page
     TrayTip, Teamsy, See help. Script shall not be run standalone! 
@@ -27,4 +27,3 @@ If (A_Args.Length() = 0)  {
 If (A_Args.Length() > 0)
     Teamsy(A_Args[1])
 return
-

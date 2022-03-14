@@ -6,6 +6,13 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 [Teamsy](Teamsy) Changelog
 
+* 2022-03-14
+  - Added kyeword 'lo'|'lobby' to Admit Lobby
+* 2022-03-11 
+	- Remove [hard dependency](https://tdalon.blogspot.com/2022/03/ahk-conditional-include.html) to Connections Lib 
+* 2022-01-12
+	- Teams Share: fix if main monitor index is not 1. restore / move meeting window to secondary monitor
+	- Teams Share: update to new share design (2 Tab)
 * 2021-04-12
 	- Add [Mute on/ off shortcut](https://tdalon.blogspot.com/2021/04/teams-shortcuts-mute-on-off.html).
 * 2021-03-31
@@ -90,4 +97,5 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 * 2020-09-30
     * Integrate to PowerTools Bundle. Add SysTray with link to help/ changelog. Add to Bundler.
 * 2020-09-29
-    * add 'cal' keyword to open calendar
+    * add 'cal' keyword to open calendar
+

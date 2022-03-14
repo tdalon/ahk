@@ -5,6 +5,10 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 ---
 
 [Teams Shortcuts](Teams-Shortcuts) Changelog
+* 2022-03-14
+  - Added kyeword 'lo'|'lobby' to Admit Lobby
+* 2022-03-11 
+	- Remove [hard dependency](https://tdalon.blogspot.com/2022/03/ahk-conditional-include.html) to Connections Lib 
 * 2022-03-08
   - Support PushToTalk Ctrl+Space global hotkey
   - Added Open Background Settings
