@@ -61,8 +61,8 @@ SharePoint_CleanUrl(url){
 }
 ; -------------------------------------------------------------------------------------------------------------------
 
-; SharePoint_IsSPUrl(url)
-SharePoint_IsSPUrl(url){
+; SharePoint_IsUrl(url)
+SharePoint_IsUrl(url){
 If RegExMatch(url,"https://[a-z\-]+\.sharepoint\.com/.*") or InStr(url,"https://mspe.")  
 {
 	; url with a few letters followed by one number
@@ -120,11 +120,24 @@ GetRootUrl(sUrl){
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-SharePoint_GetSyncIniFile(){
-    EnvGet, sOneDriveDir , onedrive
-	sOneDriveDir := StrReplace(sOneDriveDir,"OneDrive - ","")
-	sIniFile = %sOneDriveDir%\SPsync.ini
-    return sIniFile
+SharePoint_GetSyncIniFile(sFile := ""){
+	EnvGet, sOneDriveDir , onedrive
+	If !sFile {
+		FoundPos := InStr(sOneDriveDir, "\" , , -1)
+		sOneDriveDirPar = SubStr(sOneDriveDir,1,FoundPos-1)
+		If !InStr(sFile, sOneDrivePar)
+			return
+		FoundPos := InStr(sFile, "\" , StrLen(sOneDriveDirPar) )
+		sDir := SubStr(sFile,1,FoundPos-1)
+		sIniFile = %sDir%\SPsync.ini
+		
+	} Else { ; Default Tenant
+		
+		sOneDriveDir := StrReplace(sOneDriveDir,"OneDrive - ","")
+		sIniFile = %sOneDriveDir%\SPsync.ini
+	}
+	return sIniFile
+
 }
 ; -------------------------------------------------------------------------------------------------------------------
 
@@ -133,6 +146,88 @@ SharePoint_GetSyncDir(){
 	sOneDriveDir := StrReplace(sOneDriveDir,"OneDrive - ","")
     return sOneDriveDir
 }
+; -------------------------------------------------------------------------------------------------------------------
+SharePoint_UpdateSync(){
+; showWarn := SharePoint_UpdateSync()
+
+
+
+
+FileRead, IniContent, %sIniFile%
+
+showWarn := False
+Loop, Reg, HKEY_CURRENT_USER\Software\SyncEngines\Providers\OneDrive, K
+{
+	
+	RegRead MountPoint, HKEY_CURRENT_USER\Software\SyncEngines\Providers\OneDrive\%A_LoopRegName%, MountPoint
+	MountPoint := StrReplace(MountPoint,"\\","\")
+
+	; Exclude Personal OneDrive
+	If InStr(MountPoint,"\OneDrive -")
+		Continue
+
+	FoundPos := InStr(MountPoint, "\" , , -1)
+	sOneDriveDir = SubStr(MountPoint,1,FoundPos-1)
+	sIniFile = %sOneDriveDir%\SPsync.ini
+
+	If Not FileExist(sIniFile)
+	{
+		TrayTip, NWS PowerTool, File %sIniFile% does not exist! File was created. Fill it following user documentation.
+
+		FileAppend, REM See documentation https://tdalon.github.io/ahk/Sync`n, %sIniFile% 
+		FileAppend, REM Use a TAB to separate local root folder from SharePoint sync root url`n, %sIniFile%
+		FileAppend, REM It might be the default mapping is wrong if you've synced from a subfolder not in the first level. Url shall not end with /`n, %sIniFile%
+		Run "%sIniFile%"
+
+	}
+
+	If Not InStr(IniContent,MountPoint . A_Tab) {
+		RegExMatch(MountPoint,"[^\\]*$",sFolderName)
+
+		RegRead UrlNamespace, HKEY_CURRENT_USER\Software\SyncEngines\Providers\OneDrive\%A_LoopRegName%, UrlNamespace
+		
+		sFolderName := RegExReplace(sFolderName,"^EXT - ","") ; Special case for EXT -
+		
+
+		If FolderName := RegExMatch(sFolderName,"^[^-]* - ([^-]*) - ([^-]*)$",sMatch) { ;  Private Channel
+			If (sMatch1 = sMatch2) { ; root folder has same name
+				UrlNamespace := SubStr(UrlNamespace,1,-1) ; remove trailing /	
+			} Else {
+				UrlNamespace := UrlNamespace . sMatch2
+				showWarn := True
+			}
+		} Else {
+			FolderName := RegExReplace(sFolderName,".*- ","")
+			
+			If Not (FolderName = "Documents") { ; not root level
+				UrlNamespace := UrlNamespace . FolderName
+				; For Teams SharePoint check for General channel folder to ignore displaying warning
+				If RegExMatch(UrlNamespace,"sharepoint\.com/teams/team_")
+					If Not (FolderName = "General")
+						showWarn := True
+				Else
+					showWarn := True
+			} Else ; root level -> remove trailing /
+				UrlNamespace := SubStr(UrlNamespace,1,-1)
+
+		}
+		FileAppend, %MountPoint%%A_Tab%%UrlNamespace%`n, %sIniFile%
+
+	}
+} ; end Loop
+
+If (showWarn) {
+	sTrayTip = If you are not syncing on the root level, you need to check the default mapping!
+	TrayTip Check Mapping in SPsync.ini! , %sTrayTip%,,0x2
+	Run "%sIniFile%"
+}
+
+return showWarn
+
+} ; eofun
+
+
+
 ; -------------------------------------------------------------------------------------------------------------------
 
 SharePoint_UpdateSyncIniFile(sIniFile:=""){
