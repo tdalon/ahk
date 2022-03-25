@@ -51,7 +51,7 @@ Else If RegExMatch(sLink,"/im/issues\?selection=(.*)",OutputVar)
 	linktext = %OutputVar1%
 Else If RegExMatch(sLink,"/im/viewissue\?selection=(.*)",OutputVar) 
 	linktext = %OutputVar1%
-} Else If RegExMatch(sLink,"https://web.microsoftstream.com/browse\?q=(.*)",sQuery) {
+Else If RegExMatch(sLink,"https://web.microsoftstream.com/browse\?q=(.*)",sQuery) {
 	linktext = Stream videos matching: %sQuery1% 
 	linktext := StrReplace(linktext,"%23","#")		
 } Else If RegExMatch(sLink,"/teams/team_[^/]*/[^/]*/(.*)",sMatch) {
@@ -122,7 +122,7 @@ If (RegExMatch(sInput,"[A-Z]:\\")) or (RegExMatch(sInput,"^\\\\"))  { ; local fi
 	sInput := GetFileLink(sInput)
 }
 
-If SharePoint_IsSPUrl(sInput) {
+If SharePoint_IsUrl(sInput) {
 	sInput := SharePoint_CleanUrl(sInput) ; keep name used as link for ico
 	linktext := SharePoint_Link2Text(sInput)
 	If InStr(linktext,">") ; use breadcrumbs
@@ -276,7 +276,7 @@ If sFileExt {
 		return imgsrc
 }
 
-If (SharePoint_IsSPUrl(sLink))
+If (SharePoint_IsUrl(sLink))
 	IniRead, imgsrc, %IniFile%, ConnectionsIcons, SharepointIcon
 Else If InStr(sLink,"communityUuid=") {
 	sPat=.*?\?communityUuid=([^ ]*)
@@ -294,7 +294,7 @@ Else If (InStr(sLink,"github.") and Not (InStr(sLink,"github.io/")))
 	IniRead, imgsrc, %IniFile%, ConnectionsIcons, GithubIcon
 Else If Jira_IsUrl(sLink)
 	IniRead, imgsrc, %IniFile%, ConnectionsIcons, JiraIcon
-Else If InStr(sLink,"confluence")
+Else If Confluence_IsUrl(sLink)
 	IniRead, imgsrc, %IniFile%, ConnectionsIcons, ConfluenceIcon
 Else If InStr(sLink,"https://teams.microsoft.com/l/channel/") || InStr(sLink,"https://teams.microsoft.com/l/team/") 
 	IniRead, imgsrc, %IniFile%, ConnectionsIcons, TeamsIcon
@@ -309,8 +309,8 @@ Else
 } ; end function
 
 ; -------------------------------------------------------------------------------------------------------------------
-CleanUrl(url,encode:= False) {
-; Clean connext url from lang tag
+IntelliPaste_CleanUrl(url,encode:= False) {
+; Clean Connections url from lang tag
 ; Clean-up ugly SharePoint folder url
 ; Convert Teams file links to SharePoint links
 ;
@@ -322,65 +322,20 @@ url := Trim(url)
 ; Teams Beautifier
 url := Teams_FileLinkBeautifier(url) ; will decode url
 
-If Connections_IsUrl(url) {
-	ReConnectionsRootUrl := StrReplace(PowerTools_ConnectionsRootUrl,".","\.")
-	
-	; Switch to https
-	url := StrReplace(url,"http://","https://")
-	
-	; Link to Blog entries: https://connectionsroot/blogs/tdalon?tags=chrome&lang=en
-	; Wiki page: https://connectionsroot/wikis/home?lang=en#!/wiki/Wa8a86fe4ac2b_4e9d_8e98_17d4671c70f8 
-	; => remove ?lang=en#!
-	; Comment permalink https://connectionsroot/blogs/tdalon/entry/connext_link_format?lang=en#threadid=356630b7-2c83-4d94-b033-d8ca24f456d7
-	; => https://connectionsroot/blogs/tdalon/entry/connext_link_format#threadid=356630b7-2c83-4d94-b033-d8ca24f456d7
-	
-	; Language might be en-us => add - to the word		; de_de
-	
-	
-	; Wiki section
-	;		https://connectionsroot/wikis/home?lang=en#!/wiki/W10f67125ddc8_42e1_a6da_0a8e6a1cd541/page/Help%20on%20NWS%20Search%20Tool&section=overview
-	url := RegExReplace(url, "[&|\?]lang=[\w-_]+(#!)?" , "")
-	url := StrReplace(url,"&section=","?section=")
-		
-	; wiki pages filtered by tag example https://connectionsroot/wikis/home/wiki/W354104eee9d6_4a63_9c48_32eb87112262/index?lang=en&tag=nws_workflow
-	url := StrReplace(url,"index&tag=","index?tag=")
-	
-	; Remove ?logDownload=true&downloadType=view&versionNum=1 (when copying image from Files)
-	; Ex. https://connectionsroot/files/form/anonymous/api/library/9d7cc0b6-434a-4f44-9091-6f13fbac8a4e/document/f091ded1-da5d-45fb-8910-927439348a90/media/idea_orange_trans.png?versionNum=1
-	; Ex. https://connectionsroot/files/form/anonymous/api/library/ffd279a0-2764-46bb-a8ec-b1aa3c713072/document/87249fa7-87f8-4977-b511-6c49a1597e31/media/wikis_32.jpg?logDownload=true&downloadType=view&versionNum=1
-
-	;url := RegExReplace(url, "\?versionNum=\d+" , "")
-	url := RegExReplace(url, "://" . ReConnectionsRootUrl . "/files/form/anonymous/api/library/([^?]*)\?.*", "://" . PowerTools_ConnectionsRootUrl . "/files/form/anonymous/api/library/$1")
-	
-	; Remove lastMod (when copying profile picture)
-	; Ex. https://connectionsroot/profiles/photo.do?key=7df0fd93-6999-426d-869c-d36d434d11fa&lastMod=1500531017000
-	url := RegExReplace(url, "&lastMod=\d+" , "")
-	
-	; Remove ?preventCache=1500037805880 if copied from wiki/blogs
-	url := RegExReplace(url, "\?preventCache=\d+" , "")
-	
-	; Remove ?logDownload=true&downloadType=view from copy video address from context menu
-	url := StrReplace(url, "?logDownload=true&downloadType=view","")
-	
-	; For FireFox/Chrome support replace https: to http: to make images visible if accessed via http
-	;SplitPath, url, sFileName,,sFileExt 
-	;If (sFileExt = "png") || (sFileExt = "jpg") || (sFileExt = "gif") 
-	;	url := StrReplace(url,"https://","http://")
-	
-	url := StrReplace(url,"'","%27")
-
-} Else If (SharePoint_IsSPUrl(url)) 
+If Connections_IsUrl(url) 
+	url := Connections_CleanUrl(url)
+Else If (SharePoint_IsUrl(url)) 
 	url := SharePoint_CleanUrl(url)	
 Else If (IsGoogleUrl(url))
 	url := GetGoogleUrl(url)
-Else If (Confluence_IsUrl(url)) {
+/* Else If (Confluence_IsUrl(url)) {
 	link := Confluence_CleanLink(url)
 	url := link[1]
-}
+} 
+*/
 
 If !(encode) {
-
-	; fix beautified url for ConNext wikis
+	; fix beautified url for Connections wikis
 	If (Connections_IsUrl(url,"wiki"))	{
 		;url := StrReplace(url,"(","%28")
 		;url := StrReplace(url,")","%29")
@@ -520,7 +475,7 @@ If !InStr(sClipboard,"`n") { ; single input
 	}
 
 	If RegExMatch(sClipboard,"^http") { ; only for links - exclude script, html code	
-		sLink := CleanUrl(sLink)
+		sLink := IntelliPaste_CleanUrl(sLink)
 	}
 	
 	sHtml := IntelliHtml(sLink, useico)
@@ -539,7 +494,7 @@ If (useico) {
 	useico := False
 	Loop, parse, sClipboard, `n, `r
 	{
-		sLink := CleanUrl(A_LoopField) ; TODO call again below
+		sLink := IntelliPaste_CleanUrl(A_LoopField) ; TODO call again below
 		imgsrc := Link2Ico(sLink)
 		;MsgBox %sLink% : %imgsrc% ; DBG
 		If not (imgsrc="") { ; icon not empty
@@ -569,7 +524,7 @@ sFullText =
 If !InStr(sClipboard,"`n") { ; single input
 	sLink := sClipboard
 	If RegExMatch(sClipboard,"^http") ; only for links - exclude script, html code	
-		sLink := CleanUrl(sLink)
+		sLink := IntelliPaste_CleanUrl(sLink)
 
 	sHtml := IntelliHtml(sLink, useico)
 	If (sLink = sClipboard) { ; no action on clean -> transform to html
@@ -588,7 +543,7 @@ If WinActive("ahk_group PlainEditor") { ;-> Plain-text
 
 Loop, parse, sClipboard, `n, `r
 {
-	sLink_i := CleanUrl(A_LoopField)	; calls also GetSharepointUrl
+	sLink_i := IntelliPaste_CleanUrl(A_LoopField)	; calls also GetSharepointUrl
 
 	Switch Fmt 
 	{
@@ -673,7 +628,7 @@ Default:
 
 IntelliPaste_Refresh(){
 ; Refresh SPSync.ini 
-SharePoint_UpdateSyncIniFile()
+SharePoint_UpdateSync()
 ; Refresh Teams Export List
 Teams_ExportTeams()
 } ; eofun
@@ -709,7 +664,7 @@ GetFileLink(sFile) {
 	Else {
 		sFile2 := StrReplace(sFile,"\","/") 
 		sFile2 = https:%sFile2%
-		If SharePoint_IsSPUrl(sFile2)
+		If SharePoint_IsUrl(sFile2)
 			return sFile2
 	}
 	;Else
