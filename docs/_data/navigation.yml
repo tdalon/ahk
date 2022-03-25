@@ -22,10 +22,12 @@ pages:
   - title: "NWS PowerTool"
     url: /NWS-PowerTool
     children:
-      - title: "Sync"
-        url: /Sync
       - title: "IntelliPaste"
         url: /IntelliPaste
+      - title: "Quick Search"
+        url: /Quick-Search
+      - title: "Sync"
+        url: /Sync
   - title: "People Connector"
     url: /People-Connector
   - title: "Teams Shortcuts"

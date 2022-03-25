@@ -5,6 +5,11 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2022-03-24
+  - QuickSearch: conditional dependency to libraries: Blogger, Jira, Conluence, Connections (will work even if Lib file is not available)
+  - Confluence Quick Search: support search with labels (using # prefix)
+  - Fix: Set Settings: Previous Value was not shown as Default
+  - Add JiraUserName as Setting in the SystemTray Menu
 * 2021-10-07
   - Confluence/Jira Get: use JiraUserName in Settings (if defined)
   - Confluence Get: support authentification

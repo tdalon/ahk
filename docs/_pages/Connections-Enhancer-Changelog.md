@@ -6,11 +6,13 @@ excerpt: "Release notes for HCL Connections Enhancer PowerTool."
 
 [Connections Enhancer](Connections-Enhancer) Changelog
 
+* 2022-03-25
+  - Move ConnectionsSearch.ahk function to Lib/Connections.ahk->Connections_Search
 * 2021-04-22
 	- Added systray menu entry to open main menu.
 * 2021-04-01
 	- Change Connections_CloseCodeView based on FindText instead of ImageSearch
-	- Bug fix: refresh Toc for Wiki always add new Toc. Do not update (change of html macro code for wiki toc with TinyMCE editor+Connections 6.5) 
+	- Bug fix: refresh Toc for Wiki always add new Toc. Do not update (change of html macro code for wiki toc with TinyMCE editor+Connections 6.5)
 * 2021-03-12
   - [Connections 6.5 Update](https://tdalon.blogspot.com/2021/04/connections-enhancer-update-for-6p5.html)
     - Fix for Regression: Ctrl+Shift+U hotkey does not open code view if editor view is HTML Source.

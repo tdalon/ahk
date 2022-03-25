@@ -53,6 +53,9 @@ Or assign a [global hotkey](#global-hotkeys) to it.
 
 ### [Global hotkeys](Teams-Global-Hotkeys)
 
+[Teams Shortcuts](https://aka.ms/teamsshortcuts) are only active if a Teams Window is selected/ under focus.
+The Teams PowerTool allows to define global hotkeys for Microsoft Teams.
+
 ### New Conversation (Alt+N)
 
 It will open a new conversation with the expanded compose box and move back the cursor right on the subject line - within one hotkey.

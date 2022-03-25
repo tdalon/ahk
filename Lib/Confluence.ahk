@@ -52,9 +52,9 @@ return [sUrl, sLinkText]
 }
 
 
-
 ; ----------------------------------------------------------------------
 Confluence_Get(sUrl){
+; Requires JiraUserName or ConfluenceUserName to be set in the Registry if different from Windows Username
 ; Syntax: sResponse .= Jira_Get(sUrl)
 ; Calls: b64Encode
 
@@ -101,37 +101,113 @@ ExpandLink(sLink){
 
 ; Confluence Search - Search within current Confluence Space
 ; Called by: NWS.ahk (Win+F Hotkey)
+; 
 Confluence_Search(sUrl){
-static sConfluenceSearch, sKey
-; http://confluenceroot/dosearchsite.action?cql=siteSearch+~+"project+status+report"+and+space+=+"projectCFTPT"+and+type+=+"page"
+static sConfluenceSearch, sSpace
 
-; Extract project key from Url and confluence root url
-; http://confluenceroot/spaces/viewspace.action?key=projectCFTI
-; or http://confluenceroot/display/projectCFTI/Newsletters
+;https://confluenceroot/dosearchsite.action?cql=+space+%3D+%22PMPD%22+and+type+%3D+%22page%22+and+label+in+(%22best_practice%22%2C%22bitbucket%22)&queryString=code
+;https://confluenceroot/dosearchsite.action?cql=+space+%3D+%22PMPD%22+and+type+%3D+%22page%22+and+label+in+(%22best_practice%22%2C%22bitbucket%22)&queryString=code
+;https://confluenceroot/dosearchsite.action%3Fcql=%2Bspace%2B=%2B%22PMPD%22%2Band%2Btype%2B=%2B%22page%22%2Band%2Blabel%2Bin%2B%28%22best_practice%22%2C%22bitbucket%22%29&queryString=code
+;https://confluenceroot/dosearchsite.action?cql=+space+=+"PMPD"+and+type+=+"page"+and+label+in+("best_practice","bitbucket")&queryString=code
 
+; , %2C
+; + %2B
+; = %3D
+; " %22
+
+
+; extract def search and key from url
 RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
-If RegExMatch(sUrl,sRootUrl . "/display/([^/]*)",sKey)
-    sKey := sKey1
-Else If  RegExMatch(sUrl,sRootUrl . "/spaces/viewspace.action\?key=([^&\?/]*)",sKey)
-    sKey := sKey1
-Else
-    Return
-sOldKey := sKey
-If sKey = %sOldKey%
-	sDefSearch := sConfluenceSearch
-Else
-	sDefSearch = 
+ReRootUrl := StrReplace(sRootUrl,".","\.")
 
-InputBox, sSearch , Confluence Search, Enter search string:,,640,125,,,,,%sDefSearch% 
+If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) { 	
+	sCQL := sCQL1
+	sCQL := StrReplace(sCQL,"=","%3D")
+	sQuote = "
+	sCQL := StrReplace(sCQL,sQuote,"%22")
+	sCQL := StrReplace(sCQL,"%2B","+")
+	sCQL := StrReplace(sCQL,"%28","(")
+	sCQL := StrReplace(sCQL,"%29",")")
+
+	; Extract Labels	
+	; Single label 
+	If 	RegExMatch(sCQL,"label\+%3D\+%22([^%]*)%22",sCQLLabels) {
+		sLabels := "#" . sCQLLabels1
+		sDefSearch := sLabels
+	}	; multiple labels cql=type+=+"page"%2Band%2Blabel%2Bin%2B%28"jira"%2C"confluence"%29
+	Else If RegExMatch(sCQL,"label\+in\+\(([^\)]*)\)",sCQLLabels) {
+		sPat := "%22([^%]*)%22" 
+		Pos=1
+		While Pos :=    RegExMatch(sCQLLabels1, sPat, label,Pos+StrLen(label)) 
+			sLabels := sLabels . " #" . label1 
+		sLabels := Trim(sLabels) ; remove starting space			
+		sDefSearch := sLabels
+	}
+	; Extract Space Key
+	If RegExMatch(sCQL,"space\+?%3D\+?%22([^%]*)%22",sSpace) 
+		sSpace := sSpace1
+
+	; Extract Search String
+	If RegExMatch(sCQL,"\&queryString%3D(.*)",sSearchString) {
+		sDefSearch := sDefSearch . " " . sSearchString1
+	}
+	
+; Not from advanced search 
+} Else {
+	sOldSpace := sSpace
+	If RegExMatch(sUrl,ReRootUrl . "/display/([^/]*)",sSpace)
+		sSpace := sSpace1
+	Else If  RegExMatch(sUrl,ReRootUrl . "/spaces/viewspace\.action\?key=([^&\?/]*)",sSpace)
+		sSpace := sSpace1
+	If sSpace = %sOldSpace%
+		sDefSearch := sConfluenceSearch
+	Else
+		sDefSearch = 
+}
+
+InputBox, sSearch , Confluence Search, Enter search string (use # for labels):,,640,125,,,,,%sDefSearch% 
 if ErrorLevel
 	return
 sSearch := Trim(sSearch) 
-sConfluenceSearch := StrReplace(sSearch," ","+")
-sSearchUrl = /dosearchsite.action?cql=siteSearch+~+"%sConfluenceSearch%"+and+space+=+"%sKey%"+and+type+=+"page"
-Run, %sRootUrl%%sSearchUrl%
 
-}
 
+; ----
+; Convert labels to CQL
+sPat := "#([^#\s]*)" 
+Pos=1
+While Pos :=    RegExMatch(sSearch, sPat, label,Pos+StrLen(label)) {
+	If (!sCQLLabelsNew) {
+		sCQLLabelsNew := "%2Band%2Blabel%2Bin%2B%28%22"  . label1 . "%22"
+	} Else {
+		sCQLLabelsNew := sCQLLabelsNew . "%2C%22" . label1 . "%22"
+	}
+} ; end while
+
+; remove labels from search string
+sSearch := RegExReplace(sSearch, sPat , "")
+sSearch := Trim(sSearch)
+
+sSearchUrl = %sRootUrl%/dosearchsite.action?cql=type+=+"page"
+If sSpace
+	sSearchUrl := sSearchUrl . "+and+space=%22" . sSpace "%22"
+
+If sCQLLabelsNew ; not empty
+	sSearchUrl := sSearchUrl . sCQLLabelsNew . 	"%29"
+
+If sSearch ; not empty
+	sSearchUrl = %sSearchUrl%&queryString=%sSearch%
+sConfluenceSearch := sDefSearch
+
+If sCQL ; not empty means update search 
+	Send ^l
+Else
+	Send ^n ; New Window
+Sleep 500
+Clip_Paste(sSearchUrl)
+
+Send {Enter}
+
+} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 Confluence_PersonalizeMention() {

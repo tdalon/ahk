@@ -843,7 +843,7 @@ return sResponse
 
 ; ----------------------------------------------------------------------
 
-; Called by ConnectionsSearch and ConnectionsEnhancer-> CreateNew
+; Called by Connections_Search and ConnectionsEnhancer-> CreateNew
 CNGetForumId(sUrl){
 ; Trim part after & e.g. permalink https://connectionsroot/forums/html/threadTopic?id=18503bfc-8d76-4861-9f03-524a7a18d6bd&permalinkReplyUuid=b4fe66c6-1aa2-4d0b-89be-0cdf2719512d
 ; Trim after # example https://connectionsroot/forums/html/topic?id=5c1dbf73-844d-43d7-b5b7-77a6c0e49383#repliesPg=0
@@ -1307,3 +1307,288 @@ sHtml := RegExReplace(sHtml,sPat,sRep)
 return sHtml
 }
 ; ----------------------------------------------------------------------
+
+
+
+;-------------------- SEARCH -------------------------------------------
+; Connections Search - Search within current Connections App
+
+; Called by: MWS.ahk (Win+F Hotkey)
+Connections_Search(sUrl, newWindow := True){
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+	Run, "https://connectionsroot/blogs/tdalon/entry/Connections_search_ahk" ; TODO
+	return
+}
+static sWikiSearch, sWikiLabel
+static sForumSearch, sForumUuid
+static sBlogSearch, sBlogId
+
+If Connections_IsUrl(sUrl,"wiki") {
+	sOldWikiLabel := sWikiLabel
+	sWikiLabel := GetWikiLabel(sUrl)
+	If !sWikiLabel
+		return
+	sDefSearch =
+	If sWikiLabel = %sOldWikiLabel%
+		sDefSearch := sWikiSearch
+
+	If (sDefSearch = "") { ; isempty
+		ReConnectionsRootUrl := StrReplace(PowerTools_ConnectionsRootUrl,".","\.")
+		; https://connectionsroot/wikis/home?lang=en#!/wiki/W354104eee9d6_4a63_9c48_32eb87112262/index?sort=mostpopular&tag=ms_teams&tag=meeting
+		; https://connectionsroot/wikis/home?lang=en#!/wiki/W965feafa2312_41f6_b6c9_63bbc7c9a59b/index?tag=ms_outlook
+		If RegExMatch(sUrl,ReConnectionsRootUrl . "/wikis/.*[&\?]tag=([^&\?]*)",sMatch) { ; tag-based			
+			sPat := "[&\?]tag=([^&]*)" 
+			Pos=1
+			While Pos :=    RegExMatch(sUrl, sPat, tag,Pos+StrLen(tag)) 
+				sTags := sTags . " #" . tag1 
+			sTags := Trim(sTags) ; remove starting space			
+			sDefSearch := sTags
+			
+		; keyword-based https://connectionsroot/wikis/home#!/search?query=ms_teams&mode=this&wikiLabel=W354104eee9d6_4a63_9c48_32eb87112262
+		} Else If RegExMatch(sUrl,ReConnectionsRootUrl . "/wikis/.*[\?&]query=([^&\?]*)",sMatch) { ; keyword-based
+			sDefSearch := StrReplace(sMatch1,"%20"," ") 
+		} 
+
+	}	
+
+	InputBox, sSearch , Wiki Search, Enter search string (use # for tags):,,640,125,,,,,%sDefSearch% 
+	if ErrorLevel
+		return
+	sWikiSearch := Trim(sSearch) 
+	SearchWiki(sWikiLabel,sWikiSearch)
+
+} Else If Connections_IsUrl(sUrl,"forum") {
+	sForumUuid := CNGetForumId(sUrl)
+	If !sForumUuid
+		return
+	ReConnectionsRootUrl := StrReplace(PowerTools_ConnectionsRootUrl,".","\.")
+	; sUrl = https://connectionsroot/forums/html/forum?id=755c8bb9-52a5-4db8-9ac9-933777b4322d&tags=uservoice&query=multiple%20window&ps=100
+	If RegExMatch(sUrl,ReConnectionsRootUrl . "/forums/html/forum\?id=(?:.*?)&tags=([^&\?]*)&query=([^&\?]*)",sMatch) {
+		sDefSearch := "#" . StrReplace(sMatch1,"%20"," #") . " " . StrReplace(sMatch2,"%20"," ")
+	}
+	Else If RegExMatch(sUrl,ReConnectionsRootUrl . "/forums/html/forum\?id=(?:.*?)&query=([^&\?]*)&tags=([^&\?]*)",sMatch) {
+		sDefSearch := "#" . StrReplace(sMatch2,"%20"," #") . " " . StrReplace(sMatch1,"%20"," ")
+	}
+	Else If RegExMatch(sUrl, ReConnectionsRootUrl . "/forums/html/forum\?id=(?:.*?)&tags=([^&\?]*)",sMatch) {
+		sDefSearch := "#" . StrReplace(sMatch1,"%20"," #") 
+	}
+	Else If RegExMatch(sUrl,ReConnectionsRootUrl . "/forums/html/forum\?id=(?:.*?)&query=([^&\?]*)",sMatch) {
+		sDefSearch := StrReplace(sMatch1,"%20"," ")
+	} Else 
+		sDefSearch = 
+	
+	If InStr(sUrl,"&filter=answeredQuestions")
+		sDefSearch := sDefSearch . " -a"
+	If InStr(sUrl,"&filter=openQuestions")
+		sDefSearch := sDefSearch . " -o"
+		
+	InputBox, sSearch , Forum Search, Enter search string (use # for tags):,,640,125,,,,,%sDefSearch% 
+	if ErrorLevel
+		return
+	SearchForum(sForumUuid,Trim(sSearch))
+
+} Else If Connections_IsUrl(sUrl,"blog") {
+	sOldBlogId := sBlogId
+	sPat = /blogs/([^/\?]*)[/\?]
+	Pos := RegExMatch(sUrl, sPat, sBlogId)
+	sBlogId := sBlogId1
+	If sBlogId = %sOldBlogId%
+		sDefSearch := sBlogSearch
+	Else {
+		ReConnectionsRootUrl := StrReplace(PowerTools_ConnectionsRootUrl,".","\.")
+
+		; sUrl = https://connectionsroot/blogs/tdalon?tags=Connections%20ms_sharepoint
+		If RegExMatch(sUrl,ReConnectionsRootUrl . "/blogs/.*\?tags=([^&\?]*)",sMatch) { ; tag-based
+			sDefSearch := "#" . StrReplace(sMatch1,"%20"," #")
+		; keyword-based https://connectionsroot/blogs/tdalon/search?t=entry&q=Connections+sharepoint&lang=en
+		; https://connectionsroot/blogs/45ca8e69-8c52-4154-8119-b85b7fdb62a0/search?t=entry&f=all&q=Connections&lang=en
+		} Else If RegExMatch(sUrl,ReConnectionsRootUrl . "/blogs/.*[\?&]q=([^&\?]*)",sMatch) { ; keyword-based
+			sDefSearch := StrReplace(sMatch1,"+"," ") 
+		} Else 
+			sDefSearch = 
+	}
+	InputBox, sSearch , Blog Search, Enter search string (use # for tags):,,640,125,,,,,%sDefSearch% 
+	if ErrorLevel
+		return
+	sBlogSearch := Trim(sSearch) 
+	SearchBlog(sBlogId,sBlogSearch)		
+
+} Else If InStr(sUrl,PowerTools_ConnectionsRootUrl . "/profiles/html/advancedSearch.do") {
+	; https://connectionsroot/profiles/html/advancedSearch.do?pageSize=150&profileTags=nws_guide&keyword=regensburg
+	sSpace := "%20"
+	sPat = profileTags=([^&]*)	
+	If RegExMatch(sUrl, sPat, sTags)
+		sProfileSearch := "#" .  StrReplace(sTags1,sSpace," #")
+	sPat = keyword=([^&]*)	
+	If RegExMatch(sUrl, sPat, sKeywords)
+		sProfileSearch := sProfileSearch . " " . StrReplace(sKeywords1,sSpace," ")
+
+	sProfileSearch := StrReplace(sProfileSearch,"%26","&")
+	;sDefSearch := StrReplace(sDefSearch,"%23","#")
+
+	InputBox, sProfileSearch , Profiles Search, Enter search string (use # for tags):,,640,125,,,,,%sProfileSearch% 
+	If ErrorLevel
+		return
+	sProfileSearch := Trim(sProfileSearch) 
+	SearchProfiles(sProfileSearch)	
+
+} Else If RegExMatch(sUrl,ReConnectionsRootUrl . ".*\?communityUuid=([^\?&#]*)",sMatch)  {
+	sCommunityId := sMatch1
+	If RegExMatch(sUrl,".*#query=([^&\?]*)",sMatch) 
+		sDefSearch := StrReplace(sMatch1,"+"," ")
+	
+	InputBox, sSearch , Community Search, Enter search string (use # for tags):,,640,125,,,,,%sDefSearch% 
+	If ErrorLevel
+		return
+	sSearch := Trim(sSearch) 
+	sUrl = https://%PowerTools_ConnectionsRootUrl%/communities/service/html/communityoverview?communityUuid=%sCommunityId%#query=%sSearch%
+	Run, "%sUrl%"
+
+} Else {
+	TrayTipAutoHide("NWS PowerTool","No Connections Search available on this page!")
+}
+
+} ; End Main Function
+
+; #############################################################################################
+; SubFunctions
+
+SearchForum(sForumUuid,sSearch,newWindow:=False){
+sUrl = https://%PowerTools_ConnectionsRootUrl%/forums/html/forum?id=%sForumUuid%&ps=500
+
+; Check for option -o or -a
+sPat = \s*-o\s*
+If RegExMatch(sSearch, sPat, sMatch) {
+	sSearch := StrReplace(sSearch, sMatch,"")
+	sUrl := sUrl . "&filter=openQuestions"
+}
+
+sPat = \s*-a\s*
+If RegExMatch(sSearch, sPat, sMatch) {
+	sSearch := StrReplace(sSearch, sMatch,"")
+	sUrl := sUrl . "&filter=answeredQuestions"
+}
+
+; Extract Tags
+sPat = #([^#\s]*)
+sSpace := "%20"
+Pos=1
+While Pos :=    RegExMatch(sSearch, sPat, tag,Pos+StrLen(tag)) 
+	sTags := sTags . sSpace . tag1    
+
+; Remove start sSpace
+sTags := SubStr(sTags,StrLen(sSpace)+1)
+If !(sTags="")  ; not empty
+	sTags := "&tags=" . sTags	
+sSearch := RegExReplace(sSearch, sPat , "")
+sSearch := Trim(sSearch)
+sUrl := sUrl . sTags 
+
+If  (sSearch != "")
+	sUrl := sUrl . "&query=" sSearch
+
+If !newWindow
+	Send ^w ; Close previous search window
+Run, %sUrl%
+} ; End function SearchForum
+
+; ----------------------------------------------------------------------
+GetWikiLabel(sUrl){
+sPat = /wiki/([^/]*)/?
+; Search view
+If RegExMatch(sUrl, sPat, sWikiLabel) 
+	return sWikiLabel1
+sPat := "&wikiLabel=([^&]*)"
+If RegExMatch(sUrl, sPat, sWikiLabel) 
+	return sWikiLabel1
+	
+MsgBox,48,Warning!,WikiLabel not found!
+return
+
+}
+; ----------------------------------------------------------------------
+
+SearchWiki(sWikiLabel,sSearch,newWindow:= False){
+
+sPat := "#([^#\s]*)" 
+sSpace :="%20"
+Pos=1
+While Pos :=    RegExMatch(sSearch, sPat, tag,Pos+StrLen(tag)) 
+	sTags := sTags . "&tag=" . tag1 
+
+
+sSearch := RegExReplace(sSearch, sPat , "")
+sSearch := Trim(sSearch)
+
+
+If  (sSearch != "") { ; not empty
+	sSearch := sSearch . StrReplace(sTags,"&tag="," ")  ; convert tags to query
+	sUrl := "https://" . PowerTools_ConnectionsRootUrl . "/wikis/home/search?query=" . sSearch . "&mode=this&wikiLabel=" . sWikiLabel
+} Else {
+	sUrl := "https://" . PowerTools_ConnectionsRootUrl . "/wikis/home/wiki/" . sWikiLabel . "/index?sort=mostpopular" . sTags
+}	
+If !newWindow
+	Send ^w ; Close previous search window
+Run, %sUrl%
+
+} ; End function SearchWiki
+
+SearchBlog(sBlogId,sSearch,newWindow:= False){
+
+sUrl :=  "https://" . PowerTools_ConnectionsRootUrl . "/blogs/" . sBlogId 
+sPat := "#([^#\s]*)" 
+sSpace :="%20"
+Pos=1
+sTags := ""
+While Pos :=    RegExMatch(sSearch, sPat, tag,Pos+StrLen(tag)) 
+	sTags := sTags . sSpace . tag1    
+
+; Remove start sSpace
+sTags := SubStr(sTags,StrLen(sSpace)+1)
+	
+sSearch := RegExReplace(sSearch, sPat , "")
+sSearch := Trim(sSearch)
+
+If  (sSearch != ""){
+	sSearch := StrReplace(sSearch," ","+")
+	If  (sTags != ""){
+		sSearch := sSearch . "+" . StrReplace(sTags,sSpace,"+")  ; convert tags to query
+	}
+	sUrl := sUrl . "/search?t=entry&q=" sSearch
+} Else { ; Tag based search
+	sUrl := sUrl . "?tags=" . sTags
+}	
+If !newWindow
+	Send ^w ; Close previous search window
+Run, %sUrl%
+}
+
+; ----------------------------------------------------------------------
+SearchProfiles(sSearch,newWindow := False){
+
+sSearch := StrReplace(sSearch,"&","%26")
+
+sUrl =  https://%PowerTools_ConnectionsRootUrl%/profiles/html/advancedSearch.do?pageSize=150
+sPat := "#([^#\s]*)" 
+sSpace :="%20"
+Pos=1
+sTags := ""
+While Pos :=    RegExMatch(sSearch, sPat, tag,Pos+StrLen(tag)) 
+	sTags := sTags . sSpace . tag1    
+; Remove start sSpace
+sTags := SubStr(sTags,StrLen(sSpace)+1)
+	
+sSearch := RegExReplace(sSearch, sPat , "")
+sSearch := Trim(sSearch)
+
+If  (sSearch != ""){
+	sSearch := StrReplace(sSearch," ",sSpace)
+	sUrl := sUrl . "&keyword=" . sSearch
+} 
+If  (sTags != ""){
+	sUrl := sUrl . "&profileTags=" . sTags
+}	
+If !newWindow
+	Send ^w ; Close previous search window
+Run, %sUrl%
+}
