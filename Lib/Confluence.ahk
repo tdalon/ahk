@@ -1,4 +1,5 @@
 #Include <IntelliPaste>
+#Include <Clip>
 ; for CleanUrl
 
 Confluence_IsUrl(sUrl){
@@ -19,7 +20,7 @@ Confluence_ExpandLinks(sLinks){
 ; Called by IntelliPaste
 	Loop, parse, sLinks, `n, `r
 	{
-		sLink_i := CleanUrl(A_LoopField)	; calls also GetSharepointUrl
+		sLink_i := IntelliPaste_CleanUrl(A_LoopField)	; calls also GetSharepointUrl
 		ExpandLink(sLink_i)
 	}
 }
@@ -39,6 +40,55 @@ WebRequest.Open("GET", sUrl, false) ; Async=false
 WebRequest.Send()
 sResponse := WebRequest.ResponseText 
 */
+
+RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
+ReRootUrl := StrReplace(sRootUrl,".","\.")
+
+If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) { 	
+	sCQL := sCQL1
+	sCQL := StrReplace(sCQL,"=","%3D")
+	sQuote = "
+	sCQL := StrReplace(sCQL,sQuote,"%22")
+	sCQL := StrReplace(sCQL,"%2B","+")
+	sCQL := StrReplace(sCQL,"%28","(")
+	sCQL := StrReplace(sCQL,"%29",")")
+
+	; Extract Labels	
+	; Single label 
+	If 	RegExMatch(sCQL,"label\+%3D\+%22([^%]*)%22",sCQLLabels) {
+		sLabels := "#" . sCQLLabels1
+		sDefSearch := sLabels
+	}	; multiple labels cql=type+=+"page"%2Band%2Blabel%2Bin%2B%28"jira"%2C"confluence"%29
+	Else If RegExMatch(sCQL,"label\+in\+\(([^\)]*)\)",sCQLLabels) {
+		sPat := "%22([^%]*)%22" 
+		Pos=1
+		While Pos :=    RegExMatch(sCQLLabels1, sPat, label,Pos+StrLen(label)) 
+			sLabels := sLabels . " #" . label1 
+		sLabels := Trim(sLabels) ; remove starting space			
+		sDefSearch := sLabels
+	}
+	; Extract Space Key
+	If RegExMatch(sCQL,"space\+?%3D\+?%22([^%]*)%22",sSpace) 
+		sSpace := sSpace1
+
+	; Extract Search String
+	If RegExMatch(sCQL,"\&queryString%3D(.*)",sSearchString) {
+		sDefSearch := sDefSearch . " " . sSearchString1
+	}
+	If sSpace
+		sLinkText := "Confluence Search in Space: " . sSpace
+	Else
+		sLinkText := "Confluence global Search"
+	
+	If sLabels
+		sLinkText :=  sLinkText . " with Labels: " . sLabels
+	
+	If sSearchString1
+		sLinkText :=  sLinkText . " and Search String: " . sSearchString1
+	return [sUrl, sLinkText]
+}
+
+
 sResponse := Confluence_Get(sUrl)
 
 sPat = s)<meta name="ajs-page-title" content="([^"]*)">.*<meta name="ajs-space-name" content="([^"]*)">.*<meta name="ajs-page-id" content="([^"]*)">
@@ -204,7 +254,6 @@ Else
 	Send ^n ; New Window
 Sleep 500
 Clip_Paste(sSearchUrl)
-
 Send {Enter}
 
 } ; eofun

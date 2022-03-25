@@ -3,7 +3,7 @@
 #Include <AHK>
 #Include <Teams>
 
-AppList = ConNextEnhancer,MO,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts
+AppList = ConnectionsEnhancer,MO,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts
 global Config
 Config := PowerTools_GetConfig()
 
@@ -25,7 +25,7 @@ If !ToolName
 Else
     ScriptName = %ToolName%.exe
     ; Overwrites by default
-sUrl = https://github.com/tdalon/ahk/raw/master/PowerTools/%ScriptName%
+sUrl = https://github.com/tdalon/ahk/raw/main/PowerTools/%ScriptName%
 
 ExeFile = %A_ScriptDir%\%ScriptName%
 If Not FileExist(ExeFile) {
@@ -36,7 +36,7 @@ If Not FileExist(ExeFile) {
 UrlDownloadToFile, %sUrl%, %ScriptName%.github
 guExe = %A_ScriptDir%\github_updater.exe
 If Not FileExist(guExe)
-    UrlDownloadToFile, https://github.com/tdalon/ahk/raw/master/PowerTools/github_updater.exe, %guExe%
+    UrlDownloadToFile, https://github.com/tdalon/ahk/raw/main/PowerTools/github_updater.exe, %guExe%
     
 sCmd = %guExe% %ScriptName%
 RunWait, %sCmd%,,Hide
@@ -160,7 +160,7 @@ PowerTools_RunBundler(){
 If a_iscompiled {
   ExeFile = %A_ScriptDir%\PowerToolsBundler.exe
   If Not FileExist(ExeFile) {
-    sUrl = https://raw.githubusercontent.com/tdalon/ahk/master/PowerTools/PowerToolsBundler.exe
+    sUrl = https://raw.githubusercontent.com/tdalon/ahk/main/PowerTools/PowerToolsBundler.exe
 		UrlDownloadToFile, %sUrl%, PowerToolsBundler.exe
   }
   Run %ExeFile%
@@ -210,7 +210,7 @@ SettingName := RegExReplace(SettingName,"^Set ","")
 SettingProp := RegExReplace(SettingName," ","") ; Remove spaces 
 
 RegRead, Setting, HKEY_CURRENT_USER\Software\PowerTools, %SettingProp%
-InputBox, Setting, PowerTools Setting, Enter %SettingName%,, 250, 125
+InputBox, Setting, PowerTools Setting, Enter %SettingName%:,, 250, 125, , , , ,%Setting%
 If ErrorLevel
     return
 PowerTools_RegWrite(SettingProp,Setting)
@@ -319,7 +319,7 @@ Switch Config
         ; Load Parameters
         ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay,TeamsMeetingWinUseFindText
         ; FindText
-        TeamsFindTextList = MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
+        TeamsFindTextList = Mute,Muted,Leave,Resume,MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
         Loop, Parse,TeamsFindTextList, `,
         {
             ParamList = %ParamList%,TeamsFindText%A_LoopField%
@@ -363,6 +363,14 @@ Switch Config
             PowerTools_RegWrite("ConnectionsRootUrl",IniVal)
         Else
             PowerTools_RegWrite("ConnectionsRootUrl","")
+        
+        IniRead, IniVal, %IniFile%, Jira, JiraUserName
+        If (IniVal != "ERROR")
+            PowerTools_RegWrite("JiraUserName",IniVal)
+        IniRead, IniVal, %IniFile%, Confluence, ConfluenceUserName
+        If (IniVal != "ERROR")
+            PowerTools_RegWrite("ConfluenceUserName",IniVal)
+        
 
         ; Load Parameters
         ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay,TeamsMeetingWinUseFindText

@@ -91,3 +91,15 @@ if (monitorHandle := DllCall("MonitorFromWindow", "uint", hWin, "uint", 0x2))
 }
 return monitorIndex
 } ; eofun
+
+
+Monitor_MoveToSecondary(WinId){
+; https://www.autohotkey.com/boards/viewtopic.php?t=64784
+MonitorIndex := Monitor_GetMonitorIndex(WinId)
+SysGet, MonitorPrimaryIndex, MonitorPrimary
+If (MonitorIndex = MonitorPrimaryIndex) {
+    WinActivate, ahk_id %WinId% ; requires activate to move
+    SendInput #+{Right}; Win+Shift+Right Arrow 
+}
+
+} ; eofun

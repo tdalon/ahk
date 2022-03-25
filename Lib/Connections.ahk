@@ -640,8 +640,9 @@ return sTitle
 } ; eofun
 
 ; ----------------------------------------------------------------------
-Connections_CleanLink(sUrl){
-; Link := Connections_CleanLink(sUrl)
+
+Connections_CleanUrl(sUrl) {
+; sUrl := := Connections_CleanUrl(sUrl)
 ReConnectionsRootUrl := StrReplace(PowerTools_ConnectionsRootUrl,".","\.")
 	
 ; Switch to https
@@ -683,6 +684,12 @@ sUrl := StrReplace(sUrl, "?logDownload=true&downloadType=view","")
 
 
 sUrl := StrReplace(sUrl,"'","%27")
+} ; eofun
+; ----------------------------------------------------------------------
+
+Connections_CleanLink(sUrl){
+; Link := Connections_CleanLink(sUrl)
+sUrl := Connections_CleanUrl(sUrl)
 
 sText := Connections_Link2Text(sUrl)
 

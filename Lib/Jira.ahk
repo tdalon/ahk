@@ -1,7 +1,9 @@
 ; Jira Lib
-; Includes JiraSearch, IsJiraUrl, JiraAuth
+; Includes Jira_Search, Jira_IsUrl, Jira_CleanLink
 ; for GetPassword
 #Include <Login> 
+#Include <IntelliPaste>
+#Include <Clip>
 
 ; ----------------------------------------------------------------------
 Jira_Get(sUrl){
@@ -30,7 +32,7 @@ return sResponse
 
 ; ----------------------------------------------------------------------
 Jira_IsUrl(sUrl){
-return  (InStr(sUrl,"jira")) ; TODO: edit according your need/ add setting
+return  (InStr(sUrl,"jira.")) ; TODO: edit according your need/ add setting
 } ;eofun
 ; ----------------------------------------------------------------------
 
@@ -45,29 +47,47 @@ return Jira_IsUrl(sUrl)
 ; Jira Search - Search within current Jira Project TODO
 ; Called by: NWS.ahk Quick Search (Win+F Hotkey)
 Jira_Search(sUrl){
-static sJiraSearch, sKey
+static sJiraSearch, sProjectKey
 
-If RegExMatch(sUrl,sRootUrl . "/display/([^/]*)",sKey)
-    sKey := sKey1
-Else If  RegExMatch(sUrl,sRootUrl . "/spaces/viewspace.action?key=([^&?/]*)",sKey)
-    sKey := sKey1
-Else
-    Return
-sOldKey := sKey
-If sKey = %sOldKey%
-	sDefSearch := sConfluenceSearch
-Else
-	sDefSearch = 
+RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
+ReRootUrl := StrReplace(sRootUrl,".","\.")
+; issue detailed view
+If RegExMatch(sUrl,ReRootUrl . "/browse/([^/]*)",sNewProjectKey) {
+    sNewProjectKey := RegExReplace(sNewProjectKey1,"-.*","")
+	If sNewProjectKey = %sProjectKey%
+		sDefSearch := sJiraSearch
+	Else {
+		sProjectKey := sNewProjectKey
+		sDefSearch := "project=" . sProjectKey . " AND summary ~"
+	}
+; filter view	
+} Else If  RegExMatch(sUrl,ReRootUrl . "/issues/\?jql=(.*)",sJql) { ; https://jira.etelligent.ai/issues/?jql=project%20%3D%20TPI%20AND%20summary%20~%20reuse
+	sJql := StrReplace(sJql1,"%20"," ")
+	sJql := StrReplace(sJql,"%3D","=")
+	sDefSearch := sJql
+} 
 
-InputBox, sSearch , Search string, Enter search string (use # for tags):,,640,125,,,,,%sDefSearch% 
+InputBox, sJql , Search string, Enter Jql string:,,640,125,,,,,%sDefSearch% 
 if ErrorLevel
 	return
-sSearch := Trim(sSearch) 
-sConfluenceSearch := StrReplace(sSearch," ","+")
-sSearchUrl = /dosearchsite.action?cql=siteSearch+~+"%sConfluenceSearch%"+and+space+=+"%sKey%"+and+type+=+"page""
-Run, %sSearchUrl%
+sJql := Trim(sJql) 
+sJiraSearch := sJql
+sJql := StrReplace(sJql," ","%20")
+sJql := StrReplace(sJql,"=","%3D")
+sSearchUrl = %sRootUrl%/issues/?jql=%sJql%
 
-}
+; TODO
+; Enclose ~summary ~description "" if using wildcards ? or *
+
+If sJql ; not empty means update search 
+	Send ^l
+Else
+	Send ^n ; New Window
+Sleep 500
+Clip_Paste(sSearchUrl)
+Send {Enter}
+
+} ; eofun
 ; ----------------------------------------------------------------------
 
 
@@ -75,7 +95,7 @@ Run, %sSearchUrl%
 
 Jira_FormatLinks(sLinks,sStyle){
 If Not InStr(sLinks,"`n") { ; single line
-    sLink := CleanUrl(sLinks)	; calls also GetSharepointUrl
+    sLink := IntelliPaste_CleanUrl(sLinks)	; calls also GetSharepointUrl
     sLink := StrReplace(sLink,"%20%"," ")
     linktext := Link2Text(sLink)
     sLink = [%linktext%|%sLink%]  

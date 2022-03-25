@@ -6,15 +6,18 @@ excerpt: "PowerTool Quick Search Feature. Supporting YouTube, Google, Jira, Conf
 
 This feature is implemented in the [NWS PowerTool](NWS-PowerTool) - See function QuickSearch()
 
-See related blog posts tagged with #nws-powertool #quicksearch
-
-## Prerequisite
-
-For the Jira and Confluence QuickSearch you need to set your JiraUserName.
-You can do this in the Settings SystemTray Menu.
+## [Related Blog posts](https://tdalon.blogspot.com/search/label/quicksearch)
 
 ## Usage
 
 To run the QuickSearch, use the Win+F (F like Find) hotkey from a Browser window.
+
+### Confluence Quick search
+
+See [blog post](https://tdalon.blogspot.com/2022/03/confluence-quick-search.html)
+
+### Quick Google Site search
+
+See [blog post](https://tdalon.blogspot.com/2021/04/quick-site-search.html)
 
 ## YouTube Playlist

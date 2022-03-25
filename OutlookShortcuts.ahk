@@ -113,13 +113,13 @@ return
 ;subject of a message or task).
 
 #IfWinActive, ahk_exe OUTLOOK.EXE
-; Ctrl+D: Mark as complete
-^d:: ; <--- Mark as Complete/ Done
+; Ctrl+D: Mark as completed
+^d:: ; <--- Mark as Completed/ Done
 If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
 ; Keys are blocked by the UI: c,d,a,s. Alt does not work
 	WinActivate
 	Send +{F10} ; Shift+F10 - Open Context Menu
-	Send m ; Mark as Complete
+	Send m ; Mark as Completed
 	WinSet Bottom
 } else if WinActive("Inbox - ") or WinActive("Tasks - ") WinActive("To-Do List - ") {
 	Send +{F10} ; Shift+F10
@@ -127,8 +127,8 @@ If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
 	Send m 
 }	
 return
-; Ctrl+J: Join Teams meeting
-^j:: ; <--- Mark as Complete/ Done
+; Ctrl+J
+^j:: ; <---  Join Teams meeting
 If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
 ; Keys are blocked by the UI: c,d,a,s. Alt does not work
 	WinActivate
@@ -141,17 +141,18 @@ If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
 	Sleep 1000 ; time for the window to load
 	SendInput {Tab 7}{Enter}
 
-} else if WinActive("Inbox - ") or WinActive("Tasks - ") WinActive("To-Do List - ") {
+; } else if WinActive("Inbox - ") or WinActive("Tasks - ") WinActive("To-Do List - ") {
 	
 }	
 return
 ; ----------------------------------------------------------------------
-#1:: ; <--- Personalize mentions
+!1:: ; <--- Personalize mentions
 Outlook_PersonalizeMentions()
 return
 ; ----------------------------------------------------------------------
 
-^+c:: ; Ctrl+Shift+C
+; Ctrl+Shift+C
+^+c:: ; <--- Copy Link
 CopyLink:
 Outlook_CopyLink()
 return
@@ -251,7 +252,7 @@ m:: ; <--- Reply with Meeting
 ;k::HandleOutlookKeys("{Up}", "k") ;move up
 ;+k::HandleOutlookKeys("+{Up}", "+k") ;move up and select next item
 ;o::HandleOutlookKeys("^o", "o") ;open message
-s:: ; <--- Toggle Flad (star)
+s:: ; <--- Toggle Flag (star)
 HandleOutlookKeys("{Insert}", "s") ;toggle flag (star)
 return
 ; s::HandleOutlookKeys("^+g", "s") ;set follow up options (star)
