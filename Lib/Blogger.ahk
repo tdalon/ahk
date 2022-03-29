@@ -91,7 +91,7 @@ If Not (sTags = "") {
     Else
         sSearch := sTags . "+" . sSearch
 }
-sSearchUrl := sRootUrl . "/search/label?q=" . sSearch . "&max-results=500"
+sSearchUrl := sRootUrl . "/search?q=" . sSearch . "&max-results=500"
 ;Run, %sSearchUrl%
 Send ^n ; New Window
 Sleep 500
