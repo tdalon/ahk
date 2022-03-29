@@ -20,4 +20,8 @@ See [blog post](https://tdalon.blogspot.com/2022/03/confluence-quick-search.html
 
 See [blog post](https://tdalon.blogspot.com/2021/04/quick-site-search.html)
 
+### Blogger Quick Search
+
+See [blog post](https://tdalon.blogspot.com/2021/02/blogger-combined-label-keyword-search.html)
+
 ## YouTube Playlist

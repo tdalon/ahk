@@ -12,8 +12,8 @@ main:
   #   url: /collection-archive/
   - title: "Sitemap"
     url: /sitemap
-  
-  
+
+
 pages:
   - title: "Overview"
     url: /PowerTools
@@ -25,7 +25,7 @@ pages:
       - title: "IntelliPaste"
         url: /IntelliPaste
       - title: "Quick Search"
-        url: /Quick-Search
+        url: /QuickSearch
       - title: "Sync"
         url: /Sync
   - title: "People Connector"
