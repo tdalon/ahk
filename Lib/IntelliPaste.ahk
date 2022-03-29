@@ -328,11 +328,9 @@ Else If (SharePoint_IsUrl(url))
 	url := SharePoint_CleanUrl(url)	
 Else If (IsGoogleUrl(url))
 	url := GetGoogleUrl(url)
-/* Else If (Confluence_IsUrl(url)) {
-	link := Confluence_CleanLink(url)
-	url := link[1]
-} 
-*/
+Else If (Confluence_IsUrl(url)) 
+	url := Confluence_CleanUrl(url)
+
 
 If !(encode) {
 	; fix beautified url for Connections wikis

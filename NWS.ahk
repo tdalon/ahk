@@ -8,9 +8,6 @@ SetWorkingDir %A_ScriptDir%
 
 #Include <Clip>
 #Include <IntelliPaste>
-#Include <Connections>
-#Include <Jira>
-#Include <Confluence>
 #Include <Login>
 #Include <PowerTools>
 #Include <Browser>
@@ -18,6 +15,11 @@ SetWorkingDir %A_ScriptDir%
 #Include <SharePoint>
 #Include <Explorer>
 #Include <People>
+; Optional Libaries - used if available
+;#Include <Connections>
+;#Include <Jira>
+;#Include <Confluence>
+;#Include <Blogger>
 
 LastCompiled = 20220325091524
 
@@ -429,7 +431,7 @@ return
 ^+c:: ; <--- [Browser] Intelli Copy Active Url
 IntelliCopyActiveUrl:
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/intelli_copy_active_url"
+	Run, "https://connectionsroot/blogs/tdalon/entry/intellicopy_active_url"
 	return
 }
 WinGetActiveTitle, linktext
@@ -440,18 +442,17 @@ sLink := IntelliPaste_CleanUrl(sLink)
 StringGetPos,pos,linktext,%A_space%-,R
 if (pos >=0)
 	linktext := SubStr(linktext,1,pos)
-If Connections_IsUrl(sLink,"blog") { ; Connections Blog
-	linktext := StrReplace(linktext,"Blog Blog","Blog")
+
+If FileExist("Lib/Connections.ahk") {
+	FunStr := "Connections_IsUrl"
+	If %FunStr%(sLink) {
+		FunStr := "Connections_Link2Text"
+		linktext := %FunStr%(sUrl)
+	}
 }
-Else If Jira_IsUrl(sLink){
-	StringGetPos,pos,linktext,%A_space%-,R
-	if (pos >=0)
-		linktext := SubStr(linktext,1,pos)
-}
+
 sHtml =	<a href="%sLink%">%linktext%</a>   
-;Clip_SetHtml(sHtml,sLink) ; WinClip.GetHtml does not work afterwards
-WinClip.SetHTML(sHtml)
-WinClip.SetText(sLink)
+Clip_SetHtml(sHtml,sLink) 
 TrayTipAutoHide("NWS PowerTool","Link was copied to the clipboard!")
 
 return
@@ -473,9 +474,15 @@ StringGetPos,pos,linktext,%A_space%-,R
 if (pos != -1)
 	linktext := SubStr(linktext,1,pos)
 
-If Connections_IsUrl(sLink,"blog")  { ; Connections Blog
-	linktext := StrReplace(linktext,"Blog Blog","Blog")
+If FileExist("Lib/Connections.ahk") {
+	FunStr := "Connections_IsUrl"
+	If %FunStr%(sLink) {
+		FunStr := "Connections_Link2Text"
+		linktext := %FunStr%(sUrl)
+	}
 }
+
+
 sHTMLBody = Hello<br>I thought you might be interested in this post: <a href="%sLink%">%linktext%</a>.<br>
 ; Create Email using ComObj
 Try
@@ -684,6 +691,7 @@ Menu_Show(MenuGetHandle("Tray"), False, Menu_TrayParams()*)
 Return
 
 NotifyTrayClick_205:   ; Right click (Button up)
+SendInput, !{Esc} ; for call from system tray - get active window
 Menu, NWSMenu, Show
 Return 
 

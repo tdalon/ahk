@@ -55,9 +55,8 @@ While Pos := RegExMatch(sInput,sPat,sMatch,Pos+StrLen(sMatch)){
     sEmailList := sEmailList . sMatch1 . ";"
 }
 
+If FileExist("Lib/Connections.ahk") {
 FunStr := "Connections_Profile2Email"
-If IsFunc(FunStr)
-{
 sPat = https?://%PowerTools_ConnectionsRootUrl%/profiles/html/profileView.do\?(userid|key)=[0-9A-Za-z\-]*
 sPat := StrReplace(sPat,".","\.")
 Pos = 1 
@@ -68,7 +67,7 @@ While Pos := RegExMatch(sInput,sPat,sMatch,Pos+StrLen(sMatch)){
         continue
     sEmailList := sEmailList . sEmail . ";"
 }
-} ; end if IsFunc
+} ; end if Lib exists
 
 return SubStr(sEmailList,1,-1) ; remove ending ;
 } ; eof
@@ -444,9 +443,9 @@ sEmailList := People_GetEmailList(sSelection)
 If (sEmailList = "") {
     ;TODO Warning
 } Else {
+    
+    If FileExist("Lib/Connections.ahk") {
     FunStr := "Connections_Email2Key"
-    If IsFunc(FunStr)
-    {
     Loop, parse, sEmailList, ";"
     {
          sKey:= %FunStr%(A_LoopField)

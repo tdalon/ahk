@@ -53,20 +53,14 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 	sCQL := StrReplace(sCQL,"%28","(")
 	sCQL := StrReplace(sCQL,"%29",")")
 
-	; Extract Labels	
-	; Single label 
-	If 	RegExMatch(sCQL,"label\+%3D\+%22([^%]*)%22",sCQLLabels) {
-		sLabels := "#" . sCQLLabels1
-		sDefSearch := sLabels
-	}	; multiple labels cql=type+=+"page"%2Band%2Blabel%2Bin%2B%28"jira"%2C"confluence"%29
-	Else If RegExMatch(sCQL,"label\+in\+\(([^\)]*)\)",sCQLLabels) {
-		sPat := "%22([^%]*)%22" 
-		Pos=1
-		While Pos :=    RegExMatch(sCQLLabels1, sPat, label,Pos+StrLen(label)) 
-			sLabels := sLabels . " #" . label1 
-		sLabels := Trim(sLabels) ; remove starting space			
-		sDefSearch := sLabels
-	}
+	; Extract Labels (only AND label= not label in)	
+	sPat := "label\+%3D\+%22([^%]*)%22" 
+	Pos=1
+	While Pos :=    RegExMatch(sCQL, sPat, label,Pos+StrLen(label)) 
+		sLabels := sLabels . " #" . label1 
+	sLabels := Trim(sLabels) ; remove starting space			
+	sDefSearch := sLabels	
+	
 	; Extract Space Key
 	If RegExMatch(sCQL,"space\+?%3D\+?%22([^%]*)%22",sSpace) 
 		sSpace := sSpace1
@@ -88,19 +82,26 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 	return [sUrl, sLinkText]
 }
 
-
 sResponse := Confluence_Get(sUrl)
-
 sPat = s)<meta name="ajs-page-title" content="([^"]*)">.*<meta name="ajs-space-name" content="([^"]*)">.*<meta name="ajs-page-id" content="([^"]*)">
 RegExMatch(sResponse, sPat, sMatch)
 sLinkText := sMatch1 " | " sMatch2 " - Confluence"
 sLinkText := StrReplace(sLinkText,"&amp;","&")
 RegExMatch(sUrl, "https://[^/]*", sRootUrl)
 sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch3
-;MsgBox %sLinkText% %sUrl%
 return [sUrl, sLinkText]
 }
 
+; ----------------------------------------------------------------------
+Confluence_CleanUrl(sUrl){
+If InStr(sUrl,"/display/") ; pretty link
+sResponse := Confluence_Get(sUrl)
+sPat = s)<meta name="ajs-page-id" content="([^"]*)">
+RegExMatch(sResponse, sPat, sMatch)
+RegExMatch(sUrl, "https://[^/]*", sRootUrl)
+sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch1
+return sUrl
+} ; eofun
 
 ; ----------------------------------------------------------------------
 Confluence_Get(sUrl){
@@ -179,20 +180,14 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 	sCQL := StrReplace(sCQL,"%28","(")
 	sCQL := StrReplace(sCQL,"%29",")")
 
-	; Extract Labels	
-	; Single label 
-	If 	RegExMatch(sCQL,"label\+%3D\+%22([^%]*)%22",sCQLLabels) {
-		sLabels := "#" . sCQLLabels1
-		sDefSearch := sLabels
-	}	; multiple labels cql=type+=+"page"%2Band%2Blabel%2Bin%2B%28"jira"%2C"confluence"%29
-	Else If RegExMatch(sCQL,"label\+in\+\(([^\)]*)\)",sCQLLabels) {
-		sPat := "%22([^%]*)%22" 
-		Pos=1
-		While Pos :=    RegExMatch(sCQLLabels1, sPat, label,Pos+StrLen(label)) 
-			sLabels := sLabels . " #" . label1 
-		sLabels := Trim(sLabels) ; remove starting space			
-		sDefSearch := sLabels
-	}
+	; Extract Labels (only AND label= not label in)	
+	sPat := "label\+%3D\+%22([^%]*)%22" 
+	Pos=1
+	While Pos :=    RegExMatch(sCQL, sPat, label,Pos+StrLen(label)) 
+		sLabels := sLabels . " #" . label1 
+	sLabels := Trim(sLabels) ; remove starting space			
+	sDefSearch := sLabels
+
 	; Extract Space Key
 	If RegExMatch(sCQL,"space\+?%3D\+?%22([^%]*)%22",sSpace) 
 		sSpace := sSpace1
@@ -202,13 +197,19 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 		sDefSearch := sDefSearch . " " . sSearchString1
 	}
 	
-; Not from advanced search 
+; Not from advanced search - page view -> Extract Space 
 } Else {
 	sOldSpace := sSpace
 	If RegExMatch(sUrl,ReRootUrl . "/display/([^/]*)",sSpace)
 		sSpace := sSpace1
-	Else If  RegExMatch(sUrl,ReRootUrl . "/spaces/viewspace\.action\?key=([^&\?/]*)",sSpace)
+	Else If InStr(sUrl, "/pages/viewpage.action?pageId=") {
+		sResponse := Confluence_Get(sUrl)
+		sPat = s)<meta name="ajs-space-name" content="([^"]*)">
+		RegExMatch(sResponse, sPat, sMatch)
+		sSpace := sMatch1
+	} Else If  RegExMatch(sUrl,ReRootUrl . "/spaces/viewspace\.action\?key=([^&\?/]*)",sSpace)
 		sSpace := sSpace1
+	
 	If sSpace = %sOldSpace%
 		sDefSearch := sConfluenceSearch
 	Else
@@ -220,17 +221,12 @@ if ErrorLevel
 	return
 sSearch := Trim(sSearch) 
 
-
 ; ----
 ; Convert labels to CQL
 sPat := "#([^#\s]*)" 
 Pos=1
 While Pos :=    RegExMatch(sSearch, sPat, label,Pos+StrLen(label)) {
-	If (!sCQLLabelsNew) {
-		sCQLLabelsNew := "%2Band%2Blabel%2Bin%2B%28%22"  . label1 . "%22"
-	} Else {
-		sCQLLabelsNew := sCQLLabelsNew . "%2C%22" . label1 . "%22"
-	}
+	sCQLLabels := sCQLLabels . "+and+label+%3D+" . sQuote . label1 . sQuote
 } ; end while
 
 ; remove labels from search string
@@ -241,8 +237,8 @@ sSearchUrl = %sRootUrl%/dosearchsite.action?cql=type+=+"page"
 If sSpace
 	sSearchUrl := sSearchUrl . "+and+space=%22" . sSpace "%22"
 
-If sCQLLabelsNew ; not empty
-	sSearchUrl := sSearchUrl . sCQLLabelsNew . 	"%29"
+If sCQLLabels ; not empty
+	sSearchUrl := sSearchUrl . sCQLLabels 
 
 If sSearch ; not empty
 	sSearchUrl = %sSearchUrl%&queryString=%sSearch%

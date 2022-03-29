@@ -228,7 +228,11 @@ return Config
 ; ----------------------------------------------------------------------
 PowerTools_SetConfig(){
 RegRead, Config, HKEY_CURRENT_USER\Software\PowerTools, Config
-DefListConfig := "Default|Conti|Vitesco|Ini"
+DefListConfig := "Default|Ini"
+If FileExist("Lib/ET.ahk")
+    DefListConfig := DefListConfig . "|ET"
+If FileExist("Lib/Conti.ahk")
+    DefListConfig := DefListConfig . "|Conti|Vitesco"
 Select := 0
 Loop, parse, DefListConfig, | 
 {
@@ -403,7 +407,14 @@ Switch Config
             If (IniVal != "ERROR")
                 PowerTools_RegWrite(Param,IniVal)
         }
-            
+    Case "ET":
+	    If FileExist("Lib/ET.ahk") 
+            FunStr := "ET_LoadConfig"
+			%FunStr%()
+    Case "Conti","Vitesco":        
+	    If FileExist("Lib/Conti.ahk")
+            FunStr := "Conti_LoadConfig"
+			%FunStr%(Config)
 } ; end switch
 
 } ; eofun

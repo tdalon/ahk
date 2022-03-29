@@ -5,17 +5,21 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2022-03-29
+  - Fix: Confluence IntelliCopy: pretty link converted to link by pageId
+  - [Blogger Quick Search](https://tdalon.blogspot.com/2021/02/blogger-combined-label-keyword-search.html)
+  - fix: Browser actions run from system tray menu
 * 2022-03-24
   - QuickSearch: Jira Search implemented
   - QuickSearch: conditional dependency to libraries: Blogger, Jira, Confluence, Connections (will work even if Lib file is not available)
-  - Quick Search: Confluence supports search with labels (using # prefix)
+  - Quick Search: [Confluence](https://tdalon.blogspot.com/2022/03/confluence-quick-search.html) supports search with labels (using # prefix)
   - Fix: Set Settings: Previous Value was not shown as Default
   - Add JiraUserName as Setting in the SystemTray Menu
 * 2021-10-07
   - Confluence/Jira Get: use JiraUserName in Settings (if defined)
   - Confluence Get: support authentification
 * 2021-10-05
-  - Fix: Quick Search if Connections not used
+  - Fix: Quick Search if Connections Lib not used
 * 2021-04-30
 	- Fix: IntelliPaste Teams conversation links in with encoded url e.g. for comments in Connections not to be broken
 * 2021-04-21
@@ -66,7 +70,7 @@ excerpt: "Release notes for NWS PowerTool."
 * 2021-01-12
 	- Fix: Cisco VPN Connect
 * 2021-01-07
-	- IntelliPaste old SharePoint Librarey opened in file explorer with address e.g. \\aws3.conti.de without @SSL\\DavWWWRoot in it. Revert url to https and propose breadcrumb option
+	- IntelliPaste old SharePoint Library opened in file explorer with address e.g. \\aws3.conti.de without @SSL\\DavWWWRoot in it. Revert url to https and propose breadcrumb option
 * 2021-01-05
 	- IntelliPaste for Jira: remove Jira_FormatLinks (Jira like Confluence supports now RichText pasting)
 	- Bug fix VPNConnect
@@ -77,11 +81,11 @@ excerpt: "Release notes for NWS PowerTool."
 * 2020-12-14
 	- IntelliPaste for Confluence: revert to standard RTF paste
 * 2020-12-11
-	- IntelliPaste SharePoint url: Extend Breadcrumb to root sharepoint and doc lib
+	- IntelliPaste SharePoint url: Extend Breadcrumb to root SharePoint and doc lib
 * 2020-12-09
 	- More robust VPNConnect in case client already opened.
 * 2020-12-07
-  - IntelliPaste: ListBox for breadcrumb liktext display type AlwaysOnTop
+  - IntelliPaste: ListBox for breadcrumb linktext display type AlwaysOnTop
 * 2020-12-03
   - Fix IntelliPaste Jira|Confluence_IsWinActive
   - Fix IntelliPaste links: Upper case and replace - by spaces from link display text. Fix upper case full links.
@@ -137,7 +141,7 @@ excerpt: "Release notes for NWS PowerTool."
 * 2020-09-09
     * IntelliPaste support new YouTube links starting with https://youtu.be/ (before only www.youtube.com/)
 * 2020-08-07
-    * Fix IntelliPaste link to Ms Teams Team
+    * Fix IntelliPaste link to MS Teams Team
     * Change icon from 42 to power
 * 2020-08-05
     * PowerTools.ini
