@@ -170,11 +170,10 @@ static sConfluenceSearch, sSpace
 ; extract def search and key from url
 RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
 ReRootUrl := StrReplace(sRootUrl,".","\.")
-
+sQuote = "
 If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) { 	
 	sCQL := sCQL1
 	sCQL := StrReplace(sCQL,"=","%3D")
-	sQuote = "
 	sCQL := StrReplace(sCQL,sQuote,"%22")
 	sCQL := StrReplace(sCQL,"%2B","+")
 	sCQL := StrReplace(sCQL,"%28","(")
