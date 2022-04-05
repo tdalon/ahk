@@ -5,6 +5,9 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2022-04-05
+  - Fix: Confluence Quick Search by keyword
+  - Confluence IntelliPaste/ IntelliCopy: remove | from link text (conflict with link formatting in Jira)
 * 2022-03-29
   - Fix: Confluence IntelliCopy: pretty link converted to link by pageId
   - [Blogger Quick Search](https://tdalon.blogspot.com/2021/02/blogger-combined-label-keyword-search.html)

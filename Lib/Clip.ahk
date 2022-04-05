@@ -206,6 +206,7 @@ Clip_GetSelection(restore:=True){
 If (restore)
     ClipBackup:= ClipboardAll
 sSelection := Clip_GetSel("text")
+
 If (restore)
     Clipboard := ClipBackup 
 return sSelection 

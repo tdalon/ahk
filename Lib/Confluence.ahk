@@ -85,7 +85,7 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 sResponse := Confluence_Get(sUrl)
 sPat = s)<meta name="ajs-page-title" content="([^"]*)">.*<meta name="ajs-space-name" content="([^"]*)">.*<meta name="ajs-page-id" content="([^"]*)">
 RegExMatch(sResponse, sPat, sMatch)
-sLinkText := sMatch1 " | " sMatch2 " - Confluence"
+sLinkText := sMatch1 " - " sMatch2 " - Confluence" ; | will break link in Jira RTF Field
 sLinkText := StrReplace(sLinkText,"&amp;","&")
 RegExMatch(sUrl, "https://[^/]*", sRootUrl)
 sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch3
@@ -215,6 +215,7 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 		sDefSearch = 
 }
 
+sDefSearch := Trim(sDefSearch)
 InputBox, sSearch , Confluence Search, Enter search string (use # for labels):,,640,125,,,,,%sDefSearch% 
 if ErrorLevel
 	return
@@ -232,15 +233,19 @@ While Pos :=    RegExMatch(sSearch, sPat, label,Pos+StrLen(label)) {
 sSearch := RegExReplace(sSearch, sPat , "")
 sSearch := Trim(sSearch)
 
-sSearchUrl = %sRootUrl%/dosearchsite.action?cql=type+=+"page"
+sSearchUrl = %sRootUrl%/dosearchsite.action?cql=
+If sSearch { ; not empty
+	sSearchUrl := sSearchUrl . "siteSearch+~+%22" . sSearch . "%22" . "+and+type+%3D+"
+	sSearchUrl = %sSearchUrl%"page"
+} Else
+	sSearchUrl = %sSearchUrl%type+=+"page"
 If sSpace
 	sSearchUrl := sSearchUrl . "+and+space=%22" . sSpace "%22"
 
 If sCQLLabels ; not empty
 	sSearchUrl := sSearchUrl . sCQLLabels 
 
-If sSearch ; not empty
-	sSearchUrl = %sSearchUrl%&queryString=%sSearch%
+
 sConfluenceSearch := sDefSearch
 
 If sCQL ; not empty means update search 
@@ -251,6 +256,9 @@ Sleep 500
 Clip_Paste(sSearchUrl)
 Send {Enter}
 
+
+; https://wiki.etelligent.ai/dosearchsite.action?cql=type+=+%22page%22+and+space=%22EMIK%22+and+label+%3D+%22r4j%22
+; https://wiki.etelligent.ai/dosearchsite.action?cql=siteSearch+~+%22reuse%22+and+space+%3D+%22EMIK%22+and+type+%3D+%22page%22+and+label+%3D+%22r4j%22&queryString=reuse
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
