@@ -94,12 +94,13 @@ return [sUrl, sLinkText]
 
 ; ----------------------------------------------------------------------
 Confluence_CleanUrl(sUrl){
-If InStr(sUrl,"/display/") ; pretty link
-sResponse := Confluence_Get(sUrl)
-sPat = s)<meta name="ajs-page-id" content="([^"]*)">
-RegExMatch(sResponse, sPat, sMatch)
-RegExMatch(sUrl, "https://[^/]*", sRootUrl)
-sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch1
+If InStr(sUrl,"/display/") { ; pretty link
+	sResponse := Confluence_Get(sUrl)
+	sPat = s)<meta name="ajs-page-id" content="([^"]*)">
+	RegExMatch(sResponse, sPat, sMatch)
+	RegExMatch(sUrl, "https://[^/]*", sRootUrl)
+	sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch1
+}
 return sUrl
 } ; eofun
 
