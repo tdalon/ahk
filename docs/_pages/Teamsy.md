@@ -55,7 +55,7 @@ Thanks to this, the working configuration in Launchy looks like:
 <div style="text-align:center"><img src="/ahk/assets/images/Launchy_Teamsy_Setup.png" alt="Teamsy Launchy Setup"></div>
 
 You will need to add a custom command to the Runner plugin.
-To run it in launcher, the type for example t {TAB} followed by the Teamsy command. (Only 2-3 keywords are supported.)
+To run it in launcher, type the command keyword t in the screenshot, then TAB followed by the Teamsy command. 
 
 
 ### Alternative without application launcher

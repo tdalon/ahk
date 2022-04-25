@@ -2,7 +2,7 @@
 ; You need to compile it to run from the command line
 ; You can compile it via running the Ahk2Exe command e.g. D:\Programs\AutoHotkey\Compiler\Ahk2Exe.exe /in "Teamsy.ahk" /icon "icons\Teams.ico"
 ; You can also compile it from the PowerTools Bundler
-LastCompiled = 20220425160053
+LastCompiled = 20220425193700
 #Include <PowerTools>
 #Include <Teamsy>
 
@@ -22,15 +22,12 @@ If (A_Args.Length() = 0)  {
 
     sTooltip = Teamsy %LastMod%`nRight-Click on icon to access help/support.
     Menu, Tray, Tip, %sTooltip%
+    return
 } ; end icon tray
 
-If (A_Args.Length() = 1) 
-    Teamsy(A_Args[1])
-Else { ; because of Launchy Runner Plugin not handling "$$" properly
-    If (A_Args.Length() = 2) 
-        Teamsy(A_Args[1] . " " . A_Args[2]) 
-    Else If (A_Args.Length() = 3) 
-        Teamsy(A_Args[1] . " " . A_Args[2] . " " . A_Args[3]) 
-    Else
-        MsgBox Error: Wrong argument number
+; Loop, because of Launchy Runner Plugin not handling "$$" properly
+nCount := A_Args.Length()
+Loop %nCount% { 
+    Arg := Arg . " " . A_Args[A_Index]
 }
+Teamsy(Trim(Arg))
