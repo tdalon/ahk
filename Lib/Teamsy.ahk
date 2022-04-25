@@ -194,9 +194,7 @@ If (SubStr(sKeyword,1,1) = "@") {
     sleep, 300
     sInput := SubStr(sKeyword,2)
 } Else {
-    SendInput /
-    sleep, 500
-    SendInput %sKeyword%
+    SendInput /%sKeyword%
     Delay := PowerTools_GetParam("TeamsCommandDelay")
     Sleep %Delay% 
     SendInput +{enter}

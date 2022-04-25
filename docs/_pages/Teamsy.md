@@ -15,7 +15,7 @@ Teamsy is a
 You can also run Teamsy from the [Teamsy Launcher](Teamsy-Launcher) or the [Teams Shortcuts](Teams-Shortcuts) PowerTool.
 
 Its main advantage is that it works even if your Microsoft Teams window client isn't active (contrary to built-in hotkeys) e.g. both for main window and meeting window actions.
-Moreover the keyword-based syntax shall be much easier to remember that hotkeys combination.
+Moreover the keyword-based syntax shall be much easier to remember than hotkeys combination.
 
 ## [Main Blog Post](https://tdalon.blogspot.com/2020/07/teamsy.html)
 
@@ -26,11 +26,33 @@ See [all blog posts tagged with #teamsy](https://tdalon.blogspot.com/search/labe
 ## Prerequisites
 
 Teamsy is a available as standalone .exe application. [Download link](https://github.com/tdalon/ahk/raw/main/PowerTools/Teamsy.exe)
-You can also run it from its AutoHotkey source [Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Teamsy.ahk) provided you take all the dependencies/ downlad the [full repository](https://github.com/tdalon/ahk).
 
-You can run Teamsy from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html).
+You can run Teamsy from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html) or from an Application Launcher.
 I personally use Teamsy from an Application launcher e.g. [Launchy](http://launchy.net/) or [Executor](http://executor.dk/).
-I [recommend](https://tdalon.blogspot.com/2020/08/executor-my-preferred-app-launcher.html) [Executor](http://executor.dk/).
+I [recommend](https://tdalon.blogspot.com/2020/08/executor-my-preferred-app-launcher.html) [Executor](http://executor.dk/) as application launcher.
+
+### Setup with Executor
+
+[Executor](http://executor.dk/)
+
+<div style="text-align:center"><img src="/ahk/assets/images/Executor_Teamsy_Setup.png" alt="Teamsy Executor Setup"></div>
+
+### Setup with Launchy/ LaunchyQt
+
+[Launchy](http://launchy.net/)
+
+[LaunchyQt](https://github.com/samsonwang/LaunchyQt)
+
+Unfortunately the Launchy Runner Plugin seems not to support passing an argument with a space in it. (It will break the argument at the first space into a second argument.)
+A workaround is implemented in Teamsy.ahk so that it will aggregate the arguments together.
+
+Thanks to this, the working configuration in Launchy looks like:
+
+<div style="text-align:center"><img src="/ahk/assets/images/Launchy_Teamsy_Setup.png" alt="Teamsy Launchy Setup"></div>
+
+You will need to add a custom command to the Runner plugin.
+To run it in launcher, the type for example t {TAB} followed by the Teamsy command. (Only 2-3 keywords are supported.)
+
 
 ### Alternative without application launcher
 
