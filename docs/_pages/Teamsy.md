@@ -28,14 +28,18 @@ See [all blog posts tagged with #teamsy](https://tdalon.blogspot.com/search/labe
 Teamsy is a available as standalone .exe application. [Download link](https://github.com/tdalon/ahk/raw/main/PowerTools/Teamsy.exe)
 
 You can run Teamsy from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html) or from an Application Launcher.
-I personally use Teamsy from an Application launcher e.g. [Launchy](http://launchy.net/) or [Executor](http://executor.dk/).
 I [recommend](https://tdalon.blogspot.com/2020/08/executor-my-preferred-app-launcher.html) [Executor](http://executor.dk/) as application launcher.
 
 ### Setup with Executor
 
 [Executor](http://executor.dk/)
 
+Add a new Keyword in Executor as shown in screenshot below:
+
 <div style="text-align:center"><img src="/ahk/assets/images/Executor_Teamsy_Setup.png" alt="Teamsy Executor Setup"></div>
+
+As Parameter enter: "$P$" (between quotes)
+
 
 ### Setup with Launchy/ LaunchyQt
 

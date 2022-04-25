@@ -1566,6 +1566,7 @@ Teams_HotkeySet(HKid){
 If GetKeyState("Ctrl")  { ; exclude ctrl if use in the hotkey
 	sUrl := "https://tdalon.github.io/ahk/Teams-Global-Hotkeys"
     Run, "%sUrl%"
+    return
 }
 
 ; For Menu callback, remove ending Hotkey and blanks
