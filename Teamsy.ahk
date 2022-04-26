@@ -2,7 +2,7 @@
 ; You need to compile it to run from the command line
 ; You can compile it via running the Ahk2Exe command e.g. D:\Programs\AutoHotkey\Compiler\Ahk2Exe.exe /in "Teamsy.ahk" /icon "icons\Teams.ico"
 ; You can also compile it from the PowerTools Bundler
-LastCompiled = 20220425193700
+LastCompiled = 20220426065522
 #Include <PowerTools>
 #Include <Teamsy>
 
@@ -25,9 +25,8 @@ If (A_Args.Length() = 0)  {
     return
 } ; end icon tray
 
-; Loop, because of Launchy Runner Plugin not handling "$$" properly
-nCount := A_Args.Length()
-Loop %nCount% { 
+; Loop, because of Launchy Runner Plugin not handling "$$" properly as one input argument but splitting arguments at space
+Loop % A_Args.Length() { 
     Arg := Arg . " " . A_Args[A_Index]
 }
 Teamsy(Trim(Arg))
