@@ -46,8 +46,6 @@ if A_GuiControlEvent <> DoubleClick
 ; Otherwise, the user double-clicked a list item.
 GoTo, WinListBoxButtonOK
 
-return
-
 ;-----------------------------------
 ; event handlers
 ;-----------------------------------

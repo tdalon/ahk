@@ -51,12 +51,13 @@ if (clipboard == "") ; no word selected -> use caret cursor location
 	regexmatch(clipboard, "\w+", grab)
     return grab
     
-    ; Ctrl+Right and then Ctrl+Shift+Left to select word
+    /* ; Ctrl+Right and then Ctrl+Shift+Left to select word
     SendInput ^{Right}
     SendInput ^+{Left}
     SendInput ^c
 	clipwait 0
-	grab := clipboard
+	grab := clipboard 
+    */
 
 }
 else

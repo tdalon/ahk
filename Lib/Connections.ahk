@@ -467,14 +467,12 @@ ReCNRoot := StrReplace(PowerTools_ConnectionsRootUrl, ".","\.")
 If RegExMatch(sUrl,"://" . ReCNRoot . "/blogs/.*weblog\.do\?method=edit") { ; Connections Blog in edit mode
 	SendInput ^+J ; or F12
     SendInput {Tab}document.getElementById('postEntryID').click(){Enter}
-	return
-    SendInput ^+J
+    ;SendInput ^+J
 } Else If RegExMatch(sUrl,"://" . ReCNRoot . "/wikis/.*/edit") { ; Connections Wiki - in edit mode	
 	SendInput ^+J{Tab}
 	Sleep 3000
     SendInput document.getElementById('edit_saveclose').click(){Enter}
-	return
-	SendInput ^+J
+	;SendInput ^+J
 }
 } ; eofun
 

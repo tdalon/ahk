@@ -111,7 +111,7 @@ class WinClip extends WinClip_base
         if !this.isinstance
         {
             throw Exception( "Error in '" funcName "':`nInstantiate the object first to use this method!", -1 )
-            return 0
+            ;return 0
         }
         return 1
     }

@@ -4,8 +4,6 @@
 #Include <Teams>
 
 AppList = ConnectionsEnhancer,MO,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts
-global Config
-Config := PowerTools_GetConfig()
 
 PowerTools_CheckForUptate(ToolName :="") {
 If !a_iscompiled {
@@ -177,15 +175,9 @@ If a_iscompiled {
 
 PowerTools_OpenDoc(key:=""){
 RegRead, PT_DocRootUrl, HKEY_CURRENT_USER\Software\PowerTools, DocRootUrl
-If (key ="") {
-Switch PowerTools_Config
-{
-Case "Conti":  
-    sUrl := "https://connectionsroot/wikis/home/wiki/Wc4f94c47297c_42c8_878f_525fd907cb68/page/GUIDEs%20Power%20Tools"  
-Default:
+If (key ="") 
     sUrl := "https://github.com/tdalon/ahk"
-}
-} Else {
+Else {
     If InStr(PT_DocRootUrl,".blogspot.") 
         key := StrReplace(key,"_","-")
     sUrl = %PT_DocRootUrl%/%key% 
