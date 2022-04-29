@@ -8,7 +8,7 @@
 ; Explanation: https://tdalon.blogspot.com/2022/03/ahk-conditional-include.html
 ; Idea: https://gist.github.com/davebrny/55de3ab40499e33e40324ac6a96b70c0
 
-conditional_include(LibList) {
+include_cond(LibList) {
 ; LibList is a CSV string: it lists the name of the library files to be conditionally included.
 ; Libraries must be located under MainScriptDir/Lib folder.
 If A_IsCompiled
