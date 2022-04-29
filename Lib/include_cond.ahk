@@ -1,12 +1,18 @@
-; Conditional Library includes - only if the Library exists it will then be included
+; Conditional Library includes - only if the Library exists it will be included
 ; Output: ~ScriptName_includes.ahk
 
 ; Call this function in the auto-execute section
 ; Include ~ScriptName_includes.ahk
+; An empty ~ScriptName_includes.ahk file must be provided along the main script to get the script running at the first time (or comment the include line at the first run)
 
+; Explanation: https://tdalon.blogspot.com/2022/03/ahk-conditional-include.html
 ; Idea: https://gist.github.com/davebrny/55de3ab40499e33e40324ac6a96b70c0
 
 conditional_include(LibList) {
+; LibList is a CSV string: it lists the name of the library files to be conditionally included.
+; Libraries must be located under MainScriptDir/Lib folder.
+If A_IsCompiled
+    return
 
 FileName := "~" . RegExReplace(A_ScriptName, "(.\w*$)") . "_includes.ahk"
 file := FileOpen(FileName,"w") ; overwrite existing file
