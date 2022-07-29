@@ -166,4 +166,17 @@ Else If RegExMatch(sUrl,"/browse/(?P<ProjectKey>[A-Z]*)-(?P<IssueNb>\d*)$",Outpu
 }
 
 return [sUrl, sLinkText]
-}
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Jira_CreateIssue(Json){
+
+
+JiraUserName :=  PowerTools_RegRead("JiraUserName")
+If !JiraUserName
+	JiraUserName := A_UserName
+
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+

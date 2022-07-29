@@ -98,7 +98,7 @@ Monitor_MoveToSecondary(WinId){
 MonitorIndex := Monitor_GetMonitorIndex(WinId)
 SysGet, MonitorPrimaryIndex, MonitorPrimary
 If (MonitorIndex = MonitorPrimaryIndex) {
-    WinActivate, ahk_id %WinId% ; requires activate to move
+    ;WinActivate, ahk_id %WinId% ; requires activate to move
     SendInput #+{Right}; Win+Shift+Right Arrow 
 }
 

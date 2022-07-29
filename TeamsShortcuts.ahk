@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20211014192529
+LastCompiled = 20220314141308
 
 #Include <Teams>
 #Include <PowerTools>
@@ -230,8 +230,8 @@ return
 Menu, TeamsShortcutsMenu, Show
 return
 
-; Win+C
-~#c:: ; <--- Copy Link
+; Alt+C
+~!c:: ; <--- Copy Link
 Teams_CopyLink()
 return	
 ; -------------------------------------------------------------------------------------------------------------------
@@ -252,12 +252,10 @@ return
 ~!m:: ; <--- Create eMail with link to current conversation
 ShareByMail:
 If GetKeyState("Ctrl") {
-	;Run, "https://connectionsroot/blogs/tdalon/entry/teams_smart_reply"
+	;Run, "https://connectionsroot/blogs/tdalon/entry/teams_smart_reply" ;TODO
 	return
 }
-rc := Teams_CopyLink()
-If (rc =false)
-	return
+Teams_CopyLink()
 
 sHTMLBody = Hello<br>Following <a href="%clipboard%">this conversation</a> in Teams:
 ; Create Email using ComObj

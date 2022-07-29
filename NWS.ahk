@@ -6,6 +6,12 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SetWorkingDir %A_ScriptDir%
 
+include_cond("ET")
+; creates  %A_ScriptDir%\~NWS_includes.ahk. provide empty file with install or uncomment line below at first run
+#Include %A_ScriptDir%\~NWS_includes.ahk
+
+; A_ScriptDir is required
+
 #Include <Clip>
 #Include <IntelliPaste>
 #Include <Login>
@@ -21,10 +27,13 @@ SetWorkingDir %A_ScriptDir%
 ;#Include <Confluence>
 ;#Include <Blogger>
 
-LastCompiled = 20220325091524
+
+LastCompiled = 20220406190922
 
 ; AutoExecute Section must be on the top of the script
+
 #Warn All, OutputDebug
+#Warn LocalSameAsGlobal, off
 
 GroupAdd, Explorer, ahk_class CabinetWClass         
 GroupAdd, Explorer, ahk_class ExploreWClass         
@@ -166,8 +175,12 @@ Menu, NWSMenu, add, (Browser) Share by E&mail current Url (Ctrl+Shift+M), EmailS
 Menu, NWSMenu, add, (Browser) Share Url to Teams, TeamsShareActiveUrl
 Menu, NWSMenu, add, (Browser) Quick &Search (Win+F), QuickSearch
 
-If FileExist("Lib/Conti.ahk") & (Config = "Conti")
+If FileExist("Lib/Conti.ahk") and (Config = "Conti")
 	Menu, NWSMenu, add, (Browser) Create IT &Ticket, Conti_CreateTicket
+
+If FileExist("Lib/ET.ahk") and (Config = "ET") {
+	Menu, NWSMenu, Add, Open Issue (Ctrl+Shift+I), ET_OpenIssue
+}
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; EDIT : SCRIPT PARAMETERS
@@ -176,7 +189,7 @@ IfNotExist, %DefExplorerExe%
 	DefExplorerExe := "explorer.exe"
 		
 ; Start VPN (only for Conti config)
-If FileExist("Lib/Conti.ahk") & (Config = "Conti") {
+If FileExist("Lib/Conti.ahk") and (Config = "Conti") {
 	If ! (Login_IsNet("Conti"))
 		Login_VPNConnect()
 }
@@ -186,8 +199,10 @@ return
 ; ####################################################################
 ; Hotkeys
 
+
 ; -------------------------------------------------------------------------------------------------------------------
-^+Space:: WinSet, AlwaysOnTop, Toggle, A
+^+Space:: ;<--- Always on Top
+WinSet, AlwaysOnTop, Toggle, A
 return
 ;================================================================================================
 ;  CapsLock processing.  Must double tap CapsLock to toggle CapsLock mode on or off.
@@ -213,6 +228,8 @@ CapsLock & c:: ;  <--- Connections Global Search
 sSelection:= Clip_GetSelection()
 Run, https://%PowerTools_ConnectionsRootUrl%/search/web/search?query=%sSelection%     ; Launch with contents of clipboard
 Return
+
+
 
 #If
 
@@ -329,7 +346,8 @@ Clip_Paste(Clipboard)
 return
 
 #If WinActive("ahk_exe Code - Insiders.exe") || WinActive("ahk_exe Code.exe")
-!c:: ; Alt+C Toggle Block comment Uncomment. Block need to be selected
+;Alt+C
+!c:: ;  <--- Toggle Block comment Uncomment. Block need to be selected
 ClipBackup:= ClipboardAll
 sSelection := Clip_GetSelection(False)
 If !sSelection { ; no sSelection
@@ -349,7 +367,8 @@ return
 
 ; -------------------------------------------------------------------------------------------------------------------
 #If WinActive(".ahk")
-!h:: ; Alt+h AHK Open Help command
+; Alt+h
+!h:: ; <--- AHK Open Help command
 kw := Clip_GrabWord()
 AHK_Help(kw)
 ;Run,% "https://www.autohotkey.com/docs/commands/" cmd ".htm"
@@ -425,6 +444,7 @@ return
 Menu, NWSMenu, Show
 return
 
+; -------------------------------------------------------------------------------------------------------------------
 ; IntelliCopyActiveURL Ctrl+Shift+C
 #If Browser_WinActive()
 
@@ -434,10 +454,15 @@ If GetKeyState("Ctrl") and !GetKeyState("Shift") {
 	Run, "https://connectionsroot/blogs/tdalon/entry/intellicopy_active_url"
 	return
 }
-WinGetActiveTitle, linktext
-sLink := Browser_GetUrl()
-sLink := IntelliPaste_CleanUrl(sLink)
 
+sLink := Browser_GetUrl()
+If ErrorLevel {
+	MsgBox 0x1010, Error, No url could be copied!
+	return
+}
+
+sLink := IntelliPaste_CleanUrl(sLink)
+WinGetActiveTitle, linktext
 ; Remove trailing - containing program e.g. - Google Chrome
 StringGetPos,pos,linktext,%A_space%-,R
 if (pos >=0)
@@ -457,6 +482,8 @@ TrayTipAutoHide("NWS PowerTool","Link was copied to the clipboard!")
 
 return
 
+; -------------------------------------------------------------------------------------------------------------------
+
 ; IntelliSharebyEmailActiveURL Ctrl+Shift+M
 #If Browser_WinActive()
 
@@ -467,6 +494,10 @@ If GetKeyState("Ctrl") and !GetKeyState("Shift") {
 	return
 }
 sLink := Browser_GetUrl()
+If ErrorLevel {
+	MsgBox 0x1010, Error, No url could be copied!
+	return
+}
 sLink := IntelliPaste_CleanUrl(sLink)
 WinGetActiveTitle, linktext
 ; Remove trailing - containing program e.g. - Google Chrome
@@ -648,7 +679,7 @@ Else
 return
 ; -------------------------------------------------------------------------------------------------------------------
 ; Ctrl+O
-; Calls: GetFileLink, GetExplorerSelection, OpenFile
+; Calls: GetFileLink, Explorer_GetSelection
 ^o:: ; <--- [Explorer] Open file
 sFiles := Explorer_GetSelection()
 ; if no file selected in File Explorer
@@ -672,7 +703,6 @@ return
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Ctrl+K
-; Calls: GetFileLink, GetExplorerSelection, OpenFile
 ^k:: ; <--- [Explorer] Copy File Link (OneDrive)
 Send +{F10} ; Shift+F10
 Send s 
@@ -683,6 +713,14 @@ Send {Enter}
 Send {Esc}
 return
 
+
+; Open Issue
+#If FileExist("Lib/ET.ahk") and (Config = "ET") 
+^+i:: ; <--- Open Issue (Jira, ServiceDesk)
+ET_OpenIssue:
+FunStr := "ET_OpenIssue"
+%FunStr%()
+return
 
 
 ; ######################################################################
@@ -706,13 +744,17 @@ SendInput, !{Esc}
 WinSet, Style, ^0xC00000, A ; toggle title bar
 return
 
-#If FileExist("Lib/Conti.ahk")
+#If FileExist("Lib/Conti.ahk") and (Config = "Conti")
 
 SysTrayCreateTicket:
 SendInput, !{Esc}
 FunStr = Conti_CreateTicket
 %FunStr%()
 return
+
+
+
+
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------------------
@@ -780,7 +822,7 @@ OpenLink(sURL) {
 ; ----------------------------------------------------------------------
 QuickSearch(){
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	sUrl := "https://connectionsroot/wikis/home/wiki/Wc4f94c47297c_42c8_878f_525fd907cb68/page/NWS%20PowerTool?section=%28Win%2BF%29_Quick_Search_%28Connections%2C_Jira%2C_Confluence%29"
+	sUrl := "https://tdalon.github.io/ahk/QuickSearch"
 	Run, "%sUrl%"
 	return
 }

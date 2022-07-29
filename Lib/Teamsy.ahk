@@ -45,10 +45,10 @@ Case "bgf","obg","backgrounds":
 Case "bg","bgs","background":
     Teams_MeetingShortcuts("bg")
     return
-Case "lo","lobby":
+Case "lob","lobby":
     Teams_MeetingShortcuts("lobby")
     return
-Case "together","tm","to":
+Case "together","tm","to","tg":
     Teams_MeetingAction("TogetherMode")
     return
 Case "news","-n":
@@ -66,7 +66,7 @@ Case "f","fi":
     sKeyword = find
 Case "free","a","av":
     sKeyword = available
-Case "sa","save":
+Case "s","save":
     sKeyword = saved
 Case "d":
     sKeyword = dnd
@@ -79,14 +79,17 @@ Case "m","me","meet": ; activate meeting window
     Teams_ActivateMeetingWindow()
     ;Teams_NewMeeting()
     return
-Case "l","le","leave": ; leave meeting
+Case "le","leave": ; leave meeting
     Teams_Leave()
     return
 Case "raise","hand","ha","rh","ra":  
     Teams_RaiseHand()
     return
 Case "li","like":
-    Teams_MeetingReaction("Like")
+    If Teams_IsMainWindowActive()
+        Teams_ConversationReaction("Like")
+    Else
+        Teams_MeetingReaction("Like")
     return
 Case "ap","clap":
     Teams_MeetingReaction("Applause")
@@ -96,10 +99,30 @@ Case "clap2":
     SoundPlay, C:\Users\thierry.dalon\Broadcast\Audio\Fast_Clapping.mp3
     return
 Case "la","lol","laugh":
-    Teams_MeetingReaction("Laugh")
+    If Teams_IsMainWindowActive()
+        Teams_ConversationReaction("Laugh")
+    Else
+        Teams_MeetingReaction("Laugh")
     return
-Case "he","heart":
-    Teams_MeetingReaction("Heart")
+Case "he","heart","lo","love":
+    If Teams_IsMainWindowActive()
+        Teams_ConversationReaction("Heart")
+    Else
+        Teams_MeetingReaction("Love")
+    return
+Case "su","surprised":
+    If Teams_IsMainWindowActive()
+        Teams_ConversationReaction("Surprised")
+    Else
+        Teams_MeetingReaction("Surprised")
+    return
+Case "sa","sad":
+    If Teams_IsMainWindowActive()
+        Teams_ConversationReaction("Sad")
+    return
+Case "an","angry":
+    If Teams_IsMainWindowActive()
+        Teams_ConversationReaction("Angry")
     return
 Case "fs":  
     Teams_MeetingAction("FullScreen")
@@ -172,6 +195,12 @@ Case "n","new","x","nc": ; new expanded conversation
     return
 Case "v","vi": ; Toggle video 
     Teams_Video()
+    return
+Case "vi+":
+    Teams_Video(1)
+    return
+Case "vi-":
+    Teams_Video(0)
     return
 Case "fav","of": ; open favorites folder
     Teams_FavsOpenDir()
