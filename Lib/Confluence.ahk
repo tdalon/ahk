@@ -54,7 +54,7 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 	sCQL := StrReplace(sCQL,"%29",")")
 
 	; Extract Labels (only AND label= not label in)	
-	sPat := "label\+%3D\+%22([^%]*)%22" 
+	sPat = label\+=\+"([^"]*)" 
 	Pos=1
 	While Pos :=    RegExMatch(sCQL, sPat, label,Pos+StrLen(label)) 
 		sLabels := sLabels . " #" . label1 
@@ -85,8 +85,15 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 sResponse := Confluence_Get(sUrl)
 sPat = s)<meta name="ajs-page-title" content="([^"]*)">.*<meta name="ajs-space-name" content="([^"]*)">.*<meta name="ajs-page-id" content="([^"]*)">
 RegExMatch(sResponse, sPat, sMatch)
-sLinkText := sMatch1 " - " sMatch2 " - Confluence" ; | will break link in Jira RTF Field
+sLinkText := sMatch1 " - " sMatch2  ; | will break link in Jira RTF Field
 sLinkText := StrReplace(sLinkText,"&amp;","&")
+; extract section
+If RegExMatch(sUrl,"#([^?&]*)",sSection) {
+	sSection := RegExReplace(sSection1,".*-","")
+	sLinkText := sLinkText . ": " . sSection
+}
+sLinkText := sLinkText . " - Confluence"
+
 RegExMatch(sUrl, "https://[^/]*", sRootUrl)
 sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch3
 return [sUrl, sLinkText]
@@ -97,7 +104,8 @@ Confluence_CleanUrl(sUrl){
 If InStr(sUrl,"/display/") { ; pretty link
 	sResponse := Confluence_Get(sUrl)
 	sPat = s)<meta name="ajs-page-id" content="([^"]*)">
-	RegExMatch(sResponse, sPat, sMatch)
+	If !RegExMatch(sResponse, sPat, sMatch)
+	 	MsgBox %sResponse%
 	RegExMatch(sUrl, "https://[^/]*", sRootUrl)
 	sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch1
 }
@@ -113,7 +121,7 @@ Confluence_Get(sUrl){
 sPassword := Login_GetPassword()
 If (sPassword="") ; cancel
     return	
-
+sUrl := RegExReplace(sUrl,"#.*","") ; remove link to section
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("GET", sUrl, false) ; Async=false
 
@@ -172,16 +180,17 @@ static sConfluenceSearch, sSpace
 RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
 ReRootUrl := StrReplace(sRootUrl,".","\.")
 sQuote = "
+
 If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) { 	
 	sCQL := sCQL1
-	sCQL := StrReplace(sCQL,"=","%3D")
-	sCQL := StrReplace(sCQL,sQuote,"%22")
+	;sCQL := StrReplace(sCQL,"=","%3D")
+	;sCQL := StrReplace(sCQL,sQuote,"%22")
 	sCQL := StrReplace(sCQL,"%2B","+")
 	sCQL := StrReplace(sCQL,"%28","(")
 	sCQL := StrReplace(sCQL,"%29",")")
 
 	; Extract Labels (only AND label= not label in)	
-	sPat := "label\+%3D\+%22([^%]*)%22" 
+	sPat = label\+=\+"([^"]*)"
 	Pos=1
 	While Pos :=    RegExMatch(sCQL, sPat, label,Pos+StrLen(label)) 
 		sLabels := sLabels . " #" . label1 
@@ -189,31 +198,47 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 	sDefSearch := sLabels
 
 	; Extract Space Key
-	If RegExMatch(sCQL,"space\+?%3D\+?%22([^%]*)%22",sSpace) 
+	sPat = space\+?=\+?"([^"]*)"
+	If RegExMatch(sCQL,sPat,sSpace) 
 		sSpace := sSpace1
 
 	; Extract Search String
-	If RegExMatch(sCQL,"\&queryString%3D(.*)",sSearchString) {
+	If RegExMatch(sCQL,"\&queryString=(.*)",sSearchString) {
 		sDefSearch := sDefSearch . " " . sSearchString1
+	}
+	sPat = siteSearch\+~\+"([^"]*)"
+	If RegExMatch(sCQL,sPat,sSearchString) {
+		; reverse regexp to wildcards
+		sSearchString := StrReplace(sSearchString1,"%2F","/")
+		;If RegExMatch(sSearchString,"^/(.*)/$",sSearchString)
+		;	sSearchString := StrReplace(sSearchString1,".*","*")
+		sDefSearch := sDefSearch . " " . sSearchString
 	}
 	
 ; Not from advanced search - page view -> Extract Space 
 } Else {
-	sOldSpace := sSpace
-	If RegExMatch(sUrl,ReRootUrl . "/display/([^/]*)",sSpace)
+	If RegExMatch(sUrl,ReRootUrl . "/label/([^/]*)/([^/]*)",sSpace) {
 		sSpace := sSpace1
-	Else If InStr(sUrl, "/pages/viewpage.action?pageId=") {
-		sResponse := Confluence_Get(sUrl)
-		sPat = s)<meta name="ajs-space-name" content="([^"]*)">
-		RegExMatch(sResponse, sPat, sMatch)
-		sSpace := sMatch1
-	} Else If  RegExMatch(sUrl,ReRootUrl . "/spaces/viewspace\.action\?key=([^&\?/]*)",sSpace)
-		sSpace := sSpace1
-	
-	If sSpace = %sOldSpace%
-		sDefSearch := sConfluenceSearch
-	Else
-		sDefSearch = 
+		sDefSearch := "#" . sSpace2
+	} Else {
+
+		sOldSpace := sSpace
+		If RegExMatch(sUrl,ReRootUrl . "/display/([^/]*)",sSpace)
+			sSpace := sSpace1
+		Else If InStr(sUrl, "/pages/viewpage.action?pageId=") {
+			sResponse := Confluence_Get(sUrl)
+			sPat = s)<meta name="ajs-space-key" content="([^"]*)">
+			RegExMatch(sResponse, sPat, sMatch)
+			sSpace := sMatch1
+		} Else If  RegExMatch(sUrl,ReRootUrl . "/spaces/viewspace\.action\?key=([^&\?/]*)",sSpace)
+			sSpace := sSpace1
+		}	
+		
+		If sSpace = %sOldSpace%
+			sDefSearch := sConfluenceSearch
+		Else
+			sDefSearch = 
+		
 }
 
 sDefSearch := Trim(sDefSearch)
@@ -227,21 +252,25 @@ sSearch := Trim(sSearch)
 sPat := "#([^#\s]*)" 
 Pos=1
 While Pos :=    RegExMatch(sSearch, sPat, label,Pos+StrLen(label)) {
-	sCQLLabels := sCQLLabels . "+and+label+%3D+" . sQuote . label1 . sQuote
+	sCQLLabels := sCQLLabels . "+and+label+=+" . sQuote . label1 . sQuote
 } ; end while
 
 ; remove labels from search string
 sSearch := RegExReplace(sSearch, sPat , "")
 sSearch := Trim(sSearch)
 
+; Check for leading wildcard -> convert to regexp
+If RegExMatch(sSearch,"^\*") {
+	sSearch := "%2F" . sSearch "%2F" ; %2F is / encoded
+	sSearch := StrReplace(sSearch,"*",".*")
+}
 sSearchUrl = %sRootUrl%/dosearchsite.action?cql=
 If sSearch { ; not empty
-	sSearchUrl := sSearchUrl . "siteSearch+~+%22" . sSearch . "%22" . "+and+type+%3D+"
-	sSearchUrl = %sSearchUrl%"page"
+	sSearchUrl = %sSearchUrl% siteSearch+~+"%sSearch%"+and+type+=+"page"
 } Else
 	sSearchUrl = %sSearchUrl%type+=+"page"
 If sSpace
-	sSearchUrl := sSearchUrl . "+and+space=%22" . sSpace "%22"
+	sSearchUrl = %sSearchUrl%+and+space=%sQuote%%sSpace%%sQuote%
 
 If sCQLLabels ; not empty
 	sSearchUrl := sSearchUrl . sCQLLabels 
@@ -268,32 +297,25 @@ If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/2020/11/confluence-personalize-mentions.html"
 	return
 }
-SendInput +{Left}
-sLastLetter := Clip_GetSelectionHtml()
-IsRealMention := InStr(sLastLetter,"http://schema.skype.com/Mention") 
-sLastLetter := Clip_GetSelection()    
-SendInput {Right}
+ClipboardBackup := Clipboard
+SendInput ^{down}+{down}{Left}
+sClip := Clip_GetSelection(False)   
 
-If (IsRealMention) {
-    If (sLastLetter = ")")
-        SendInput {Backspace}^{Left}
-    Else 
-        SendInput ^{Left}
-
-    SendInput +{Left} 
-    sLastLetter := Clip_GetSelection()   
-    If (sLastLetter = "-")
-        SendInput ^{Left}{Backspace}
-    Else 
-        SendInput {Backspace}
-} Else {
-    ; do not personalize if no match to avoid ambiguity which name was mentioned if shorten to firstname and reprompt for matching
-    return
-    If (sLastLetter = ")") 
-        SendInput {Backspace}^{Backspace}{Backspace} ; remove ()
-
-    SendInput ^{Left}^{Backspace}^{Backspace}^{Right}
+; Remove company in ()
+If (sClip = ")") {
+	While RegExMatch(sClip,"\(.*\)") {
+		SendInput {Left}
+		sClip := Clip_GetSelection(False) 
+	}
+	SendInput {Delete}
 }
+SendInput +{up}
+; Skip Firstname
+SendInput {Left}
+; Remove LastName,
+SendInput ^{down}+{down}{Left}{Left}{Delete}
+SendInput ^{up}+{up}{Right}
+
 } ; eofun
 
 

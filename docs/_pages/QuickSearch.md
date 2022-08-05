@@ -16,6 +16,10 @@ To run the QuickSearch, use the Win+F (F like Find) hotkey from a Browser window
 
 See [blog post](https://tdalon.blogspot.com/2022/03/confluence-quick-search.html)
 
+### Jira Quick search
+
+See [blog post](https://tdalon.blogspot.com/2022/08/jira-quick-search.html)
+
 ### Quick Google Site search
 
 See [blog post](https://tdalon.blogspot.com/2021/04/quick-site-search.html)

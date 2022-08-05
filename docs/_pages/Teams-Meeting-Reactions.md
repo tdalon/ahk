@@ -1,22 +1,22 @@
 ---
 permalink: /Teams-Meeting-Reactions
 title: "Teams Meeting Reactions Shortcuts"
-excerpt: "How to setup Teams Meeting Reactions Shortcuts."
+excerpt: "Teams Meeting Reactions Shortcuts."
 ---
 
 ## Short Description
 
 Teams Shortcuts PowerTool allows to send Teams Meeting reactions from a Launcher or Hotkey.
-It is based on AutoHotkey [FindText](https://www.autohotkey.com/boards/viewtopic.php?f=6&t=17834) functionality.
+It is based on [AutoHotkey UI Automation Library](https://tdalon.blogspot.com/2022/07/ahk-teams-uiautomation.html).
 
 ## Screencast
 
-<p style="text-align: center;"><iframe width="560" height="315" src="https://www.youtube.com/embed/sPy07IzEGu4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></p>
+<p style="text-align: center;"><iframe width="560" height="315" src="https://www.youtube.com/embed/CuhXwQamuLE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></p>
 
 
 ## Related Blog posts
 
-* [Teams Meeting Reactions](https://tdalon.blogspot.com/2021/03/teams-meeting-reactions-shortcuts.html)
+* [Teams Meeting Reactions](https://tdalon.blogspot.com/2022/07/ahk-teams-meeting-reactions-uia.html)
 * [Teams Audio Effects](https://tdalon.blogspot.com/2021/12/teams-audio-effects.html)
 
 ## How to use
@@ -28,8 +28,9 @@ Keyword  |  Reaction
 --|--
 li, like   |  Like
 lol, la, laugh  |  Laugh
-he, heart  |  Heart, Love
+he, heart,lo  |  Heart, Love
 ap, clap  |  Applause
+su  | Surprised  
 
 This make it so much easier to LOL in a meeting (click to enlarge):
 
@@ -43,18 +44,10 @@ You can combine built-in live reactions with additional audio effects.
 
 <div style="text-align:center"><a href="https://tdalon.github.io/ahk/assets/images/Teams_MeetingLiveReactions_Audio.gif"><img src="/ahk/assets/images/Teams_Lol.gif" alt="Teams Meeting Reaction LOL"></a></div>
 
-
-## How to setup/ troubleshooting
-
-The feature relies on finding some UI element in the Teams Client using the FindText function as explained in [this post](https://tdalon.blogspot.com/2021/03/ahk-findtext-teams-shortcuts.html)
-
-If the FindText does not work, you can overwrite the Text string to be searched with your working version in the .ini file. In the section [Teams] you will find the parameters starting with **TeamsFindText**<Action>
-
-
 ## Code
 
 This feature is implemented in [/ahk/Lib/Teams.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teams.ahk) -> Teams_MeetingReaction (function)
 
 ## Potential improvements
 
-I could also add configurable global hotkeys for such actions but I find it much easier to run from the launcher via a natural command or keyword. (I have problems remembering hotkeys)
+I could also add configurable global hotkeys for such actions but I find it much easier to run from the launcher via a natural command or keyword.

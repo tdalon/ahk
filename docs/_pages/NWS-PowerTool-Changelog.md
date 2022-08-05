@@ -5,8 +5,20 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+
+* 2022-08-05
+  - [Jira Quick Search](https://tdalon.blogspot.com/2022/08/jira-quick-search.html): [support wild-card based search](https://tdalon.blogspot.com/2022/02/jira-partial-text-search.html) 
+* 2022-08-03
+  - Confluence Quick Search: fix for Urls of type /pages/viewpage.action?pageId=
+* 2022-07-15
+  - [Confluence Quick Search improved for partial word search](https://tdalon.blogspot.com/2022/07/confluence-partial-word-quick-search.html)
+* 2022-04-07
+  - Confluence IntelliPaste/ IntelliCopy:
+    - fix and improve links with anchor/link to section
 * 2022-04-06
-  - Fix: Confluence Quick Search by keyword
+  - Confluence Quick Search
+      - fix search by keyword
+      - fix search from single label link / won't get space and default search
   - Confluence IntelliPaste/ IntelliCopy:
       - remove | from link text (conflict with link formatting in Jira)
       - bug fix: if link by pageId

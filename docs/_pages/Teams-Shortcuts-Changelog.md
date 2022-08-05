@@ -5,10 +5,30 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 ---
 
 [Teams Shortcuts](Teams-Shortcuts) Changelog
+
+Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
+
+
+* 2022-07-18
+  - Conversations Reactions: Like, Heart, Laugh, Surprised, Sad, Angry
+  - Conversation: Copy Link using UIA
+  - Copy Link: change hotkey to Alt+C instead of Win+C because of conflict with Cortana
+* 2022-07-13
+  - Leave: Works also with Call is in progress Share Window. No need to activate meeting window.
+  - Mute: Works also with "Call is in progress" Share Window. No need to activate meeting window.
+  - Video: Works also with "Call is in progress" Share Window. No need to activate meeting window.
+  - Video: Option to switch Video on or off (not only toggle)
+  - Share: Works without FindText/ with UI Automation. No need to activate Meeting Window. Unshare works also with Call in progress minimized Share window.
+  - Share: also reactivates Meeting window to secondary screen.
+  - Share: share audio by default.
+* 2022-07-08
+  - Update [Teams Meeting Reactions based on UIAutomation](https://tdalon.blogspot.com/2022/07/ahk-teams-meeting-reactions-uia.html) instead of FindText
+* 2022-07-01
+  - Teams_Mute/PushToTalk based on UIAutomation instead of FindText
 * 2022-03-14
-  - Added kyeword 'lo'|'lobby' to Admit Lobby
-* 2022-03-11 
-	- Remove [hard dependency](https://tdalon.blogspot.com/2022/03/ahk-conditional-include.html) to Connections Lib 
+  - Added keyword 'lo'|'lobby' to Admit Lobby
+* 2022-03-11
+	- Remove [hard dependency](https://tdalon.blogspot.com/2022/03/ahk-conditional-include.html) to Connections Lib
 * 2022-03-08
   - Support PushToTalk Ctrl+Space global hotkey
   - Added Open Background Settings
