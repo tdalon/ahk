@@ -44,10 +44,10 @@ return Jira_IsUrl(sUrl)
 } ; eofun
 
 ; ----------------------------------------------------------------------
-; Jira Search - Search within current Jira Project TODO
+; Jira Search - Search within current Jira Project
 ; Called by: NWS.ahk Quick Search (Win+F Hotkey)
 Jira_Search(sUrl){
-static sJiraSearch, sProjectKey
+static sJiraSearch, sProjectKey	
 
 RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
 ReRootUrl := StrReplace(sRootUrl,".","\.")
@@ -72,12 +72,23 @@ if ErrorLevel
 	return
 sJql := Trim(sJql) 
 sJiraSearch := sJql
+
+; Enclose summary~ description~ with "" if using wildcards ? or * see https://tdalon.blogspot.com/2022/02/jira-partial-text-search.html
+sPat1 = [^(?:\s*AND\s*|\s*OR\s*|"\*\(\))]*
+;sPat1 = [^"]*
+sRep = summary~"$1"
+sPat = summary\s*~\s*(%sPat1%\*%sPat1%)
+sJql := RegExReplace(sJql,sPat,sRep)
+
+sRep = description~"$1"
+sPat = description\s*~\s*(%sPat1%\*%sPat1%)
+sJql := RegExReplace(sJql,sPat,sRep)
+
+; Escape Html
 sJql := StrReplace(sJql," ","%20")
 sJql := StrReplace(sJql,"=","%3D")
-sSearchUrl = %sRootUrl%/issues/?jql=%sJql%
 
-; TODO
-; Enclose ~summary ~description "" if using wildcards ? or *
+sSearchUrl = %sRootUrl%/issues/?jql=%sJql%
 
 If sJql ; not empty means update search 
 	Send ^l
