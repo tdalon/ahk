@@ -1,4 +1,4 @@
-#SingleInstance Force
+﻿#SingleInstance Force
 #NoEnv
 SetWorkingDir %A_ScriptDir%
 SetBatchLines -1
@@ -553,8 +553,8 @@ ConstructTreeView(el, parent="") {
 		return
 	try {
 		elDesc := el.CurrentLocalizedControlType " """ el.CurrentName """"
-		if (elDesc == " """"")
-			return
+		;if (elDesc == " """"")
+		;	return
 		Stored.TreeView[TWEl := TV_Add(elDesc, parent)] := el
 		if !(children := el.FindAll(UIA.TrueCondition, 0x2))
 			return
@@ -669,7 +669,6 @@ Acc_Query(Acc)
 
 RangeTip(x:="", y:="", w:="", h:="", color:="Red", d:=2) ; from the FindText library, credit goes to feiyue
 {
-  local
   static id:=0
   if (x="")
   {
