@@ -1222,6 +1222,7 @@ TrayTip, Could not find Meeting Window! , No unminmized active Teams meeting win
 } ; eofun
 
 
+; -------------------------------------------------------------------------------------------------------------------
 
 Teams_FindMeetingWindow(Activate:= false) {
 ; Loop through Teams.exe Window to find Meeting Window
@@ -1244,6 +1245,7 @@ Loop, 3 {
 TrayTip, Could not find Meeting Window! , No unminmized active Teams meeting window!.,,0x2
 } ; eofun
 
+; ---------------------------------------------------------
 IsMeetingWindow(TeamsEl,Active:= true){
 if (TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn"))
     if (Active)
@@ -1907,9 +1909,7 @@ If ControlsEl { ; Meeting controls not accessible
 TrayTip TeamsShortcuts: ERROR, Meeting Reactions button not found by Id nor position!,,0x2
 return
 
-;MsgBox % ReactionsEl.DumpAll() ; DBG
 ClickReactions:
-
 ReactionsEl.Click() ; Click element without moving the mouse
 ReactionEl:=TeamsEl.WaitElementExistByName(Reaction,,,,2000) ; timeout=2s
 
@@ -2043,7 +2043,63 @@ If (ErrorLevel = 0)
     return [FoundX, FoundY]
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_MeetingAction(id, restore:= False){
+
+Teams_MeetingToggleFullscreen() {
+WinId := Teams_GetMeetingWindow()
+If !WinId ; empty
+    return
+; Needs to activate the Meeting Window because F11 Hotkey is not working even with ControlSend,,{F11}, ahk_id %WinId%
+WinGet, curWinId, ID, A
+WinActivate, ahk_id %WinId% 
+
+Send {F11}
+; restore previous window
+WinActivate, ahk_id %curWinId%
+}
+
+
+Teams_MeetingAction(id){
+; id: recording, fullscreen, device-settings, incoming-video
+TeamsEl := Teams_GetMeetingWindow(2,1) ; Activate window
+If !TeamsEl ; empty
+    return
+
+sFindBtn := "AutomationId=" . id . "-button"
+ActionEl :=  TeamsEl.FindFirstBy(sFindBtn)  
+If ActionEl
+    Goto ClickAction
+
+MoreEl := TeamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn") 
+If !MoreEl {
+    TrayTip TeamsShortcuts: ERROR, More Actions button not found!,,0x2
+    ;MsgBox % ReactionsEl.DumpAll() ; DBG
+    return
+} 
+MoreEl.Click() ; Click element without moving the mouse
+;ActionEl:=TeamsEl.WaitElementExist(sFindBtn,,,,1000) ; timeout=2s
+Sleep, 1000
+ActionEl :=  TeamsEl.FindFirstBy(sFindBtn)  
+
+If !ActionEl {
+    TrayTip TeamsShortcuts: ERROR, Meeting Action button for '%id%'' not found!,,0x2
+    ;MsgBox % ReactionsEl.DumpAll() ; DBG
+    return
+} 
+
+ClickAction:
+;MsgBox % ActionEl.DumpAll() ; DBG
+
+ActionEl.Click()
+; Tooltip("Teams Meeting Action: " . id,1000) : will hide action menu
+TrayTip TeamsShortcuts: Meeting Action, Button for '%id%'' clicked!,,0x1
+
+}
+
+
+; -------------------------------------------------------------------------------------------------------------------
+
+Teams_MeetingActionClick(id, restore:= False){
+; Based on FindText. Obsolete: replaced by Teams_MeetingAction based on UIAutomation
 WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
@@ -2072,7 +2128,7 @@ If (restore) { ; Restore previous window and mouse position
 }
 
 If (ok)
-    Tooltip("Teams Meeting Reaction: " . Reaction,1000) 
+    Tooltip("Teams Meeting Action: " . id,1000) 
 }
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ClearFlash(){

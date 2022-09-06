@@ -125,7 +125,7 @@ Case "an","angry":
         Teams_ConversationReaction("Angry")
     return
 Case "fs":  
-    Teams_MeetingAction("FullScreen")
+    Teams_MeetingToggleFullscreen()
     return
 Case "sh","share":  
     Teams_Share()
