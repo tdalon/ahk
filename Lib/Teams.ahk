@@ -2044,8 +2044,10 @@ If (ErrorLevel = 0)
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
-Teams_MeetingToggleFullscreen() {
-WinId := Teams_GetMeetingWindow()
+Teams_MeetingToggleFullscreen(WinId:="") {
+; Optional: pass Meeting Window WinId if known
+If !WinId
+    WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
 ; Needs to activate the Meeting Window because F11 Hotkey is not working even with ControlSend,,{F11}, ahk_id %WinId%
