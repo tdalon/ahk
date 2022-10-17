@@ -1,10 +1,10 @@
-#Include <People>
-#Include <UriDecode>
-#Include <Teamsy>
-#Include <Clip>
-#Include <FindText>
-#Include <UIA_Interface>
-
+; Documentation of Lib dependencies
+#Include People.ahk
+#Include UriDecode.ahk
+#Include Teamsy.ahk
+#Include Clip.ahk
+#Include FindText.ahk
+#Include UIA_Interface.ahk
 
 Teams_Launcher(){
 Teamsy("-g")
@@ -696,55 +696,97 @@ El.Click()
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ConversationReaction(reaction){
 ; reaction can be: Like, Heart, Laugh, Surprised, Sad, Angry
+; hard-coded menu order
 
+StringLower, reaction, reaction
+;MsgBox % reaction
 Send {Click}
 Send {Enter} ; to activate the menu elements
 
+; UIA does not work to find element
+
 Switch reaction {
-    Case "Like":
-    Case "Heart":
-     Send {Right}
-    Case "Laugh":
+    Case "like":
+    Case "heart":
+        Send {Right}
+    Case "laugh":
         Send {Right 2}
-    Case "Surprised":
+    Case "surprised":
         Send {Right 3}
-    Case "Sad":
+    Case "sad":
         Send {Right 4}
-    Case "Angry":
+    Case "angry":
         Send {Right 5}
 }
 Send {Enter}
 } ; eofun
 
+
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_CopyLink(){
-UIA := UIA_Interface()
-TeamsEl := UIA.ElementFromHandle(WinActive("A")) 
-Send {Enter} ; to activate the elements
+; -------------------------------------------------------------------------------------------------------------------
+Teams_ConversationAction(action){
+; action: save|copylink|unread|sharetooutlook|delete|edit
+; hard-coded menu order arrow down
 
-;FocusEl:=TeamsEl.GetFocusedElement()
+StringLower, action, action
+MouseClick, Left
+Send {Enter} 
+Send {Tab}{Enter} ; open action menu
 
-MoreEl:= TeamsEl.FindFirstByNameAndType("More options. Use left and right arrow keys to navigate.","button")
-;MsgBox % MoreEl.Dump()
+Switch action {
+    Case "save":
+        Send {Alt}
+    Case "edit":
+        Send {Down}
+    Case "delete":
+        Send {Down 2}
+    Case "unread":
+        Send {Down 3}
+    Case "copylink":
+        Send {Down 4}
+    Case "sharetooutlook":
+        Send {Down 5}
+}
+Send {Enter}
 
-MoreEl.Click()
 
-;MoreEl.GetCurrentPattern("Invoke").Invoke()
-
-BtnEl := TeamsEl.WaitElementExistByNameAndType("Copy link","button",,,,2000)
-;MsgBox % BtnEl.Dump()
-
-BtnEl.Click()
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_CopyLink2(){
-; Alternative to select all Thread: MouseClick, Left
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_GetLink(){
+SendInput +{Up} ; Shift + Up Arrow: select all thread
+Sleep 200
+sSelection := Clip_GetSelectionHtml()
+SendInput {Esc} ; unselect thread
+; Parse <a href=""
+sPat = <a href="([^"]*)"
+sep := "|"
+Pos = 1 
+While Pos := RegExMatch(sSelection,sPat,sMatch,Pos+StrLen(sMatch)){
+    If InStr(sList . sep,sMatch1 . sep) ; skip duplicates
+        continue
+    sList := sList . sep . sMatch1
+}
+sList := SubStr(sList,2) ; Remove first sep
+; Check if multiple links-> select box
+If InStr(sList,sep) {
+    Result := ListBox("Teams:Get Link","Choose link",sList,1)
+    return Result
+} 
+return sList
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+Teams_ConversationGetLink(){
+; Alternative to select all Thread: Double MouseClick, Left
 SendInput +{Up} ; Shift + Up Arrow: select all thread
 Sleep 200
 sSelection := Clip_GetSelection()
 ; Last part between <> is the thread link
 RegExMatch(sSelection,"U).*<(.*)>$",sMatch)
-SendInput {Esc}
+SendInput {Esc} ; unselect thread
 sTeamLink := StrReplace(sMatch1,"&amp;amp;","&")
 return sTeamLink
 } ; eofun
@@ -963,7 +1005,7 @@ RegRead, TeamsPowerShell, HKEY_CURRENT_USER\Software\PowerTools, TeamsPowerShell
 If (TeamsPowerShell := !TeamsPowerShell) {
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-powershell-setup.html"
     Run, "%sUrl%" 
-    MsgBox 0x1024,People Connector, Have you setup Teams PowerShell on your PC?
+    MsgBox 0x1024,Teams Shortcuts, Have you setup Teams PowerShell on your PC?
 	IfMsgBox No
 		return
     OfficeUid := People_GetMyOUid()
@@ -1182,7 +1224,7 @@ Teams_GetMeetingWindow(Mode :=0, Activate:=false){
 ;         UIAEl := Teams_GetMeetingWindow(Mode:=1|2,Activate:=true|false*)
 ;   If window is not found, hwnd is empty
 ; Mode=1: return Call in progress Share window 
-; Mode=2 return Meeting window even if Call in progress Share Window
+; Mode=2 return Meeting window even if Call in progress Share Window is active
 ; See implementation explanations here: 
 ;   https://tdalon.blogspot.com/2022/07/ahk-get-teams-meeting-win.html
 
@@ -1198,14 +1240,18 @@ Loop %Win% {
         Else
             return TeamsEl     
     }
+    
     If RegExMatch(TeamsEl.Name,"Microsoft Teams Call in progress.*") {
-        If (Mode =1) {
+        If (Mode = 1) {
             if Activate
                 WinActivate, ahk_id %WinId%
             return TeamsEl
         }
         Else If (Mode = 2) {
-            El:=  TeamsEl.FindFirstByNameAndType("Call is in progress", "text", , 1) ; partial match
+            
+            El := TeamsEl.FindFirstByType("image")
+            if !El
+                El:=  TeamsEl.FindFirstByNameAndType("Call is in progress", "text", , 1) ; partial match ; weird case: nobody joined the meeting
             If El {
                 El.Click()
                 Sleep 500
@@ -1247,6 +1293,8 @@ TrayTip, Could not find Meeting Window! , No unminmized active Teams meeting win
 
 ; ---------------------------------------------------------
 IsMeetingWindow(TeamsEl,Active:= true){
+; does not return true on Share / Call in progress window
+; Share / Call in progress window has the button hangup-button, not hangup-btn
 if (TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn"))
     if (Active)
         return !TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button
@@ -2044,59 +2092,110 @@ If (ErrorLevel = 0)
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
-Teams_MeetingToggleFullscreen(WinId:="") {
-; Optional: pass Meeting Window WinId if known
+Teams_MeetingToggleFullscreen(WinId:="",restore:=True) {
+; Teams_MeetingToggleFullscreen(WinId:="",restore:=True)
+; Arguments: 
+;    WinId: Optional: pass Meeting Window WinId if known
+;    restore: True*|False
+;               If true previous current window will be restored/ activated back. 
+;               If false, Meeting Window will be activated and stays activated
 If !WinId
     WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
 ; Needs to activate the Meeting Window because F11 Hotkey is not working even with ControlSend,,{F11}, ahk_id %WinId%
-WinGet, curWinId, ID, A
-WinActivate, ahk_id %WinId% 
+If (restore)
+    WinGet, curWinId, ID, A
 
+WinActivate, ahk_id %WinId% 
 Send {F11}
 ; restore previous window
-WinActivate, ahk_id %curWinId%
+If (restore)
+    WinActivate, ahk_id %curWinId%
 }
 
 
 Teams_MeetingAction(id){
 ; id: recording, fullscreen, device-settings, incoming-video
-TeamsEl := Teams_GetMeetingWindow(2,1) ; Activate window
-If !TeamsEl ; empty
+teamsEl := Teams_GetMeetingWindow(2,1) ; Activate window
+If !teamsEl ; empty
     return
-
 sFindBtn := "AutomationId=" . id . "-button"
-ActionEl :=  TeamsEl.FindFirstBy(sFindBtn)  
-If ActionEl
-    Goto ClickAction
 
-MoreEl := TeamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn") 
-If !MoreEl {
+/* 
+; If more Menu already clicked
+
+actionEl :=  teamsEl.FindFirstBy(sFindBtn)  
+If actionEl
+    Goto ClickAction 
+*/
+
+moreEl := teamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn")
+Sleep, 200
+;moreEl.Highlight()
+moreEl.Click()
+Sleep, 100
+actionEl:= teamsEl.WaitElementExist(sFindBtn,,,,1000)
+;actionEl:= teamsEl.WaitElementExist("AutomationId=fullscreen-button")
+If !actionEl
+    return
+
+Sleep, 500
+actionEl.Highlight()
+Sleep, 500
+actionEl.Click()
+;MsgBox % actionEl.DumpAll() ; DBG
+return
+/* 
+moreEl := teamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn") 
+Sleep, 100
+moreEl.Click()
+If !moreEl {
     TrayTip TeamsShortcuts: ERROR, More Actions button not found!,,0x2
-    ;MsgBox % ReactionsEl.DumpAll() ; DBG
+    ;MsgBox % moreEl.DumpAll() ; DBG
     return
 } 
-MoreEl.Click() ; Click element without moving the mouse
-;ActionEl:=TeamsEl.WaitElementExist(sFindBtn,,,,1000) ; timeout=2s
-Sleep, 1000
-ActionEl :=  TeamsEl.FindFirstBy(sFindBtn)  
 
-If !ActionEl {
+
+actionEl:=teamsEl.WaitElementExist(sFindBtn,,,,1000) ; timeout=2s
+
+If !actionEl {
     TrayTip TeamsShortcuts: ERROR, Meeting Action button for '%id%'' not found!,,0x2
-    ;MsgBox % ReactionsEl.DumpAll() ; DBG
+    MsgBox % actionEl.DumpAll() ; DBG
     return
 } 
+*/ 
 
 ClickAction:
-;MsgBox % ActionEl.DumpAll() ; DBG
-
-ActionEl.Click()
+Sleep, 500
+actionEl.Click()
 ; Tooltip("Teams Meeting Action: " . id,1000) : will hide action menu
 TrayTip TeamsShortcuts: Meeting Action, Button for '%id%'' clicked!,,0x1
 
+
 }
 
+
+Teams_Join(){
+; Join a Teams Meeting from Outlook Reminder Window
+If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
+; Keys are blocked by the UI: c,d,a,s. Alt does not work
+	WinActivate
+	;Send +{F10} ; Shift+F10 - Open Context Menu
+	SendInput {Tab}
+	Send j ; Join accelerator
+	WinWaitActive, ahk_exe Teams.exe,,5
+	If ErrorLevel
+		Return
+}
+UIA := UIA_Interface()
+If !WinId
+    WinId := WinActive("A")
+TeamsEl := UIA.ElementFromHandle(WinId) 
+JoinBtn :=  TeamsEl.FindFirstBy("AutomationId=prejoin-join-button")  
+
+
+}
 
 ; -------------------------------------------------------------------------------------------------------------------
 
