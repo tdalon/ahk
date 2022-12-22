@@ -8,6 +8,8 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2022-09-06
+  - Updated Shortcut for Toggle Fullscreen based on F11 hotkey. Keyword 'fs' from Launcher. New function: Teams_MeetingToggleFullscreen
 * 2022-03-14
   - Added keyword 'lo'|'lobby' to Admit Lobby
 * 2022-03-11

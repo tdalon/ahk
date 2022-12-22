@@ -5,9 +5,19 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
-
+* 2022-12-17
+  - Changed hotkey for paste plain text (conflict with open issue in doc): Ctrl+Alt+V or Alt+Ins
+  - Remove VPN Connect hotkey
+* 2022-12-15
+  - Jira_OpenIssue  and Jira_OpenIssueDoc. Add Setting JiraRootUrl
+* 2022-12-14
+  - Refactoring IntelliPaste make Connections Lib optional
+* 2022-12-01
+  - Confluence Quick Search. Support Hierarchy view to get space name from url
+* 2022-10-18
+  - Fix IntelliPaste Jira ServiceDesk
 * 2022-08-05
-  - [Jira Quick Search](https://tdalon.blogspot.com/2022/08/jira-quick-search.html): [support wild-card based search](https://tdalon.blogspot.com/2022/02/jira-partial-text-search.html) 
+  - [Jira Quick Search](https://tdalon.blogspot.com/2022/08/jira-quick-search.html): [support wild-card based search](https://tdalon.blogspot.com/2022/02/jira-partial-text-search.html)
 * 2022-08-03
   - Confluence Quick Search: fix for Urls of type /pages/viewpage.action?pageId=
 * 2022-07-15
@@ -89,7 +99,7 @@ excerpt: "Release notes for NWS PowerTool."
 * 2021-01-07
 	- IntelliPaste old SharePoint Library opened in file explorer with address e.g. \\aws3.conti.de without @SSL\\DavWWWRoot in it. Revert url to https and propose breadcrumb option
 * 2021-01-05
-	- IntelliPaste for Jira: remove Jira_FormatLinks (Jira like Confluence supports now RichText pasting)
+	- IntelliPaste for Jira: remove Jira_FormatLinks (Jira - like Confluence - supports now RichText pasting)
 	- Bug fix VPNConnect
 	- IntelliPaste Stream video for Connections revert div align to p align center
 * 2021-01-04

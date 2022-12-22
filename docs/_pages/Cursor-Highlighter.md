@@ -21,4 +21,4 @@ Its author is [Luc Boisvert](https://sites.google.com/site/boisvertlab/computer-
 
 <div align="center"><iframe width="560" height="315" src="https://www.youtube.com/embed/kwSqtNvT7to" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><br><a href="https://www.youtube.com/watch?v=kwSqtNvT7to&feature=youtu.be&t=479">Direct Link to YouTube video</a></div>
 
-## [Main blog post](https://tdalon.blogspot.com/cursor-highlighter)
+## [Main blog post](https://tdalon.blogspot.com/2020/10/cursor-highlighter.html)

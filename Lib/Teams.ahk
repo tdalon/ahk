@@ -1,10 +1,10 @@
 ; Documentation of Lib dependencies
-#Include People.ahk
-#Include UriDecode.ahk
-#Include Teamsy.ahk
-#Include Clip.ahk
-#Include FindText.ahk
-#Include UIA_Interface.ahk
+#Include <People>
+#Include <UriDecode>
+#Include <Teamsy>
+#Include <Clip>
+#Include <FindText>
+#Include <UIA_Interface>
 
 Teams_Launcher(){
 Teamsy("-g")
@@ -1223,7 +1223,7 @@ Teams_GetMeetingWindow(Mode :=0, Activate:=false){
 ; Syntax: hwnd := Teams_GetMeetingWindow(Mode:=0)
 ;         UIAEl := Teams_GetMeetingWindow(Mode:=1|2,Activate:=true|false*)
 ;   If window is not found, hwnd is empty
-; Mode=1: return Call in progress Share window 
+; Mode=1: return Share/ Call in progress window 
 ; Mode=2 return Meeting window even if Call in progress Share Window is active
 ; See implementation explanations here: 
 ;   https://tdalon.blogspot.com/2022/07/ahk-get-teams-meeting-win.html
@@ -1753,7 +1753,6 @@ If El {
         return
     }
 }
-MsgBox % TeamsEl.DumpAll()
 
 
 } ; eofun

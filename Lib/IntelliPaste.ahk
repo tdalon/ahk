@@ -4,8 +4,8 @@
 #Include <Teams>
 #Include <uriDecode>
 #Include <SharePoint>
-; Calls: CNGetTitle, Connections_Link2Text, CNFormatImg
-#Include <Connections>
+; Calls: Connections_Link2Text
+;#Include <Connections> conditional include
 #Include <Confluence>
 #Include <Clip>
 
@@ -18,14 +18,25 @@ Link2Text(sLink) {
 ; Syntax:
 ; 	linktext := Link2Text(sLink)
 ; Called by: IntelliHtml
-; Calls: Connections_Link2Text, Teams_Link2Text
+; Calls: Connections_Link2Text*, Teams_Link2Text
 
 
 If InStr(sLink,"https://teams.microsoft.com/") {
 	return Teams_Link2Text(sLink)
 }
-If Connections_IsUrl(sLink) {
-    return Connections_Link2Text(sLink)
+
+If FileExist("Lib/Connections.ahk") {
+	FunStr := "Connections_IsUrl"
+	If %FunStr%(sLink) {
+		FunStr := "Connections_Link2Text"
+		return %FunStr%(sLink)
+	}
+}
+
+If Jira_IsUrl(sLink) {
+	linktext := Jira_Url2IssueKey(sLink)
+	If !linktext
+		return linktext
 }
 
 If InStr(sLink,"/gist/") {
@@ -115,7 +126,6 @@ return linktext
 ; No need to switch to HTML Source / Paste in Rich-Text Format
 
 ; Called by NWS.ahk - Triggered by Ins
-; Calls CNFormatImg, Link2Text, Link2Ico
 IntelliHtml(sInput,useico:=True){
 
 If (RegExMatch(sInput,"[A-Z]:\\")) or (RegExMatch(sInput,"^\\\\"))  { ; local files or old SharePoint opened in File explorer 
@@ -128,7 +138,7 @@ If SharePoint_IsUrl(sInput) {
 	If InStr(linktext,">") ; use breadcrumbs
 		sHtml := SharePoint_IntelliHtml(sInput)
 	Else
-		sHtml =	<a href="%sInput%">%linktext%</a>
+		sHtml =<a href="%sInput%">%linktext%</a>
 
 	If RegExMatch(sInput,"/teams/(team_[^/]*)/",sMatch) {
 		CsvFile = %A_ScriptDir%\Teams_list.csv
@@ -142,7 +152,7 @@ If SharePoint_IsUrl(sInput) {
 		If Not (TeamName = "") {
 			GroupId := ReadCsv(CsvFile,"MailNickName",MailNickName,"GroupId")
 			TeamLink = https://teams.microsoft.com/l/team/?groupId=%GroupId%
-			sHtml = <a href="%TeamLink%">%TeamName% Team</a>: %sHtml%
+			sHtml =<a href="%TeamLink%">%TeamName% Team</a>: %sHtml%
 		}
 	}
 	Cont1:
@@ -151,61 +161,64 @@ If SharePoint_IsUrl(sInput) {
 	sHtml := Teams_MessageLink2Html(sInput)
 
 } Else If RegExMatch(sInput,"\.png$") or RegExMatch(sInput,"\.gif$") or RegExMatch(sInput,"\.jpg$") {
-		sHtml = <img src="%sInput%"/></img>
-		sHtml := Connections_FormatImg(sHtml)
+		sHtml =<img src="%sInput%"/></img>
+		If FileExist("Lib/Connections.ahk") {
+			FunStr := "Connections_FormatImg"
+			sHtml := %FunStr%(sHtml)
+		}
 } Else If InStr(sInput,".mp4") or InStr(sInput,".wmv") {
-	sHtml = <p dir="ltr" style="text-align: center;"><video controls="controls"  width="95_percent" tabindex="-1" class="HTML5Video"><source src="%sInput%"/></video></p>
+	sHtml =<p dir="ltr" style="text-align: center;"><video controls="controls"  width="95_percent" tabindex="-1" class="HTML5Video"><source src="%sInput%"/></video></p>
 	sHtml := StrReplace(sHtml,"_percent","%")
 } Else If InStr(sInput,"_player.html") { ; Camtasia player file
 	If WinActive("Blog")  
-		sHtml = <p dir="ltr" style="text-align: center;"><iframe  allowfullscreen="true"  frameborder="0" src="%sInput%" width="700" height="394"></iframe></p>
+		sHtml =<p dir="ltr" style="text-align: center;"><iframe  allowfullscreen="true"  frameborder="0" src="%sInput%" width="700" height="394"></iframe></p>
 	Else
-		sHtml = <p dir="ltr" style="text-align: center;"><iframe  allowfullscreen="true"  frameborder="0" src="%sInput%" width="800" height="450"></iframe></p>
+		sHtml =<p dir="ltr" style="text-align: center;"><iframe  allowfullscreen="true"  frameborder="0" src="%sInput%" width="800" height="450"></iframe></p>
 ; SharePoint List => embed in iFrame
 } Else If RegExMatch(sInput,"/Lists/[^.]*.aspx") & Not InStr(sInput,"DispForm.aspx?ID=") { ; exclude link to item e.g. LL/RAI '
-	sHtml = <p><iframe height="500" src=" %sInput%?isFrame=1" width="95_percent"></iframe></p>
+	sHtml =<p><iframe height="500" src=" %sInput%?isFrame=1" width="95_percent"></iframe></p>
 	sHtml := StrReplace(sHtml,"_percent","%")
 ; Embed java script e.g. Gist <script src="https://gist.github.com/tdalon/0924af7a21cc2571a2d25040905fe39d.js"></script>
 } Else If RegExMatch(sInput,"^<script .*</script>$") {
 	sHtml := sInput
 } Else If InStr(sInput,"</script>") { ; TODO Overwritten by previous clause
-	sHtml = <html><body>%sInput%</body></html>
+	sHtml =<html><body>%sInput%</body></html>
 	sHtml := uriEncode(sHtml)
-	sHtml = <iframe src="data:text/html;charset=utf-8,%sHtml%" frameborder="0" width="100{percent}"/>
+	sHtml =<iframe src="data:text/html;charset=utf-8,%sHtml%" frameborder="0" width="100{percent}"/>
 	sHtml := StrReplace(sHtml, "{percent}" ,"%")	
 ; Embed iframes e.g. YouTube embed code - center
 } Else If RegExMatch(sInput,"^<iframe [^>]*</iframe>") {
-	sHtml = <p style="text-align: center;">%sInput%</p>
+	sHtml =<p style="text-align: center;">%sInput%</p>
 } Else If RegExMatch(sInput,"<iframe [^>]* src=""https://www\.youtube\.com/embed/") { ; TODO overwritten by previous clause
-	sHtml = <p style="text-align: center;">%sInput%</p>
+	sHtml =<p style="text-align: center;">%sInput%</p>
 } Else If RegExMatch(sInput,"https://www\.youtube\.com/watch\?.*v=([^\?&]*)",sVideoId) { ; bug fix links https://www.youtube.com/watch?time_continue=1&v=y6qT502Ao58 {
-	sHtml =	<iframe width="560" height="315" src="https://www.youtube.com/embed/%sVideoId1%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-	sHtml = <p style="text-align: center;">%sHtml%</p>
+	sHtml =<iframe width="560" height="315" src="https://www.youtube.com/embed/%sVideoId1%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	sHtml =<p style="text-align: center;">%sHtml%</p>
 } Else If RegExMatch(sInput,"https://youtu\.be/([^\?&]*)",sVideoId) { ; https://youtu.be/ngLfEVU46x0?t=1007
-	sHtml =	<iframe width="560" height="315" src="https://www.youtube.com/embed/%sVideoId1%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-	sHtml = <p style="text-align: center;">%sHtml%</p>
+	sHtml =<iframe width="560" height="315" src="https://www.youtube.com/embed/%sVideoId1%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	sHtml =<p style="text-align: center;">%sHtml%</p>
 } Else If RegExMatch(sInput,"https://www\.youtube\.com/playlist\?list=([^\?&]*)",sVideoId) { ; https://www.youtube.com/playlist?list=PLUSZfg60tAwLIIs8TpcOJIG9ghbQd5nHj
-	sHtml =	<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=%sVideoId1%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-	sHtml = <p style="text-align: center;">%sHtml%<br><a href="%sInput%">Direct Link to YouTube playlist</a></p>
+	sHtml =<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=%sVideoId1%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	sHtml =<p style="text-align: center;">%sHtml%<br><a href="%sInput%">Direct Link to YouTube playlist</a></p>
 ; Stream embed code - center+ add title with direct link	
 } Else If RegExMatch(sInput,"<iframe [^>]* src=""https://web\.microsoftstream\.com/embed/") {
 	sPat = src="([^"]*)"
 	RegExMatch(sInput, sPat, sSrc)
 	sInput := RegExReplace(sSrc1, "\?.*" , "")
 	sInput := StrReplace(sInput,"/embed/","/")	
-	sHtml = <p style="text-align: center;">%sInput%<br><a href="%sInput%">Direct Link to Stream video</a></p>
+	sHtml =<p style="text-align: center;">%sInput%<br><a href="%sInput%">Direct Link to Stream video</a></p>
 ; Stream video with start time
 } Else If RegExMatch(sInput,"https://web\.microsoftstream\.com/video/.*\?st=(.*)",ss)  { 
 	linktext := FormatSeconds(ss1)
-	sHtml = <a href="%sInput%">%linktext%</a>
+	sHtml =<a href="%sInput%">%linktext%</a>
 } Else If RegExMatch(sInput,"https://web\.microsoftstream\.com/video/([^/]*)",sVideoId) {
-	sEmbedCode = <iframe width="640" height="360" src="https://web.microsoftstream.com/embed/video/%sVideoId1%?autoplay=false&amp;showinfo=true" style="border:none;" allowfullscreen ></iframe>
-	sHtml = <p style="text-align: center;">%sEmbedCode%<br><a href="%sInput%">Direct Link to Stream video</a></p>
+	sEmbedCode =<iframe width="640" height="360" src="https://web.microsoftstream.com/embed/video/%sVideoId1%?autoplay=false&amp;showinfo=true" style="border:none;" allowfullscreen ></iframe>
+	sHtml =<p style="text-align: center;">%sEmbedCode%<br><a href="%sInput%">Direct Link to Stream video</a></p>
 	;sHtml = <div style="text-align:center">%sEmbedCode%<br><a href="%sInput%">Direct Link to Stream video</a></div>
 	;MsgBox %sHtml%
 } Else If RegExMatch(sInput,"^https://web\.microsoftstream\.com/channel/([^/]*)",sChannel){
-	sEmbedCode = <iframe width="960" height="540" src="https://web.microsoftstream.com/embed/channel/%sChannel1%?sort=trending" style="border:none;" allowfullscreen ></iframe>	
-	sHtml = <p style="text-align: center;">%sEmbedCode%<br><a href="%sInput%">Direct Link to Stream Channel</a></p>
+	sEmbedCode =<iframe width="960" height="540" src="https://web.microsoftstream.com/embed/channel/%sChannel1%?sort=trending" style="border:none;" allowfullscreen ></iframe>	
+	sHtml =<p style="text-align: center;">%sEmbedCode%<br><a href="%sInput%">Direct Link to Stream Channel</a></p>
 } ; end IfElse
 
 ;MsgBox %sHtml% ; DBG
@@ -215,13 +228,13 @@ If !sHtml {	; empty
 		linktext := Link2Text(sInput) 
 	if !linktext ; empty => cancel
 		return
-	sHtml =	<a href="%sInput%">%linktext%</a>
+	sHtml =<a href="%sInput%">%linktext%</a>
 } ; End If sHtml empty
 
 If useico { ; not empty; File Link with FileType icon
 	imgsrc := Link2Ico(sInput)
 	if imgsrc ; not empty
-		sHtml = <a href="%sInput%"><img src="%imgsrc%" width="32"/></a>%sHtml%
+		sHtml =<a href="%sInput%"><img src="%imgsrc%" width="32"/></a>%sHtml%
 }
 
 return sHtml
@@ -251,60 +264,11 @@ FormatSeconds(NumberOfSeconds)  ; Convert the specified number of seconds to hh:
 }
 ; -------------------------------------------------------------------------------------------------------------------
 
-; FUNCTION Link2Ico
+; FUNCTION Link2Ico #TODO
 Link2Ico(sLink) {
 ; imgsrc := Link2Ico(sLink)
 ; Calls/include IsSharepointUrl
-
-sLink := RegExReplace(sLink, "\?.*$","") ; remove e.g. ?d=
-SplitPath, sLink, sFileName, , sFileExt ; Extension without .
-IniFile = PowerTools.ini
-If sFileExt {
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, %sFileExt%FileIcon
-	If (imgsrc != "ERROR")
-		return imgsrc
-	If (sFileExt = "pdf")
-		IniRead, imgsrc, %IniFile%, ConnectionsIcons, pdfFileIcon
-	Else If (sFileExt = "doc") || (sFileExt = "docx") || (sFileExt = "docm")
-		IniRead, imgsrc, %IniFile%, ConnectionsIcons, docFileIcon
-	Else If (sFileExt = "xlsm") || (sFileExt = "xlsx") || (sFileExt = "xls")
-		IniRead, imgsrc, %IniFile%, ConnectionsIcons, xlsFileIcon
-	Else If (sFileExt = "pptx") || (sFileExt = "pptm") || (sFileExt = "ppt")
-		IniRead, imgsrc, %IniFile%, ConnectionsIcons, pptFileIcon		
-
-	If (imgsrc != "ERROR")
-		return imgsrc
-}
-
-If (SharePoint_IsUrl(sLink))
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, SharepointIcon
-Else If InStr(sLink,"communityUuid=") {
-	sPat=.*?\?communityUuid=([^ ]*)
-	sRep = https://%PowerTools_ConnectionsRootUrl%/communities/service/html/image?communityUuid=$1
-	imgsrc:= RegExReplace(sLink,sPat,sRep)
-} Else If Connections_IsUrl(sLink,"wiki")
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, WikiIcon
-Else If Connections_IsUrl(sLink,"blog")
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, BlogIcon
-Else If Connections_IsUrl(sLink,"forum")
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, ForumIcon
-Else If InStr(sLink,"/gist/")
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, GistIcon
-Else If (InStr(sLink,"github.") and Not (InStr(sLink,"github.io/")))
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, GithubIcon
-Else If Jira_IsUrl(sLink)
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, JiraIcon
-Else If Confluence_IsUrl(sLink)
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, ConfluenceIcon
-Else If InStr(sLink,"https://teams.microsoft.com/l/channel/") || InStr(sLink,"https://teams.microsoft.com/l/team/") 
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, TeamsIcon
-Else If InStr(sLink,"https://web.microsoftstream.com/browse?q=")
-	IniRead, imgsrc, %IniFile%, ConnectionsIcons, StreamIcon
-
-If (imgsrc = "ERROR")
-	return
-Else
-	return imgsrc
+return 
 
 } ; end function
 
@@ -365,12 +329,8 @@ return url
 ; -------------------------------------------------------------------------------------------------------------------
 GetGoogleUrl(url){
 ; Calls: IsGoogleUrl
-	url := uriDecode(url)	
-	RegExMatch(url,"&url=(.*)&usg=",newurl) ; exclude & escape ?
-	; 1st Matching pattern is stored in RootFolder1
-	; MsgBox %RootFolder1%
-	; decode url
-		
+url := uriDecode(url)	
+RegExMatch(url,"&url=(.*)&usg=",newurl) ; exclude & escape ?		
 return newurl1
 } ;eofun
 ; -------------------------------------------------------------------------------------------------------------------
@@ -419,10 +379,13 @@ If InStr(sClipboard,"`n") { ; MultiLine
 
 SetTitleMatchMode, 2 ; partial match
 
-If (Connections_IsWinActive())
-	useico := True
-Else
-	useico := False ; Deactivate till it is refactored. #TODO
+If FileExist("Lib/Connections.ahk") {
+	FunStr := "Connections_IsWinActive"
+	If (%FunStr%())
+		useico := True
+	Else
+		useico := False ; Deactivate till it is refactored. #TODO
+}
 ; Do not ask for ico for specific applications where pasting icon doesn't work
 ;If WinActive("ahk_group MSOffice") or  WinActive("Confluence") or WinActive("Microsoft Teams")  or WinActive("Microsoft Stream") or WinActive("Microsoft Whiteboard") or  WinActive("ahk_exe notepad.exe") or WinActive("ahk_exe notepad++.exe") or WinActive("ahk_exe WorkFlowy.exe") or WinActive("ahk_exe atom.exe") ; plain text editor
 ;	useico := False
@@ -439,7 +402,7 @@ Else
 If !InStr(sClipboard,"`n") { ; single input
 	If InStr(sClipboard,"https://github.com/") {
 		sFile := StrReplace(sClipboard,"/blob/","/raw/")
-		sFullText = <script src="http://gist-it.appspot.com/%sFile%"></script>
+		sFullText =<script src="http://gist-it.appspot.com/%sFile%"></script>
 		Clip_Paste(sFullText)
 		return
 	}
@@ -447,7 +410,7 @@ If !InStr(sClipboard,"`n") { ; single input
 		WinGetTitle, sTitle , A
 		If InStr(sTitle,".md") { ; markdown format
 			sHtml := WinClip.GetHtml()
-			sPat = <a href="(.*)">(.*)</a>
+			sPat =<a href="(.*)">(.*)</a>
 			If RegExMatch(sHtml,sPat,sMatch) {
 				sClipboard = [%sMatch2%](%sMatch1%)
 				Clip_Paste(sClipboard)
@@ -455,6 +418,7 @@ If !InStr(sClipboard,"`n") { ; single input
 			}
 		}
 	} ; eif Text editors
+
 
 	sLink := sClipboard
 
@@ -613,13 +577,7 @@ TrayTip, Set IntelliPaste Hotkey,% HK " Hotkey on"
 ; -------------------------------------------------------------------------------------------------------------------
 
 IntelliPaste_Help(){
-Switch PowerTools_Config
-{
-Case "Conti":  
-    Run, "https://connectionsroot/blogs/tdalon/entry/intelli_paste"  
-Default:
-    Run, "https://tdalon.github.io/ahk/IntelliPaste"
-}
+Run, "https://tdalon.github.io/ahk/IntelliPaste"
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -657,11 +615,11 @@ GetFileLink(sFile) {
 	If !(sFile2 = sFile)
 	{
 		sFile := StrReplace(sFile2,"\","/") 
-		sFile = https:%sFile%
+		sFile =https:%sFile%
 	}
 	Else {
 		sFile2 := StrReplace(sFile,"\","/") 
-		sFile2 = https:%sFile2%
+		sFile2 =https:%sFile2%
 		If SharePoint_IsUrl(sFile2)
 			return sFile2
 	}

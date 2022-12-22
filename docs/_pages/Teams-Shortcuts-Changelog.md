@@ -8,7 +8,11 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
-
+* 2022-10-18
+  - Fix Teams Get Meeting Window (Share| Call in Progress) with meeting participants
+  - Teams Conversation Reactions and Actions
+* 2022-09-06
+  - Updated Shortcut for Toggle Fullscreen based on F11 hotkey. Keyword 'fs' from Launcher. New function: Teams_MeetingToggleFullscreen.
 * 2022-07-18
   - Conversations Reactions: Like, Heart, Laugh, Surprised, Sad, Angry
   - Conversation: Copy Link using UIA

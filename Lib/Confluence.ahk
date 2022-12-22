@@ -115,7 +115,7 @@ return sUrl
 ; ----------------------------------------------------------------------
 Confluence_Get(sUrl){
 ; Requires JiraUserName or ConfluenceUserName to be set in the Registry if different from Windows Username
-; Syntax: sResponse .= Jira_Get(sUrl)
+; Syntax: sResponse := Confluence_Get(sUrl)
 ; Calls: b64Encode
 
 sPassword := Login_GetPassword()
@@ -215,7 +215,7 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 		sDefSearch := sDefSearch . " " . sSearchString
 	}
 	
-; Not from advanced search - page view -> Extract Space 
+; Not from advanced search -> Extract Space 
 } Else {
 	If RegExMatch(sUrl,ReRootUrl . "/label/([^/]*)/([^/]*)",sSpace) {
 		sSpace := sSpace1
@@ -230,9 +230,11 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 			sPat = s)<meta name="ajs-space-key" content="([^"]*)">
 			RegExMatch(sResponse, sPat, sMatch)
 			sSpace := sMatch1
-		} Else If  RegExMatch(sUrl,ReRootUrl . "/spaces/viewspace\.action\?key=([^&\?/]*)",sSpace)
+		; } Else If  RegExMatch(sUrl,ReRootUrl . "/spaces/viewspace\.action\?key=([^&\?/]*)",sSpace)
+		; 	sSpace := sSpace1
+		} Else If  RegExMatch(sUrl,"\?key=([^&\?/]*)",sSpace)
 			sSpace := sSpace1
-		}	
+		}
 		
 		If sSpace = %sOldSpace%
 			sDefSearch := sConfluenceSearch

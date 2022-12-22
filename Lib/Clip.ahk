@@ -70,26 +70,26 @@ return grab
 ; -------------------------------------------------------------------------------------------------------------------
 Clip_SetHtml(sHtml,sText:=""){
 ; Syntax: Clip_SetHtml(sHtml,sText:="",HtmlHead := "")
-; If sHtml is a link (starts with http), the Html link will be wrapped around it sHtml = <a href="%sHtml%">%sText%</a>
+; If sHtml is a link (starts with http), the Html link will be wrapped around it sHtml=<a href="%sHtml%">%sText%</a>
 ; If no Text display is passed as argument sText := sHtml
 If (sText="")
     sText := sHtml
 If RegExMatch(sHtml,"^http") {
     WinClip.SetText(sHtml)
-    sHtml = <a href="%sHtml%">%sText%</a>
-} else
+    sHtml =<a href="%sHtml%">%sText%</a>
+} else {
     WinClip.SetText(sText)
+}
 ;SetClipboardHTML(sHtml,HtmlHead,sText) ; does not work with WinClip.GetHtml
 ; WinClip.iSetHTML does not work (asked here https://www.autohotkey.com/boards/viewtopic.php?f=6&t=29314&p=393505#p393505)
 WinClip.SetHTML(sHtml)
-
 Clip_Wait()
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 Clip_PasteHtml(sHtml,sText:="",restore := True) {
 ; Syntax: Clip_PasteHtml(sHtml,sText,restore := True)
-; If sHtml is a link (starts with http), the Html link will be wrapped around it i.e. sHtml = <a href="%sHtml%">%sText%</a>
+; If sHtml is a link (starts with http), the Html link will be wrapped around it i.e. sHtml=<a href="%sHtml%">%sText%</a>
 
 
 If (restore)
@@ -116,7 +116,7 @@ If WinActive("ahk_group PlainEditor") {
 
     WinGetTitle, sTitle , A
     If InStr(sTitle,".md") { ; markdown format
-        sLink = [%sText%](%sUrl%)
+        sLink =[%sText%](%sUrl%)
         Clip_Paste(sClipboard)
         return
     }
@@ -129,16 +129,16 @@ If (doEdit) {
     if ErrorLevel ; Cancel
         return
 }
-sHtml = <a href="%sUrl%">%sText%</a>
+sHtml =<a href="%sUrl%">%sText%</a>
 If (restore)
     ClipBackup:= ClipboardAll
 Clip_SetHtml(sHtml,sText)
 
 ; Paste
 WinClip.Paste()  
-If (restore) {
+If (restore)
     Clip_Restore(ClipBackup)
-}   
+  
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 

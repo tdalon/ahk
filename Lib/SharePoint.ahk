@@ -10,8 +10,6 @@
 #Include <People>
 ; for People_GetMyOUid Personal OneDrive url
 
-#Include <Teams>
-; for Teams Name in IntelliPaste
 ; Calls: uriDecode
 ; Called by: CleanUrl
 SharePoint_CleanUrl(url){
@@ -63,7 +61,7 @@ SharePoint_CleanUrl(url){
 
 ; SharePoint_IsUrl(url)
 SharePoint_IsUrl(url){
-If RegExMatch(url,"https://[a-z\-]+\.sharepoint\.com/.*") or InStr(url,"https://mspe.")  
+If RegExMatch(url,"https://[^\.]+\.sharepoint\.com/.*") or InStr(url,"https://mspe.")  
 {
 	; url with a few letters followed by one number
     ;  or InStr(url,"https://tenantname.sharepoint.com/") or InStr(url,"https://tenantname-my.sharepoint.com/") 
@@ -81,11 +79,12 @@ sLink := RegExReplace(sLink, "\?.*$","") ; remove e.g. ?d=
 If RegExMatch(sLink,"^https://[^/]*/[^/]*/(.*)",sMatch) {
 	sMatch1 := uriDecode(sMatch1)
 	linktext := sMatch1
+	;MsgBox %linktext%
 	If Not InStr(linktext,"/") ; item in root level= no breadcrumb
 		return linktext
 	linktext := StrReplace(sMatch1,"/"," > ") ; Breadcrumb navigation for Teams link to folder
 
-	; Choose how to display: with breadcroumb or only last level
+	; Choose how to display: with breadcrumb or only last level
 	FileName := RegExReplace(sMatch1,".*/","")
 	Result := ListBox("IntelliPaste: File Link","Choose how to display",linktext . "|" . FileName,1)
 	If Not (Result ="")
@@ -96,6 +95,7 @@ If RegExMatch(sLink,"^https://[^/]*/[^/]*/(.*)",sMatch) {
 ; -------------------------------------------------------------------------------------------------------------------
 
 SharePoint_IntelliHtml(sLink){
+; calls: uriDecode
 ; breadcrumb
 If RegExMatch(sLink,"(^https://[^/]*/[^/]*)/(.*)",sMatch) {
 	DocPath := uriDecode(sMatch2)

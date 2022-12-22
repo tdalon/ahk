@@ -192,7 +192,7 @@ While Pos := RegExMatch(sHtml,sPat,sUid,Pos+StrLen(sUid)){
     sEmailList := sEmailList . ";" . sEmail
     sUidList := sUid1 . ";" . sUidList
 }
-return SubStr(sEmailList,2) ; remove trailing ;
+return SubStr(sEmailList,2) ; remove first ;
 
 } ; eof
 
@@ -1597,3 +1597,64 @@ If !newWindow
 	Send ^w ; Close previous search window
 Run, %sUrl%
 }
+
+
+Connections_Link2Ico(sLink) {
+; imgsrc := Connections_Link2Ico(sLink)
+; Calls/include Sharepoint_IsUrl
+; Called by: IntelliPaste: Link2Ico
+
+
+sLink := RegExReplace(sLink, "\?.*$","") ; remove e.g. ?d=
+SplitPath, sLink, sFileName, , sFileExt ; Extension without .
+IniFile := "PowerTools.ini"
+If sFileExt {
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, %sFileExt%FileIcon
+	If (imgsrc != "ERROR")
+		return imgsrc
+	If (sFileExt = "pdf")
+		IniRead, imgsrc, %IniFile%, ConnectionsIcons, pdfFileIcon
+	Else If (sFileExt = "doc") || (sFileExt = "docx") || (sFileExt = "docm")
+		IniRead, imgsrc, %IniFile%, ConnectionsIcons, docFileIcon
+	Else If (sFileExt = "xlsm") || (sFileExt = "xlsx") || (sFileExt = "xls")
+		IniRead, imgsrc, %IniFile%, ConnectionsIcons, xlsFileIcon
+	Else If (sFileExt = "pptx") || (sFileExt = "pptm") || (sFileExt = "ppt")
+		IniRead, imgsrc, %IniFile%, ConnectionsIcons, pptFileIcon		
+
+	If (imgsrc != "ERROR")
+		return imgsrc
+}
+
+
+
+If (SharePoint_IsUrl(sLink))
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, SharepointIcon
+Else If InStr(sLink,"communityUuid=") {
+	sPat=.*?\?communityUuid=([^ ]*)
+	sRep =https://%PowerTools_ConnectionsRootUrl%/communities/service/html/image?communityUuid=$1
+	imgsrc:= RegExReplace(sLink,sPat,sRep)
+} Else If Connections_IsUrl(sLink,"wiki")
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, WikiIcon
+Else If Connections_IsUrl(sLink,"blog")
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, BlogIcon
+Else If Connections_IsUrl(sLink,"forum")
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, ForumIcon
+Else If InStr(sLink,"/gist/")
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, GistIcon
+Else If (InStr(sLink,"github.") and Not (InStr(sLink,"github.io/")))
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, GithubIcon
+Else If Jira_IsUrl(sLink)
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, JiraIcon
+Else If Confluence_IsUrl(sLink)
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, ConfluenceIcon
+Else If InStr(sLink,"https://teams.microsoft.com/l/channel/") || InStr(sLink,"https://teams.microsoft.com/l/team/") 
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, TeamsIcon
+Else If InStr(sLink,"https://web.microsoftstream.com/browse?q=")
+	IniRead, imgsrc, %IniFile%, ConnectionsIcons, StreamIcon
+
+If (imgsrc = "ERROR")
+	return
+Else
+	return imgsrc
+
+} ; end function

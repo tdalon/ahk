@@ -6,7 +6,7 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SetWorkingDir %A_ScriptDir%
 
-include_cond("ET")
+include_cond("ET,Connections")
 ; creates  %A_ScriptDir%\~NWS_includes.ahk. provide empty file with install or uncomment line below at first run
 #Include %A_ScriptDir%\~NWS_includes.ahk
 
@@ -89,8 +89,9 @@ Menu, SubMenuSettingsIntelliPaste, Add, &Refresh Teams List and SPSync.ini, Inte
 Menu, SubMenuSettingsIntelliPaste, Add, Help, IntelliPaste_Help
 Menu, SubMenuSettings, Add, IntelliPaste, :SubMenuSettingsIntelliPaste
 
-Menu, SubMenuSettings, Add, Set JiraUserName, SetJiraUserName
-Menu, SubMenuSettings, Add, Set Phone Number, SetPhoneNumber
+Menu, SubMenuSettings, Add, Set Jira UserName, SetSetting
+Menu, SubMenuSettings, Add, Set Jira RootUrl, SetSetting
+Menu, SubMenuSettings, Add, Set Phone Number, SetSetting
 Menu, SubMenuSettings, Add, Teams PowerShell, MenuCb_ToggleSettingTeamsPowerShell
 RegRead, TeamsPowerShell, HKEY_CURRENT_USER\Software\PowerTools, TeamsPowerShell
 If (TeamsPowerShell) 
@@ -284,10 +285,6 @@ return
 ; -------------------------------------------------------------------------------------------------------------------
 ;   All Applications
 ; -------------------------------------------------------------------------------------------------------------------
-; Ctrl+Alt+V
-^!v:: ; <--- VPN Connect
-Login_VPNConnect()
-return
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Ctrl+F12
@@ -302,11 +299,21 @@ return
 PasteCleanUrl(true)	
 return	
 
+; Alt+Ins or Ctrl+Alt+V: Paste Clipboard in plain text/ removing rich-text formatting like links
+; http://stackoverflow.com/a/132826/2043349
+; https://lifehacker.com/better-paste-takes-the-annoyance-out-of-pasting-formatt-5388814
+^!v::
+!Ins:: ; <--- Paste Clipboard without formatting (Plain Text)
+Clip_Paste(Clipboard)
+return
+
 ; -------------------------------------------------------------------------------------------------------------------
 #IfWinActive, ahk_group OpenLinks
 ; Open in Default Browser (incl. Office applications) - see OpenLink function
+
 ; Middle Mouse Click
-MButton:: ; <--- Open in Preferred Browser
+MButton:: ; <--- Open in Preferred Browser/ App
+
 ; If target window is not under focus, e.g. MButton on Chrome Tab
 Clip_All := ClipboardAll  ; Save the entire clipboard to a variable
 Clipboard =  ; Empty the clipboard to allow ClipWait work
@@ -321,29 +328,19 @@ Else
 	SendInput c ; Copy Link
 
 ClipWait, 2
-sURL := Clipboard
+sUrl := Clipboard
 
-If sURL { ; Not empty
-	;OpenLink(sURL)
-	sURL := IntelliPaste_CleanUrl(sURL) ; convert e.g. teams links to SP links
-	Run %sURL% ; Handled by BrowserSelect
+If sUrl { ; Not empty
+	;OpenLink(sUrl)
+	sUrl := IntelliPaste_CleanUrl(sUrl) ; convert e.g. teams links to SP links
+	Run %sUrl% ; Handled by BrowserSelect
 } Else {
-	;MsgBox OpenLinks: Empty URL/ Error
 	Send {MButton}
 }		
 
 Clipboard := Clip_All ; Restore the original clipboard
 return
 
-
-; Ctrl+Shift+V  Paste in plain text/ removing rich-text formatting like links
-; http://stackoverflow.com/a/132826/2043349
-; https://lifehacker.com/better-paste-takes-the-annoyance-out-of-pasting-formatt-5388814
-; Exclude for Excel for AddIn Ctrl+Shift+V: open IMS issue in document - use MS Office paste option instead
-#IfWinNotActive, ahk_exe EXCEL.EXE
-^+v:: ; <--- Paste in plain text format
-Clip_Paste(Clipboard)
-return
 
 #If WinActive("ahk_exe Code - Insiders.exe") || WinActive("ahk_exe Code.exe")
 ;Alt+C
@@ -383,11 +380,11 @@ Return
 	#IfWinActive,ahk_group Browser
 	^!v:: 
 	ClipSaved := ClipboardAll
-	sURL := clipboard
-	sURL := StrReplace(sURL,"""","")
-	;MsgBox Clean url:`n%sURL%
+	sUrl := clipboard
+	sUrl := StrReplace(sUrl,"""","")
+	;MsgBox Clean url:`n%sUrl%
 	clipboard = ; Empty the clipboard
-	Clipboard := sURL
+	Clipboard := sUrl
 	ClipWait, 0.5
 	Send ^v
 	Sleep 100 ; pause necessary because of lag in browser (no problem in Notepad e.g.)- next command restore clipboard runs asynchron before paste
@@ -406,15 +403,15 @@ return
 ; Do not use Alt key because of issue with IE
 ^e:: ; <--- [Browser] Edit Connections or Open SharePoint in File Explorer
 ;!e:: ; Alt+E because Ctrl+E is used and can not be overwritten with Windows 10 and IE/Edge Browser Universal App
-sURL := Browser_GetUrl()
-If Connections_IsUrl(sURL) { 
-	Connections_Edit(sURL)
+sUrl := Browser_GetUrl()
+If Connections_IsUrl(sUrl) { 
+	Connections_Edit(sUrl)
 	return
-} Else If Blogger_IsUrl(sURL) { 
-	Blogger_Edit(sURL)
+} Else If Blogger_IsUrl(sUrl) { 
+	Blogger_Edit(sUrl)
 	return
-} Else If SharePoint_IsUrl(sURL) { ; SharePoint
-	newurl:= SharePoint_CleanUrl(sURL) ; returns wihout ending /
+} Else If SharePoint_IsUrl(sUrl) { ; SharePoint
+	newurl:= SharePoint_CleanUrl(sUrl) ; returns wihout ending /
 	; For o365 SharePoint check if file is synced in SPsync.ini
 	If SharePoint_IsSPWithSync(newurl) { ; mspe can also offers Sync
 		sFile := SharePoint_Url2Sync(sUrl)
@@ -434,7 +431,7 @@ If Connections_IsUrl(sURL) {
 		Run %DefExplorerExe% "%newurl%"
 	}	 	
 } Else {
-	TrayTipAutoHide("NWS PowerTool",sURL . " did not match a Connections, SharePoint or Blogger url!",,0x2)
+	TrayTipAutoHide("NWS PowerTool",sUrl . " did not match a Connections, SharePoint or Blogger url!",,0x2)
 }
 return
 
@@ -451,11 +448,11 @@ return
 ^+c:: ; <--- [Browser] Intelli Copy Active Url
 IntelliCopyActiveUrl:
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/intellicopy_active_url"
+	Run, "https://connectionsroot/blogs/tdalon/entry/intellicopy_active_url" ; TODO
 	return
 }
 
-sLink := Browser_GetUrl()
+sLink := Browser_GetActiveUrl()
 If ErrorLevel {
 	MsgBox 0x1010, Error, No url could be copied!
 	return
@@ -476,7 +473,7 @@ If FileExist("Lib/Connections.ahk") {
 	}
 }
 
-sHtml =	<a href="%sLink%">%linktext%</a>   
+sHtml =<a href="%sLink%">%linktext%</a> 
 Clip_SetHtml(sHtml,sLink) 
 TrayTipAutoHide("NWS PowerTool","Link was copied to the clipboard!")
 
@@ -549,12 +546,12 @@ sleep, 100 ;(wait in ms) give time for the menu to popup
 Sendinput e ; Send the underlined key that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
 ClipWait, 2
 
-sURL := Clipboard
-If (sURL = "") {
+sUrl := Clipboard
+If (sUrl = "") {
 	Exit
 }
 
-Run, iexplore.exe %sURL%
+Run, iexplore.exe %sUrl%
 ;Sleep 1000
 ;WinActivate, ahk_exe, iexplore.exe
 ;Run, C:\Users\%A_UserName%\AppData\Local\Google\Chrome\Application\chrome.exe %clipboard% ; Open in Google Chrome
@@ -571,16 +568,18 @@ Clipboard := ""  ; Empty the clipboard to allow ClipWait work
 
 Click Right ; Click Right mouse button
 sleep, 100 ;(wait in ms) give time for the menu to popup
-SendInput e ; Send the underlined key that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
+SendInput e ; Send the underlined key https://superuser.com/questions/1721702/how-to-show-the-underlines-for-navigation-key-hotkey-in-context-menu-when-ri that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
+; See also https://stackoverflow.com/questions/62707998/chrome-windows10-right-click-context-menu-option-underline-on-key-missing
 ClipWait, 2
 
-sURL := Clipboard
-If (sURL = "") {
+sUrl := Clipboard
+If (sUrl = "") {
 	Exit
 }
 
-sURL := IntelliPaste_CleanUrl(sURL)
-OpenLink(sURL)
+sUrl := IntelliPaste_CleanUrl(sUrl)
+Run %sUrl% ; Handled by BrowserSelect
+;OpenLink(sUrl)
 
 Clipboard := SavedClipboard ; Restore the original clipboard
 return
@@ -596,12 +595,12 @@ sleep, 100 ;(wait in ms) give time for the menu to popup
 SendInput e ; Send the underlined key that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
 ClipWait, 2
 
-sURL := Clipboard
-If !sURL
+sUrl := Clipboard
+If !sUrl
 	Exit
 
-If SharePoint_IsUrl(sURL) {
-	newurl:=SharePoint_CleanUrl(sURL)
+If SharePoint_IsUrl(sUrl) {
+	newurl:=SharePoint_CleanUrl(sUrl)
 	newurl:=StrReplace(newurl,"https:","")
 	newurl:=StrReplace(newurl,"+"," ") ; strange issue with blank converted to +
 	newurl:=StrReplace(newurl,"/","\")
@@ -764,8 +763,8 @@ return
 ; -------------------------------------------------------------------------------------------------------------------
 ;IsIELink(url)
 ; true if link shall be opened with Internet Explorer rather than another browser e.g. Chrome because of incompatibility
-IsIELink(sURL){
-	If SharePoint_IsUrl(sURL) || InStr(sURL,"file://") || InStr(sURL,"/pkit/") || InStr(sURL,"/BlobIT/") || InStr(sURL,"/openscapeuc/dial/") 
+IsIELink(sUrl){
+	If SharePoint_IsUrl(sUrl) || InStr(sUrl,"file://") || InStr(sUrl,"/pkit/") || InStr(sUrl,"/BlobIT/") || InStr(sUrl,"/openscapeuc/dial/") 
 		return true
 	Else 	
 		return false	
@@ -778,22 +777,22 @@ PasteCleanUrl(encode:= False){
 	; calls: CleanUrl
 	; called by Hotkey Ctrl+Ins [decode=false] and Ctrl+F12 [decode=true]
 	ClipSaved := ClipboardAll
-	sURL := clipboard
+	sUrl := clipboard
 
-	sURL := GetFileLink(sURL)
-	sURL := IntelliPaste_CleanUrl(sURL)
+	sUrl := GetFileLink(sUrl)
+	sUrl := IntelliPaste_CleanUrl(sUrl)
 
 	If (encode) {
-		sURL := uriEncode(sURL)
-		sURL := StrReplace(sURL,":","%3A")
-		sURL := StrReplace(sURL,"https%3A","https:")
-		sURL := StrReplace(sURL,"http%3A","http:")
+		sUrl := uriEncode(sUrl)
+		sUrl := StrReplace(sUrl,":","%3A")
+		sUrl := StrReplace(sUrl,"https%3A","https:")
+		sUrl := StrReplace(sUrl,"http%3A","http:")
 	}
 	
-	;MsgBox Clean url:`n%sURL%
-	;sendInput % sURL
+	;MsgBox Clean url:`n%sUrl%
+	;sendInput % sUrl
 	
-	Clip_Paste(sURL)
+	Clip_Paste(sUrl)
 	return
 }
 
@@ -801,21 +800,24 @@ PasteCleanUrl(encode:= False){
 ; -------------------------------------------------------------------------------------------------------------------
 ; Function OpenLink
 ; Open Link in Default browser
-OpenLink(sURL) {
-	If IsIELink(sURL) {
-		;Run, %A_ProgramFiles%\Internet Explorer\iexplore.exe %sURL%
-		Run, iexplore.exe "%sURL%"
-		;Sleep 1000
-		;WinActivate, ahk_exe, iexplore.exe
-	} Else If Confluence_IsUrl(sURL)  || Jira_IsUrl(sURL)  { ; JIRA or Confluence urls							
-		;Run, C:\Users\%A_UserName%\AppData\Local\Google\Chrome\Application\chrome.exe %sURL%
-		Run, "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 3" "%sURL%"
-	} Else If InStr(sURL,"https://teams.microsoft.com/") { ; Teams url=>open by default in App
-		;Run, StrReplace(sURL, "https://","msteams://")
-		Run, "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 4" "%sURL%"
+OpenLink(sUrl) {
+	If SharePoint_IsUrl(sUrl) {
+		If InStr(sUrl,".xlsx") {
+			sUrl := "ms-excel:ofe|u|" . sUrl
+			Run, "%sUrl%"
+		}
+	} If IsIELink(sUrl) {
+		;Run, %A_ProgramFiles%\Internet Explorer\iexplore.exe %sUrl%
+		Run, iexplore.exe "%sUrl%"
+	} Else If Confluence_IsUrl(sUrl)  || Jira_IsUrl(sUrl)  { ; JIRA or Confluence urls							
+		;Run, C:\Users\%A_UserName%\AppData\Local\Google\Chrome\Application\chrome.exe %sUrl%
+		Run, "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 3" "%sUrl%"
+	} Else If InStr(sUrl,"https://teams.microsoft.com/") { ; Teams url=>open by default in App
+		;Run, StrReplace(sUrl, "https://","msteams://")
+		Run, "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 4" "%sUrl%"
 	} Else {
-		;sURL := IntelliPaste_CleanUrl(sURL) ; No need to clean because handled by Redirector
-		Run, "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 1" "%sURL%"
+		;sUrl := IntelliPaste_CleanUrl(sUrl) ; No need to clean because handled by Redirector
+		Run, "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 1" "%sUrl%"
 	} ; End If
 } ; End Function OpenLink
 
@@ -921,16 +923,7 @@ If RegExMatch(sUrl,"youtube\.com/(?:c|channel)/") { ; YouTube Channel Search
 
 
 ; ----------------------------------------------------------------------
-SetPhoneNumber(ItemName){
-If GetKeyState("Ctrl") {
-	sUrl := "https://connectionsroot/blogs/tdalon/entry/Connections2ticket_ahk"
-	Run, "%sUrl%"
-	return
-}
-PowerTools_SetSetting(ItemName)
-}
-
-SetJiraUserName(ItemName){
+SetSetting(ItemName){
 If GetKeyState("Ctrl") {
 	sUrl := "https://tdalon.github.io/ahk/NWS-PowerTool"
 	Run, "%sUrl%"
@@ -938,8 +931,6 @@ If GetKeyState("Ctrl") {
 }
 PowerTools_SetSetting(ItemName)
 }
-
-
 
 
 ; ----------------------------------------------------------------------

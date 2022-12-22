@@ -1,7 +1,6 @@
 ; Library File for People Social Functions
 ; Used by PeopleConnector and ConnectionsEnhancer
 
-#Include <Teams>
 #Include <Clip>
 ;#Include <Connections> ; remove Lib declaration because it prompts for ConnectionsRootUrl
 ; Super global-variables

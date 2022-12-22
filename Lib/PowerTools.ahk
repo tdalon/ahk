@@ -290,7 +290,6 @@ IniFile = %A_ScriptDir%\PowerTools.ini
 
 Switch Config
 {
-
     Case "Default": ; Global default settings
         sEmpty=
         PowerTools_RegWrite("Domain","")
@@ -503,7 +502,6 @@ PowerTools_CheckForUptate()
 }
 
 ; -------------------------------------------------------------------------------------------------------------------
-
 PowerTools_TweetPush(ScriptName){
 
 sLogUrl := PowerTools_Changelog(ScriptName,False)
@@ -549,7 +547,6 @@ If !(ParamVal="")
 If RegExMatch(Param,"^TeamsFindText(.*)",sMatch) 
     return Teams_GetText(sMatch1,True) ; Default value
 
-
 Switch Param
 {
     Case "TeamsMentionDelay":
@@ -560,8 +557,6 @@ Switch Param
         return 500
     Case "TeamsShareDelay":
         return 1500
-    Case "TeamsMeetingWinUseFindText":
-        return 1
 }
 } ;eofun
 
@@ -577,3 +572,31 @@ PowerTools_RegWrite(Param,ParamVal)
 return ParamVal
 
 } ;eofun
+
+
+PowerTools_ErrDlg(Text,sUrl:=""){
+
+If !sUrl {
+    MsgBox 0x10, %A_ScriptName%: Error, %Text% ; OK|Cancel
+    Return
+}
+SetTimer, ChangeButtonNames, 50 
+
+MsgBox 0x11, %A_ScriptName%: Error, %Text% ; OK|Cancel
+
+IfMsgBox, Cancel ; Help
+    Run, %sUrl%
+return
+
+ChangeButtonNames: 
+SetTitleMatchMode, RegEx
+IfWinNotExist, .*: Error$
+	return  ; Keep waiting.
+SetTimer, ChangeButtonNames, Off 
+WinActivate 
+ControlSetText, Button1, &OK 
+ControlSetText, Button2, &Help 
+return
+
+}
+
