@@ -1,6 +1,6 @@
 ; See documentation TODO
 
-LastCompiled = 20210416063519
+LastCompiled = 20220314141310
 
 
 #Include <Teamsy>
@@ -8,26 +8,24 @@ LastCompiled = 20210416063519
 
 #SingleInstance force ; for running from editor
 
-Menu, Tray, Add, &Run Launcher, Teams_Launcher
-SubMenuSettings := PowerTools_MenuTray()
-Menu,Tray,Default,&Run Launcher
-
-
 HKid = Launcher
-
-; Hotkeys: Activate, Meeting Action Menus and Settings Menus
-
-Menu, SubMenuSettings, Add, %HKid% Hotkey, Teams_HotkeySet
-RegRead, HK, HKEY_CURRENT_USER\Software\PowerTools, Teams%HKid%Hotkey
+RegRead, HK, HKEY_CURRENT_USER\Software\PowerTools, TeamsHotkey%HKid%
 If (HK != "") {
-    Teams_HotkeyActivate(HKid,HK, False)
-}
-label = Teams_%HKid%Cb
-If IsLabel(label)
-    Menu, SubMenuMeeting, Add, Toggle %HKid%, %label% ; Requires Cb Label for not loosing active window
-Else
-    Menu, SubMenuMeeting, Add, Toggle %HKid%, Teams_%HKid% ; Requires Cb Label for not loosing active window
+		MenuLabel = &Run Launcher`t(%HK%)
+	} Else
+		MenuLabel = &Run Launcher
 
+Menu, Tray, Add, %MenuLabel%, Teams_Launcher
+SubMenuSettings := PowerTools_MenuTray()
+Menu,Tray,Default,%MenuLabel%
+
+If (HK != "") {
+		Teams_HotkeyActivate(HKid,HK, False)
+		MenuLabel = %HKid% Hotkey`t(%HK%)
+	} Else
+		MenuLabel = %HKid% Hotkey
+
+Menu, SubMenuSettings, Add, %MenuLabel%, Teams_HotkeySet
 
 ; Tooltip
 If !a_iscompiled 
@@ -42,8 +40,6 @@ Menu, Tray, Tip, %sTooltip%
 
 ; Reset Main WinId at startup because of some possible hwnd collision
 PowerTools_RegWrite("TeamsMainWinId","")
-
-
 return
 
 
