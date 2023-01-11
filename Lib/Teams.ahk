@@ -70,9 +70,9 @@ Run, %sLink%
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Emails2Meeting(sEmailList){
-; Open Teams 1-1 Chat or Group Chat from list of Emails
+; Create and Open Teams Meeting from list of Emails
 sLink := "https://teams.microsoft.com/l/meeting/new?attendees=" . StrReplace(sEmailList, ";",",") ; msteams:
-TeamsExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
+TeamsExe = Teams_GetExe()
 If FileExist(TeamsExe)
     sLink := StrReplace(sLink,"https://teams.microsoft.com","msteams:")
 Run, %sLink% 
@@ -156,25 +156,76 @@ If (FavDir ="") {
 Run, "%FavDir%"
 } ; eofun
 
+; -------------------------------------------------------------------------------------------------------------------
+Teams_FavsOpen(sInput) {
+If (sInput="") {
+    Teams_FavsOpenDir()
+    Return
+}
+; List .lnk files in FavDir
+RegRead, FavDir, HKEY_CURRENT_USER\Software\PowerTools, TeamsFavsDir
+If (FavDir ="") {
+    TrayTipAutoHide("Teamsy: OpenFav!","No Favorites directory!") 
+    return
+}
+sInput := Trim(sInput)
+sPat := StrReplace(sInput," ","[^\s]*\s")
+
+Loop, Files, %FavDir%\*.url, R ; recurse in subdirectories
+{
+    If RegExMatch(SubStr(A_LoopFileName, 1,-4),"i)" . sPat) { ; LoopFileName contains extension; ignore case
+        Run, %A_LoopFileFullPath%
+        return
+    }
+} ; end loop
+Loop, Files, %FavDir%\*.lnk, R ; recurse in subdirectories
+{
+    If RegExMatch(SubStr(A_LoopFileName, 1,-4),"i)" . sPat) { ; LoopFileName contains extension; ignore case
+        Run, %A_LoopFileFullPath%
+        return
+    }
+} ; end loop
+sMsg := "No Favorite found matching '", . sPat . "'."
+TrayTipAutoHide("Teamsy: OpenFav!",sMsg) 
+    
+
+} ; eofun
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_FavsAdd(){
+; Add to Favorites: either link or Email List
+; Called from Launcher f+ command
+sInput := Clip_GetSelection()
+If (sInput="") {
+    sInput := Clipboard
+}
+If RegExMatch(sInput,"^http.*"){ ; Link
+    Teams_Link2Fav(sInput)
+} Else {
+    Teams_Emails2Favs(sInput)
+}
+} ; eofun
+
 ; ----------------------------------------------------------------------
-Teams_Emails2Favs(sEmailList:= ""){
+Teams_Emails2Favs(sInput:= ""){
 ; Calls: Email2TeamsFavs
 
 If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/2021/03/teams-people-favorites.html"
 	return
 }
-If (sEmailList ="") {
-    sSelection := People_GetSelection()
-    If (sSelection = "") { 
-        TrayTipAutoHide("Teams: Email to Fav!","Nothing selected!")   
+If (sInput ="") {
+    sInput := People_GetSelection()
+    If (sInput = "") { 
+        TrayTipAutoHide("Teams: Email to Fav!","Nothing selected or Clipboard empty!")   
         return
     }
-    sEmailList := People_GetEmailList(sSelection)
-    If (sEmailList = "") { 
-        TrayTipAutoHide("Teams: Email to Fav!","No email could be found from Selection!")   
-        return
-    }
+}
+sEmailList := People_GetEmailList(sInput)
+If (sEmailList = "") { 
+    TrayTipAutoHide("Teams: Email to Fav!","No email could be found from Selection or Clipboard!")   
+    return
 }
 RegRead, FavsDir, HKEY_CURRENT_USER\Software\PowerTools, TeamsFavsDir
 If ErrorLevel {
@@ -250,6 +301,7 @@ Teams_GetExe(){
 fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
 return fExe
 } ;eofun
+; ----------------------------------------------------------------------
 
 Teams_Emails2Users(EmailList,TeamLink:=""){
 ; Syntax: 
@@ -258,6 +310,8 @@ Teams_Emails2Users(EmailList,TeamLink:=""){
 ; TeamLink: (String) optional. If not passed, user will be asked via inputbox
 ;  e.g. https://teams.microsoft.com/l/team/19%3a12d90de31c6e44759ba622f50e3782fe%40thread.skype/conversations?groupId=640b2f00-7b35-41b2-9e32-5ce9f5fcbd01&tenantId=xxx
 
+; Requires PowerShell
+; Calls: Teams_PowerShellCheck
 If GetKeyState("Ctrl") {
 	Run, "https://connectionsroot/blogs/tdalon/entry/emails2teammembers"
 	return
@@ -312,6 +366,8 @@ RunWait, PowerShell.exe -NoExit -ExecutionPolicy Bypass -Command %PsFile% ;,, Hi
 Teams_ExportTeams() {
 ; CsvFile := Teams_ExportTeams
 ; returns empty if not created/ failed
+
+; Requires PowerShell
 
 If GetKeyState("Ctrl") {
 	Run, "https://connectionsroot/blogs/tdalon/entry/emails2teammembers" ; TODO
@@ -1359,8 +1415,9 @@ SendInput {enter}
 
 } ; eofun
 
+
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_Share(ShareMode := 2){
+Teams_MeetingShare(ShareMode := 2){
 ; ShareMode = 0 : unshare
 ; ShareMode = 1 : share
 ; ShareMode =2: toggle share
@@ -1446,6 +1503,25 @@ If (MonitorCount > 1) and !(IsSharing) { ; only if IsActive (=>multiple monitors
 
 
 
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_ShareToTeams(sUrl:=""){
+If GetKeyState("Ctrl") {
+    sUrl := "https://tdalon.blogspot.com/2023/01/share-to-teams.html"
+    Run, "%sUrl%"
+	return
+}
+If (sUrl = "") && (Browser_WinActive()) {
+    sUrl := Browser_GetActiveUrl()
+}
+InputBox, sUrl , Share To Teams, Enter Link to Share:, , 640, 125,,,,, %sUrl%
+If ErrorLevel
+    return
+sUrl := "https://teams.microsoft.com/share?href=" + sUrl
+Run, %sUrl%
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
@@ -1657,7 +1733,10 @@ If GetKeyState("Ctrl")  { ; exclude ctrl if use in the hotkey
     return
 }
 
-; For Menu callback, remove ending Hotkey and blanks
+; For Menu callback, remove ending Hotkey and blanks and (Hotkey)
+
+HKid := RegExReplace(HKid,"\t(.*)","")
+;HKid := Trim(HKid) ; remove tab for align right hotkey in menu
 HKid := RegExReplace(HKid," Hotkey$","")
 HKid := StrReplace(HKid," ","")
 
@@ -1667,7 +1746,8 @@ newHK := HotkeyGUI(,prevHK,,,"Teams " . HKid . " - Set Global Hotkey")
 If ErrorLevel ; Cancelled
     return
 If (newHK = prevHK) ; no change
-  return
+    return
+
 RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, TeamsHotkey%HKid%, %newHK%
 
 If (newHK = "") { ; reset/ disable hotkey
@@ -1683,6 +1763,11 @@ If Not (prevHK == "")
 	Hotkey, %prevHK%, Teams_%HKid%, Off
 
 Teams_HotkeyActivate(HKid,newHK, True)
+
+; Refresh Menus (function is only called from Script Menu)
+Reload
+
+
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_HotkeyActivate(HKid,HK,showTrayTip := False) {

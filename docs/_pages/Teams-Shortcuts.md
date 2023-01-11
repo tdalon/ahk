@@ -72,8 +72,6 @@ See [main blog post](https://tdalon.blogspot.com/2020/11/teams-shortcuts-smart-r
 
 ### Personalize Mentions (Alt+1)
 
-
-
 ### Send Mentions
 
 See [main blog post](https://tdalon.blogspot.com/2020/11/teams-shortcuts-send-mentions.html)
@@ -85,6 +83,8 @@ See [main blog post](https://tdalon.blogspot.com/2020/11/teams-shortcuts-send-me
 ### [Push To Talk](https://tdalon.blogspot.com/2021/02/teams-push-to-talk.html)
 
 ### [Mute on/ off](https://tdalon.blogspot.com/2021/04/teams-shortcuts-mute-on-off.html)
+
+### [Share To Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
 
 ## Troubleshooting
 

@@ -34,7 +34,7 @@ Contrary to [Teamsy](Teamsy) it does not require any third-party launcher applic
 Simply run TeamsyLauncher (ahk or exe).
 When it is running the first time, you shall configure a hotkey to start the launcher.
 Right-Click on the System Tray Icon and go to Settings->Launcher Hotkey.
-(I like to use Ctrl+Space)
+(I like to use Win+Space)
 
 Running the Hotkey will open an input dialog box where you can type the commands to be sent to Microsoft Teams Client.
 You can also run the Launcher by double-clicking on the System Tray icon.

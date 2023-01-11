@@ -62,7 +62,7 @@ Case "p":
     sKeyword = pop
 Case "c":
     sKeyword = call
-Case "f","fi":
+Case "fi","find":
     sKeyword = find
 Case "free","a","av":
     sKeyword = available
@@ -128,13 +128,13 @@ Case "fs":
     Teams_MeetingToggleFullscreen()
     return
 Case "sh","share":  
-    Teams_Share()
+    Teams_MeetingShare()
     return
 Case "sh+":  
-    Teams_Share(1)
+    Teams_MeetingShare(1)
     return
 Case "sh-","unsh":  
-    Teams_Share(0)
+    Teams_MeetingShare(0)
     return
 Case "mu","mute":  
     Switch sInput
@@ -202,7 +202,10 @@ Case "vi+":
 Case "vi-":
     Teams_Video(0)
     return
-Case "fav","of": ; open favorites folder
+Case "f","fav":
+    Teams_FavsOpen(sInput)
+    return
+Case "of": ; open favorites folder
     Teams_FavsOpenDir()
     return
 Case "2fav","2f": ; link 2 favorite
@@ -210,6 +213,12 @@ Case "2fav","2f": ; link 2 favorite
     return
 Case "e2f","p2f": ; email|people 2 favorite
     Teams_Emails2Favs()
+    return
+Case "f+": ; add to favorite (either link or emails)
+    Teams_FavsAdd()
+    return
+Case "s2t": ; Share To teams
+    Teams_ShareToTeams()
     return
 } ; End Switch
 

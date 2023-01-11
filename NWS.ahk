@@ -569,7 +569,7 @@ Clipboard := ""  ; Empty the clipboard to allow ClipWait work
 Click Right ; Click Right mouse button
 sleep, 100 ;(wait in ms) give time for the menu to popup
 SendInput e ; Send the underlined key https://superuser.com/questions/1721702/how-to-show-the-underlines-for-navigation-key-hotkey-in-context-menu-when-ri that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
-; See also https://stackoverflow.com/questions/62707998/chrome-windows10-right-click-context-menu-option-underline-on-key-missing
+; See also https://stackoverflow.com/questions/62707998/chrome-windows10-right-click-context-menu-option-underline-on-key-missing Press Alt+Shift before Right-Click
 ClipWait, 2
 
 sUrl := Clipboard

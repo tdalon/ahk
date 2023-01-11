@@ -4,40 +4,41 @@
 
 ListBox(Title := "", Prompt := "", List := "", Select := 0, AlwaysOnTop := True) {
 ;-------------------------------------------------------------------------------
-    ; show a custom input box with a ListBox control
-    ; return the text of the selected item
-    ;---------------------------------------------------------------------------
-    ; Title is the title for the GUI
-    ; Prompt is the text to display
-    ; List is a pipe delimited list of choices
-    ; Select (if present) is the index of the preselected item. Default is 0 for no selection
+; show a custom input box with a ListBox control
+; return the text of the selected item
+;---------------------------------------------------------------------------
+; Title is the title for the GUI
+; Prompt is the text to display
+; List is a pipe delimited list of choices
+; Select (if present) is the index of the preselected item. Default is 0 for no selection
 
-    static LB ; used as a GUI control variable
+static LB ; used as a GUI control variable
 
-    ; create GUI
-    Gui, ListBox: New, ,%Title%
-    Gui, -MinimizeBox
-    Gui, Margin, 30, 18
-    If Prompt ; not empty
-        Gui, Add, Text,, %Prompt%
-    Gui, Add, ListBox, vLB hwndHLB Choose%Select%, %List%
-    
-    W := LB_EX_CalcWidth(HLB)
-    H := LB_EX_CalcHeight(HLB)
-    GuiControl, Move, LB, w%W% h%H%
+; create GUI
+Gui, ListBox: New, ,%Title%
+Gui, -MinimizeBox
+Gui, Margin, 30, 18
+If Prompt ; not empty
+    Gui, Add, Text,, %Prompt%
+Gui, Add, ListBox, vLB hwndHLB Choose%Select%, %List%
 
-    Gui, Add, Button, w60 Default, &OK
-    Gui, Add, Button, x+m wp, &Cancel
+W := LB_EX_CalcWidth(HLB)
+H := LB_EX_CalcHeight(HLB)
+GuiControl, Move, LB, w%W% h%H%
 
-    If (AlwaysOnTop = True)
-        Gui, +AlwaysOnTop
+Gui, Add, Button, w60 Default, &OK
+Gui, Add, Button, x+m wp, &Cancel
 
-    Gui, Show, AutoSize
-    ; main wait loop
-    Gui, +LastFound
-    WinWaitClose
+If (AlwaysOnTop = True)
+    Gui, +AlwaysOnTop
 
-    return LB
+Gui, Show, AutoSize
+
+; main wait loop
+Gui, +LastFound
+WinWaitClose
+
+return LB
 
 
     ;-----------------------------------

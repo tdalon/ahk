@@ -49,8 +49,6 @@ Case "ConnectionsEnhancer":
     sUrl = https://tdalon.github.io/ahk/Connections-Enhancer
 Case "TeamsShortcuts":
     sUrl = https://tdalon.github.io/ahk/Teams-Shortcuts
-Case "MO":
-    sUrl := "https://connectionsroot/wikis/home/wiki/Wc4f94c47297c_42c8_878f_525fd907cb68/page/MO%20PowerTool"
 Case "PeopleConnector":
     sUrl = https://tdalon.github.io/ahk/People-Connector
 Case "OutlookShortcuts":
@@ -312,7 +310,7 @@ Switch Config
 
 
         ; Load Parameters
-        ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay,TeamsMeetingWinUseFindText
+        ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay
         ; FindText
         TeamsFindTextList = Mute,Muted,Leave,Resume,MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
         Loop, Parse,TeamsFindTextList, `,
@@ -368,7 +366,7 @@ Switch Config
         
 
         ; Load Parameters
-        ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay,TeamsMeetingWinUseFindText
+        ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay
         ; FindText
         TeamsFindTextList = MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
         Loop, Parse,TeamsFindTextList, `,

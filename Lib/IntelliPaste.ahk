@@ -283,6 +283,7 @@ IntelliPaste_CleanUrl(url,encode:= False) {
 
 url := Trim(url)
 
+
 ; Teams Beautifier
 url := Teams_FileLinkBeautifier(url) ; will decode url
 

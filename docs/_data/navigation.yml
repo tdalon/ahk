@@ -30,10 +30,14 @@ pages:
         url: /Sync
   - title: "People Connector"
     url: /People-Connector
-  - title: "Teams Shortcuts"
-    url: /Teams-Shortcuts
-  - title: "Teamsy"
-    url: /Teamsy
+  - title: "Teams PowerTools"
+    children:
+    - title: "Teams Shortcuts"
+      url: /Teams-Shortcuts
+    - title: "Teamsy"
+      url: /Teamsy
+    - title: "Teamsy Launcher"
+      url: /Teamsy-Launcher
   - title: "Connections Enhancer"
     url: /Connections-Enhancer
   - title: "Outlook Shortcuts"

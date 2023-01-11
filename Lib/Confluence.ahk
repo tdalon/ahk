@@ -84,9 +84,11 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 
 sResponse := Confluence_Get(sUrl)
 sPat = s)<meta name="ajs-page-title" content="([^"]*)">.*<meta name="ajs-space-name" content="([^"]*)">.*<meta name="ajs-page-id" content="([^"]*)">
-RegExMatch(sResponse, sPat, sMatch)
+If RegExMatch(sResponse, sPat, sMatch) {
+TrayTipAutoHide("Confluence: CleanLink!","Getting PageName and PageId by API failed!")  	
 sLinkText := sMatch1 " - " sMatch2  ; | will break link in Jira RTF Field
 sLinkText := StrReplace(sLinkText,"&amp;","&")
+}
 ; extract section
 If RegExMatch(sUrl,"#([^?&]*)",sSection) {
 	sSection := RegExReplace(sSection1,".*-","")
@@ -101,11 +103,15 @@ return [sUrl, sLinkText]
 
 ; ----------------------------------------------------------------------
 Confluence_CleanUrl(sUrl){
+; Convert Confluence url to link to page by name to link to page by pageId
 If InStr(sUrl,"/display/") { ; pretty link
 	sResponse := Confluence_Get(sUrl)
 	sPat = s)<meta name="ajs-page-id" content="([^"]*)">
-	If !RegExMatch(sResponse, sPat, sMatch)
-	 	MsgBox %sResponse%
+	If !RegExMatch(sResponse, sPat, sMatch) { ; error on Confluence_Get
+	 	TrayTipAutoHide("Confluence: CleanUrl!","Getting PageId by API failed!")   
+		return sUrl
+		;MsgBox %sResponse%
+	}
 	RegExMatch(sUrl, "https://[^/]*", sRootUrl)
 	sUrl := sRootUrl "/pages/viewpage.action?pageId=" sMatch1
 }
@@ -169,12 +175,12 @@ static sConfluenceSearch, sSpace
 ;https://confluenceroot/dosearchsite.action?cql=+space+%3D+%22PMPD%22+and+type+%3D+%22page%22+and+label+in+(%22best_practice%22%2C%22bitbucket%22)&queryString=code
 ;https://confluenceroot/dosearchsite.action%3Fcql=%2Bspace%2B=%2B%22PMPD%22%2Band%2Btype%2B=%2B%22page%22%2Band%2Blabel%2Bin%2B%28%22best_practice%22%2C%22bitbucket%22%29&queryString=code
 ;https://confluenceroot/dosearchsite.action?cql=+space+=+"PMPD"+and+type+=+"page"+and+label+in+("best_practice","bitbucket")&queryString=code
+; https://cr/dosearchsite.action?cql=siteSearch+~+%22move+page%22+and+space+%3D+%22PMT%22+and+type+%3D+%22page%22+and+label+%3D+%22confluence%22+and+label+%3D+%22microlearning%22&queryString=move+page
 
 ; , %2C
 ; + %2B
 ; = %3D
 ; " %22
-
 
 ; extract def search and key from url
 RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
@@ -183,8 +189,8 @@ sQuote = "
 
 If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) { 	
 	sCQL := sCQL1
-	;sCQL := StrReplace(sCQL,"=","%3D")
-	;sCQL := StrReplace(sCQL,sQuote,"%22")
+	sCQL := StrReplace(sCQL,"%3D","=")
+	sCQL := StrReplace(sCQL,"%22",sQuote)
 	sCQL := StrReplace(sCQL,"%2B","+")
 	sCQL := StrReplace(sCQL,"%28","(")
 	sCQL := StrReplace(sCQL,"%29",")")
@@ -203,17 +209,22 @@ If RegExMatch(sUrl,ReRootUrl . "/dosearchsite\.action\?cql=(.*)",sCQL) {
 		sSpace := sSpace1
 
 	; Extract Search String
-	If RegExMatch(sCQL,"\&queryString=(.*)",sSearchString) {
-		sDefSearch := sDefSearch . " " . sSearchString1
-	}
+	
 	sPat = siteSearch\+~\+"([^"]*)"
 	If RegExMatch(sCQL,sPat,sSearchString) {
 		; reverse regexp to wildcards
 		sSearchString := StrReplace(sSearchString1,"%2F","/")
+		sSearchString := StrReplace(sSearchString,"%20"," ")
+		sSearchString := StrReplace(sSearchString,"+"," ")
 		;If RegExMatch(sSearchString,"^/(.*)/$",sSearchString)
 		;	sSearchString := StrReplace(sSearchString1,".*","*")
 		sDefSearch := sDefSearch . " " . sSearchString
 	}
+	/* Comment out, because else search string is doubled
+	If RegExMatch(sCQL,"\&queryString=(.*)",sSearchString) {
+		sDefSearch := sDefSearch . " " . sSearchString1
+	} 
+	*/
 	
 ; Not from advanced search -> Extract Space 
 } Else {
@@ -289,8 +300,8 @@ Clip_Paste(sSearchUrl)
 Send {Enter}
 
 
-; https://wiki.etelligent.ai/dosearchsite.action?cql=type+=+%22page%22+and+space=%22EMIK%22+and+label+%3D+%22r4j%22
-; https://wiki.etelligent.ai/dosearchsite.action?cql=siteSearch+~+%22reuse%22+and+space+%3D+%22EMIK%22+and+type+%3D+%22page%22+and+label+%3D+%22r4j%22&queryString=reuse
+; https://confroot/dosearchsite.action?cql=type+=+%22page%22+and+space=%22EMIK%22+and+label+%3D+%22r4j%22
+; https://confroot/dosearchsite.action?cql=siteSearch+~+%22reuse%22+and+space+%3D+%22EMIK%22+and+type+%3D+%22page%22+and+label+%3D+%22r4j%22&queryString=reuse
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------

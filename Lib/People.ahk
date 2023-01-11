@@ -11,6 +11,9 @@ global PowerTools_ADPath
 
 ; ----------------------------------------------------------------------
 People_GetSelection(){
+; sSelection := People_GetSelection()
+; If Selection, first check Html format, if empty check Text format
+; If nothing selected, return Clipboard
 If WinActive("ahk_exe Excel.exe") {
     sSelection := Clip_GetSelection()
 } Else {
@@ -25,10 +28,9 @@ If !(sSelection) { ; empty
     ;TrayTipAutoHide("People Connector warning!","You need first to select something!")   
     ;return
     If !(sSelection)  ; empty - no selection -> take value from clipboard
-        sSelection := clipboard
+        return clipboard
 } 
-SelArr[1] := sSelection
-return SelArr
+return sSelection
 } ; eofun
 ; ----------------------------------------------------------------------
 People_GetEmailList(sInput){

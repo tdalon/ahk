@@ -50,7 +50,7 @@ Menu, SubMenuSettings, Add, Set Favorites Directory, Teams_FavsSetDir
 Menu, SubMenuSettings, Add, Open Favorites Directory, Teams_FavsOpenDir
 
 
- ParamList = Mention Delay,Command Delay,Click Delay, Meeting Win Use FindText 
+ ParamList = Mention Delay,Command Delay,Click Delay 
 
 ; Hotkeys: Activate, Meeting Action Menus and Settings Menus
 Loop, Parse, ParamList, `,
@@ -60,24 +60,38 @@ Menu, SubMenuSettings, Add, Parameters, :SubMenuParams
 
 
 HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk,Clear Cache,Activate Meeting Window 
+MeetingToggleList = Mute,Video,Mute App,Share,Raise Hand,Push To Talk
 
 ; Hotkeys: Activate, Meeting Action Menus and Settings Menus
 Loop, Parse, HotkeyIDList, `,
 {
 	HKid := A_LoopField
 	HKid := StrReplace(HKid," ","")
-	Menu, SubMenuHotkeys, Add, %A_LoopField%, Teams_HotkeySet
+	
 	RegRead, HK, HKEY_CURRENT_USER\Software\PowerTools, TeamsHotkey%HKid%
+	; Activate Hotkey
 	If (HK != "") {
 		Teams_HotkeyActivate(HKid,HK, False)
+		MenuLabel = %A_LoopField% `t(%HK%)
+	} Else
+		MenuLabel = %A_LoopField%
+
+	Menu, SubMenuHotkeys, Add, %MenuLabel%, Teams_HotkeySet
+	; Add Meeting Menu Item
+	If A_LoopField in %MeetingToggleList%   ; Add to Meeting Menu
+	{
+		label = Teams_%HKid%Cb
+		If IsLabel(label)
+			Menu, SubMenuMeeting, Add, Toggle %MenuLabel%, %label% ; Requires Cb Label for not loosing active window
+		Else
+			Menu, SubMenuMeeting, Add, Toggle %MenuLabel%, Teams_%HKid% 
+	} Else If (A_LoopField = "Activate Meeting Window") {
+		label = Teams_%HKid%Cb
+		If IsLabel(label)
+			Menu, SubMenuMeeting, Add, %MenuLabel%, %label% ; Requires Cb Label for not loosing active window
+		Else
+			Menu, SubMenuMeeting, Add, %MenuLabel%, Teams_%HKid% 
 	}
-
-	label = Teams_%HKid%Cb
-	If IsLabel(label)
-		Menu, SubMenuMeeting, Add, Toggle %HKid%, %label% ; Requires Cb Label for not loosing active window
-	Else
-		Menu, SubMenuMeeting, Add, Toggle %HKid%, Teams_%HKid% ; Requires Cb Label for not loosing active window
-
 }
 Menu, SubMenuSettings, Add, Global Hotkeys, :SubMenuHotkeys
 Menu, SubMenuMeeting, Add ; Separator
@@ -85,6 +99,7 @@ Menu, SubMenuMeeting, Add ; Separator
 
 Menu,Tray,NoStandard
 Menu, Tray, Add, Launcher, Teams_Launcher
+Menu, Tray, Add, Share To Teams, Teams_ShareToTeamsCb
 Menu, Tray, Add, Add to Teams Favorites (Team or Channel), Link2TeamsFavs
 Menu, Tray, Add, Add to Teams Favorites (Contacts), Email2TeamsFavs
 
@@ -154,6 +169,30 @@ return
 
 #If Teams_IsWinActive()
 
+; Shift Mouse click: Open Link with default browser (ByPass SafeLink)
++LButton:: ; <--- [Teams] Open link with default browser
+SavedClipboard := ClipboardAll  ; Save the entire clipboard to a variable
+Clipboard := ""  ; Empty the clipboard to allow ClipWait work
+
+; release shift key
+Sendinput, {Shift up}
+Click Right ; Click Right mouse button
+sleep, 200 ;(wait in ms) give time for the menu to popup
+SendInput {Up} {Enter}
+ClipWait, 2
+
+sUrl := Clipboard
+If (sUrl = "") {
+	Exit
+}
+Send {Esc} ; Close menu (weird that it stays open)
+Run %sUrl% ; Handled by BrowserSelect
+
+Clipboard := SavedClipboard ; Restore the original clipboard
+return
+
+
+; -------------------------------------------------------------------------------------------------------------------
 ~!1:: ; <--- Personalize Mention
 PersonalizeMention:
 Teams_PersonalizeMention()
@@ -166,7 +205,7 @@ NewConversation:
 Teams_NewConversation()
 return
 
-
+; -------------------------------------------------------------------------------------------------------------------
 ; View Unread
 ; Win+U
 ~#u:: ; <--- View Unread
@@ -180,7 +219,7 @@ SendInput /unread
 Sleep 500
 Send {Enter}
 return	
-
+; -------------------------------------------------------------------------------------------------------------------
 ; View Saved
 ; Win+S
 ~#s:: ; <--- View Saved
@@ -194,7 +233,7 @@ SendInput /saved
 Sleep 500
 Send {Enter}
 return
-
+; -------------------------------------------------------------------------------------------------------------------
 ; Pop-out chat
 ; Win+P
 ~#p:: ; <--- Pop-out chat
@@ -208,7 +247,7 @@ SendInput /pop
 Sleep 500
 Send {Enter}
 return
-
+; -------------------------------------------------------------------------------------------------------------------
 ; Alt+e
 ~!e:: ; <--- Edit
 Send {Enter}
@@ -218,21 +257,22 @@ Sleep 500
 Send {Down 1}
 Send {Enter}
 return	
-
+; -------------------------------------------------------------------------------------------------------------------
 ; Alt+.
 ~!.:: ; <--- (...) Actions menu
 Send {Enter}
 Send {Tab}
 Send {Enter}
 return	
-
+; -------------------------------------------------------------------------------------------------------------------
 ~#t::
 Menu, TeamsShortcutsMenu, Show
 return
-
+; -------------------------------------------------------------------------------------------------------------------
 ; Alt+C
 ~!c:: ; <--- Copy Link
-Teams_CopyLink()
+Teams_ConversationAction("copylink")
+; clipboard := Teams_ConversationGetLink()
 return	
 ; -------------------------------------------------------------------------------------------------------------------
 ; Alt+R - 
@@ -248,16 +288,16 @@ QuoteConversation:
 Teams_SmartReply(False)
 return
 ; -------------------------------------------------------------------------------------------------------------------
-
+; Alt+M
 ~!m:: ; <--- Create eMail with link to current conversation
 ShareByMail:
 If GetKeyState("Ctrl") {
 	;Run, "https://connectionsroot/blogs/tdalon/entry/teams_smart_reply" ;TODO
 	return
 }
-Teams_CopyLink()
+sLink := Teams_ConversationGetLink()
 
-sHTMLBody = Hello<br>Following <a href="%clipboard%">this conversation</a> in Teams:
+sHTMLBody = Hello<br>Following <a href="%sLink%">this conversation</a> in Teams:
 ; Create Email using ComObj
 Try
 	MailItem := ComObjActive("Outlook.Application").CreateItem(0)
@@ -281,6 +321,7 @@ Send ^v
 return
 
 ; ----------------------------------------------------------------------
+; Win+Q
 ~#q::
 SendMentions:
 If GetKeyState("Ctrl") {
@@ -394,6 +435,15 @@ Return
 Teams_RaiseHandCb:
 SendInput, !{Esc} ; for call from system tray - get active window
 Teams_RaiseHand()
+Return 
+
+Teams_ShareCb:
+Teams_MeetingShare()
+Return
+
+Teams_ShareToTeamsCb:
+SendInput, !{Esc} ; for call from system tray - get active window
+Teams_ShareToTeams()
 Return 
 
 MenuCb_ToggleSettingNotificationAtStartup:

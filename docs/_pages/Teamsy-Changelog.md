@@ -8,6 +8,13 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-01-11
+  - New feature: [Share to Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
+* 2023-01-09
+  - Fix: Add Email to Teams Favorites. If no selection check for clipboard (Use Case: Copy email from Teams visit card)
+  - New Launcher command "f+" Add to favorites
+  - New: 'f' Launcher command to open favorites. (No need for external application launcher to use anymore.)
+  - Changed: Launcher Keyword 'f'. (Previously opened find, now favorites)
 * 2022-09-06
   - Updated Shortcut for Toggle Fullscreen based on F11 hotkey. Keyword 'fs' from Launcher. New function: Teams_MeetingToggleFullscreen
 * 2022-03-14

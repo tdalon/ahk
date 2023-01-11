@@ -55,7 +55,7 @@ Thanks to this, the working configuration in Launchy looks like:
 <div style="text-align:center"><img src="/ahk/assets/images/Launchy_Teamsy_Setup.png" alt="Teamsy Launchy Setup"></div>
 
 You will need to add a custom command to the Runner plugin.
-To run it in launcher, type the command keyword t in the screenshot, then TAB followed by the Teamsy command. 
+To run it in launcher, type the command keyword t in the screenshot, then TAB followed by the Teamsy command.
 
 
 ### Alternative without application launcher
@@ -77,6 +77,10 @@ Here you can find the syntax for keywords and command. (I hope the code is clear
 <div style="text-align:center"><img src="/ahk/assets/images/Teamsy_StatusChange.gif" alt="Teamsy Status Change"></div>
 
 ### [Meeting Live Reactions](Teams-Meeting-Reactions)
+
+### [Share To Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
+
+Keyword: 's2t'
 
 ## YouTube Playlist
 
