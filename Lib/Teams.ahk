@@ -58,6 +58,7 @@ If askOpen {
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Emails2Chat(sEmailList){
 ; Open Teams 1-1 Chat or Group Chat from list of Emails
+; See https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/build-and-test/deep-link-teams
 sLink := "msteams:/l/chat/0/0?users=" . StrReplace(sEmailList, ";",",") ; msteams:
 If InStr(sEmailList,";") { ; Group Chat
     InputBox, sTopicName, Enter Group Chat Name,,,,100
@@ -66,6 +67,21 @@ If InStr(sEmailList,";") { ; Group Chat
     }
 } 
 Run, %sLink% 
+} ; eofun
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_Selection2Chat(sSelection:=""){
+; Add to Favorites: either link or Email List
+; Called from Launcher f+ command
+If (sSelection == "")
+    sSelection := People_GetSelection()
+sEmailList := People_GetEmailList(sSelection)
+If (sEmailList = "") { 
+    TrayTipAutoHide("Teams:Emails2Chat warning!","No email could be found in current selection!")   
+    return
+}
+Teams_Emails2Chat(sEmailList)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -218,13 +234,13 @@ If GetKeyState("Ctrl") {
 If (sInput ="") {
     sInput := People_GetSelection()
     If (sInput = "") { 
-        TrayTipAutoHide("Teams: Email to Fav!","Nothing selected or Clipboard empty!")   
+        TrayTipAutoHide("Teams: Emails to Favs!","Nothing selected or Clipboard empty!")   
         return
     }
 }
 sEmailList := People_GetEmailList(sInput)
 If (sEmailList = "") { 
-    TrayTipAutoHide("Teams: Email to Fav!","No email could be found from Selection or Clipboard!")   
+    TrayTipAutoHide("Teams: Emails to Favs!","No email could be found from Selection or Clipboard!")   
     return
 }
 RegRead, FavsDir, HKEY_CURRENT_USER\Software\PowerTools, TeamsFavsDir
@@ -1015,7 +1031,7 @@ return sHtml
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_OpenSecondInstance(){
 If GetKeyState("Ctrl") {
-	Run, "https://tdalon.blogspot.com/2020/12/open-multiple-microsoft-teams-instances.html"
+	Teamsy_Help("2")
 	return
 }
 EnvGet, A_UserProfile, userprofile
@@ -1260,18 +1276,63 @@ Run, "%fTeamsExe%""
 WinWaitActive, ahk_exe Teams.exe
 TeamsMainWinId := WinExist("A")
 PowerTools_RegWrite("TeamsMainWinId",TeamsMainWinId)
-return TeamsMainWinId
+
+return 
 
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_IsMainWindowActive() {
-
 hWnd := WinActive("A")
 hMain := Teams_GetMainWindow()
 return (hWnd = hMain)
 
 } ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Teams_SendCommand(sKeyword,sInput:="",Activate:= false) {
+If Activate
+    Teams_ActivateMainWindow()
+Delay := PowerTools_GetParam("TeamsCommandDelay")
+Send ^e ; Select Search bar
+Send {Esc} ; Clear any preselection
+
+If (SubStr(sKeyword,1,1) = "@") { 
+    ;SendInput @
+    ;sleep, 300
+    ;SendInput % SubStr(sKeyword,2) 
+    ;sleep, 300
+    SendInput %sKeyword%
+    Sleep %Delay% 
+    SendInput {tab}}
+} Else {
+    SendInput /%sKeyword%
+    
+    Sleep %Delay% 
+    SendInput +{enter}
+}
+
+If (sInput=="") ; empty
+    return
+
+
+;sLastChar := SubStr(sInput,StrLen(sInput)) 
+doBreak := (SubStr(sInput,StrLen(sInput)) == "-")
+If (doBreak) {
+    sInput := SubStr(sInput,1,StrLen(sInput)-1) ; remove last -
+}
+Sleep %Delay%
+SendRaw %sInput%
+If (SubStr(sKeyword,1,1) = "@")
+    Return
+If doBreak
+    return
+
+Sleep %Delay%
+SendInput +{enter}
+
+
+}
 
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -1361,6 +1422,15 @@ return false
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ActivateMeetingWindow(){
 Teams_GetMeetingWindow(2,true)
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_ActivateMainWindow(){
+; WinId := Teams_ActivateMainWindow()
+WinId:= Teams_GetMainWindow()
+WinActivate, ahk_id %WinId%
+return WinId
+
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -1510,8 +1580,7 @@ If (MonitorCount > 1) and !(IsSharing) { ; only if IsActive (=>multiple monitors
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ShareToTeams(sUrl:=""){
 If GetKeyState("Ctrl") {
-    sUrl := "https://tdalon.blogspot.com/2023/01/share-to-teams.html"
-    Run, "%sUrl%"
+    Teamsy_Help("s2t")
 	return
 }
 If (sUrl = "") && (Browser_WinActive()) {
@@ -1528,8 +1597,7 @@ Run, %sUrl%
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ClearCache(){
 If GetKeyState("Ctrl") {
-    sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html" 
-    Run, "%sUrl%"
+    Teamsy_Help("cl")
 	return
 }
 Process, Exist, Teams.exe
@@ -1593,6 +1661,12 @@ While WinExist("ahk_exe Teams.exe")
 
 Teams_GetMainWindow()
 } ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_Quit() {
+sCmd = taskkill /f /im "Teams.exe"
+Run %sCmd%,,Hide
+} ; eofun 
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Mute(State := 2){

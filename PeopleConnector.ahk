@@ -57,7 +57,7 @@ If (SettingNotificationAtStartup)
     TrayTip "People Connector is running!", %sText%
 ;TrayTipAutoHide("People Connector is running!",sText)
 
-Menu, MainMenu, add, Teams &Chat, TeamsChat
+Menu, MainMenu, add, Teams &Chat, Teams2Chat
 Menu, MainMenu, add, Teams &Pop out Chat, TeamsPop
 Menu, MainMenu, add, &Teams Call, TeamsCall
 Menu, MainMenu, add, Create Teams Meeting, TeamsMeet
@@ -136,22 +136,12 @@ NotifyTrayClick_205:   ; Right click (Button up)
 Return 
 
 ; ----------------------------  Menu Callbacks -------------------------------------
-TeamsChat: 
-sEmailList := People_GetEmailList(sSelection)
-;MsgBox % sEmailList ; DBG
-If (sEmailList = "") { 
-    TrayTipAutoHide("People Connector warning!","No email could be found!")   
-    return
+Teams2Chat: 
+If GetKeyState("Ctrl") {
+	Teamsy_Help("2c")
+	return
 }
-Teams_Emails2Chat(sEmailList)
-
-;If InStr(sEmailList,";") ; multiple Emails
-;    Teams_Emails2ChatDeepLink(sEmailList, askOpen:= true)
-;Else {    
- ;   EnvGet, userprofile , userprofile
-;    Run,  %userprofile%\AppData\Local\Microsoft\Teams\current\Teams.exe sip:%sEmailList%
-;    Run,  msteams://teams.microsoft.com/l/chat/0/0?users=%sEmailList%
-;}
+Teams_Selection2Chat(sSelection)
 return
 
 ; ------------------------------------------------------------------

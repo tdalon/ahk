@@ -8,6 +8,8 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-01-23
+  - Selection to Chat
 * 2023-01-11
   - New feature: [Share to Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
   - fix: remove wrong Meeting Toggle menu entries: Launcher, Clear Cache etc.

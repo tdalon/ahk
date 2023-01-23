@@ -13,7 +13,7 @@ If FoundPos {
     sInput := SubStr(sInput,FoundPos+1)
 } Else {
     sKeyword := sInput
-    sInput =
+    sInput := ""
 }
 
 Switch sKeyword
@@ -23,7 +23,6 @@ Case "-g": ; gui/ launcher
     if ErrorLevel
 		return
 	sCmd := Trim(sCmd) 
-
     Teamsy(sCmd)
     return
 Case "w": ; Web App
@@ -37,7 +36,7 @@ Case "w": ; Web App
     }
     return
 Case "h","-h","help":
-    Run, https://tdalon.github.io/ahk/Teamsy
+    Teamsy_Help(sInput)
     return
 Case "bgf","obg","backgrounds":
     Teams_OpenBackgroundFolder()
@@ -166,8 +165,7 @@ Case "de":  ; decline call
     SendInput ^+d ;  ctrl+shift+d 
     return
 Case "q","quit": ; quit
-    sCmd = taskkill /f /im "Teams.exe"
-    Run %sCmd%,,Hide 
+    Teams_Quit()
     return
 Case "re","restart": ; restart
     Teams_Restart()
@@ -220,38 +218,12 @@ Case "f+": ; add to favorite (either link or emails)
 Case "s2t": ; Share To teams
     Teams_ShareToTeams()
     return
+Case "2c","oc": ; Selection To Chat, Open Chat
+    Teams_Selection2Chat()
+    return
 } ; End Switch
 
-WinId := Teams_GetMainWindow()
-WinActivate, ahk_id %WinId%
-
-Send ^e ; Select Search bar
-
-If (SubStr(sKeyword,1,1) = "@") {
-    SendInput @
-    sleep, 300
-    sInput := SubStr(sKeyword,2)
-} Else {
-    SendInput /%sKeyword%
-    Delay := PowerTools_GetParam("TeamsCommandDelay")
-    Sleep %Delay% 
-    SendInput +{enter}
-}
-
-If (!sInput) ; empty
-    return
-sleep, 500
-
-;sLastChar := SubStr(sInput,StrLen(sInput)) 
-doBreak := (SubStr(sInput,StrLen(sInput)) == "-")
-If (doBreak) {
-    sInput := SubStr(sInput,1,StrLen(sInput)-1) ; remove last -
-}
-SendInput %sInput%
-If (!doBreak){
-    sleep, 800
-    SendInput +{enter}
-}
+Teams_SendCommand(sKeyword,sInput,true)
     
 } ; End function     
 
@@ -282,7 +254,7 @@ TeamsyInputBox(){
     return
     ;---------------------- 
     TeamsyHelp:
-    Run, "https://tdalon.github.io/ahk/Teamsy"
+    Teamsy_Help()
 
     GuiTeamsyGuiEscape:
 	GuiTeamsyGuiClose:
@@ -291,4 +263,25 @@ TeamsyInputBox(){
     
     Gui, Cancel
     return
+}
+
+Teamsy_Help(sKeyword:=""){
+Switch sKeyword 
+{
+Case "":
+    sUrl := "https://tdalon.github.io/ahk/Teamsy"
+Case "2c","oc":
+    sUrl := "https://tdalon.blogspot.com/2023/01/teams-open-chat.html"
+Case "f","fav","f+","of": ; favorites
+    sUrl := "https://tdalon.blogspot.com/2023/01/teams-favorites.html"
+Case "s2t": ; Share To teams
+    sUrl := "https://tdalon.blogspot.com/2023/01/share-to-teams.html"
+Case "cl": ; clear cache
+    sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html" 
+Case "2": ; second instance
+    sUrl := "https://tdalon.blogspot.com/2020/12/open-multiple-microsoft-teams-instances.html"
+Default:
+    sUrl := "https://tdalon.github.io/ahk/Teamsy"
+} ; end switch
+Run, "%sUrl%"
 }

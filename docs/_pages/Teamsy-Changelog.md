@@ -8,6 +8,11 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-01-23
+  - New feature: [Open Chat](https://tdalon.blogspot.com/2023/01/teams-open-chat.html); Keyword "oc","2c"
+* 2023-01-20
+  - Fix Command Bar: clear existing content.
+  - CommandBar: @ + input
 * 2023-01-11
   - New feature: [Share to Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
 * 2023-01-09

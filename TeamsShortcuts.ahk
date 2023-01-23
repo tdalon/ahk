@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20220314141308
+LastCompiled = 20230111205929
 
 #Include <Teams>
 #Include <PowerTools>
@@ -99,9 +99,10 @@ Menu, SubMenuMeeting, Add ; Separator
 
 Menu,Tray,NoStandard
 Menu, Tray, Add, Launcher, Teams_Launcher
+Menu, Tray, Add, Open Chat, TeamsOpenChat
 Menu, Tray, Add, Share To Teams, Teams_ShareToTeamsCb
-Menu, Tray, Add, Add to Teams Favorites (Team or Channel), Link2TeamsFavs
-Menu, Tray, Add, Add to Teams Favorites (Contacts), Email2TeamsFavs
+Menu, Tray, Add, Open Favorites Folder, TeamsOpenFavs
+Menu, Tray, Add, Add to Favorites, TeamsFavsAdd
 
 Menu, SubMenuCustomBackgrounds, Add, Open Custom Backgrounds Folder, OpenCustomBackgrounds
 Menu, SubMenuCustomBackgrounds, Add, Open Backgrounds Library, OpenCustomBackgroundsLibrary
@@ -225,7 +226,7 @@ return
 ~#s:: ; <--- View Saved
 ViewSaved:
 If GetKeyState("Ctrl") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/teams_shortcuts_ahk" 
+	Teamsy_Help("cmd")
 	return
 }
 Send ^e ; Select Search bar
@@ -342,6 +343,31 @@ return
 ; ----------------------------------------------------------------------
 Email2TeamsFavs:
 Teams_Emails2Favs()
+return
+
+
+TeamsOpenChat:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("oc")
+	return
+}
+Teams_Selection2Chat()
+Return
+
+TeamsOpenFavs:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("of")
+	return
+}
+Teams_FavsOpenDir()
+Return
+
+TeamsFavsAdd:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("f+")
+	return
+}
+Teams_FavsAdd()
 return
 
 ; ----------------------------------------------------------------------
