@@ -17,8 +17,8 @@ See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other releva
   - New feature: [Share to Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
 * 2023-01-09
   - Fix: Add Email to Teams Favorites. If no selection check for clipboard (Use Case: Copy email from Teams visit card)
-  - New Launcher command "f+" Add to favorites
-  - New: 'f' Launcher command to open favorites. (No need for external application launcher to use anymore.)
+  - [New](https://tdalon.blogspot.com/2023/01/teams-favorites.html) Launcher command "f+" Add to favorites
+  - New: 'f' Launcher command to [open favorites](https://tdalon.blogspot.com/2023/01/teams-favorites.html). (No need for external application launcher to use anymore.)
   - Changed: Launcher Keyword 'f'. (Previously opened find, now favorites)
 * 2022-09-06
   - Updated Shortcut for Toggle Fullscreen based on F11 hotkey. Keyword 'fs' from Launcher. New function: Teams_MeetingToggleFullscreen

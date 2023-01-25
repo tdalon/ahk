@@ -54,7 +54,7 @@ Or assign a [global hotkey](#global-hotkeys) to it.
 ### [Global hotkeys](Teams-Global-Hotkeys)
 
 [Teams Shortcuts](https://aka.ms/teamsshortcuts) are only active if a Teams Window is selected/ under focus.
-The Teams PowerTool allows to define global hotkeys for Microsoft Teams.
+The TeamsShortcuts PowerTool allows to define global hotkeys for Microsoft Teams.
 
 ### New Conversation (Alt+N)
 

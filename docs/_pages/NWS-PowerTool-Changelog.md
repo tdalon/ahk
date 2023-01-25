@@ -5,6 +5,12 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2023-01-09
+  - Fix: Confluence clean link/ copy nice link in case auth failed (multiple accounts)
+* 2023-01-03
+  - - Fix: Confluence Quick Search: Refine
+* 2022-12-23
+  - Fix Jira Quick Search default project
 * 2022-12-17
   - Changed hotkey for paste plain text (conflict with open issue in doc): Ctrl+Alt+V or Alt+Ins
   - Remove VPN Connect hotkey

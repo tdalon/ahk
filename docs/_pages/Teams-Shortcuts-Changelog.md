@@ -9,7 +9,7 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
 * 2023-01-23
-  - Selection to Chat
+  - [Selection to Chat](https://tdalon.blogspot.com/2023/01/teams-open-chat.html)
 * 2023-01-11
   - New feature: [Share to Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
   - fix: remove wrong Meeting Toggle menu entries: Launcher, Clear Cache etc.
@@ -18,8 +18,8 @@ Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) feat
   - Remove Param MeetingWinUseFindText
 * 2023-01-09
   - Fix: Add Email to Teams Favorites. If no selection check for clipboard (Use Case: Copy email from Teams visit card)
-  - New Launcher command "f+" Add to favorites
-  - New: 'f' Launcher command to open favorites. (No need for external application launcher to use anymore.)
+  - [New](https://tdalon.blogspot.com/2023/01/teams-favorites.html) Launcher command "f+" Add to favorites
+  - New: 'f' Launcher command to [open favorites](https://tdalon.blogspot.com/2023/01/teams-favorites.html). (No need for external application launcher to use anymore.)
   - Changed: Launcher Keyword 'f'. (Previously opened find, now favorites)
 * 2022-10-18
   - Fix Teams Get Meeting Window (Share| Call in Progress) with meeting participants
