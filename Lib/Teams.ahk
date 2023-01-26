@@ -12,10 +12,6 @@ Teamsy("-g")
 ; -------------------------------------------------------------------------------------------------------------------
 
 Teams_OpenBackgroundFolder(){
-If GetKeyState("Ctrl") {
-	Run, "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html#openfolder"
-	return
-}
 BackgroundDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
 If !FileExist(BackgroundDir) {
     FileCreateDir, %BackgroundDir%
@@ -319,20 +315,31 @@ return fExe
 } ;eofun
 ; ----------------------------------------------------------------------
 
-Teams_Emails2Users(EmailList,TeamLink:=""){
+; ----------------------------------------------------------------------
+; ----------------------------------------------------------------------
+Teams_Selection2Team() {
+; Calls: Teams_Emails2Team
+sSelection := People_GetSelection()
+sEmailList := People_GetEmailList(sSelection)
+If (sEmailList = "") { 
+    TrayTipAutoHide("TeamsShortcuts warning!","No email could be found in selection or clipboard!")   
+    return
+}
+Teams_Emails2Team(sEmailList)
+
+} ; eofun
+
+; ----------------------------------------------------------------------
+
+Teams_Emails2Team(EmailList,TeamLink:=""){
 ; Syntax: 
-;     Emails2TeamMembers(EmailList,TeamLink*)
-; EmailList: String of email adressess separated with a ;
+;     Teams_Emails2Team(EmailList,TeamLink*)
+; EmailList: String of email adresses separated with a ;
 ; TeamLink: (String) optional. If not passed, user will be asked via inputbox
 ;  e.g. https://teams.microsoft.com/l/team/19%3a12d90de31c6e44759ba622f50e3782fe%40thread.skype/conversations?groupId=640b2f00-7b35-41b2-9e32-5ce9f5fcbd01&tenantId=xxx
 
 ; Requires PowerShell
 ; Calls: Teams_PowerShellCheck
-If GetKeyState("Ctrl") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/emails2teammembers"
-	return
-}
-
 If !Teams_PowerShellCheck()
     return
 
@@ -386,7 +393,7 @@ Teams_ExportTeams() {
 ; Requires PowerShell
 
 If GetKeyState("Ctrl") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/emails2teammembers" ; TODO
+	Teamsy_Help("t2xl")
 	return
 }
 
@@ -935,6 +942,25 @@ Else
     SendInput {Backspace}
 
 } ; eofun
+
+
+
+
+; -------------------------------------------------------------------------------------------------------------------
+; -------------------------------------------------------------------------------------------------------------------
+Teams_Selection2Mentions(sSelection:=""){
+; Add to Favorites: either link or Email List
+; Called from Launcher e2m command
+If (sSelection == "")
+    sSelection := People_GetSelection()
+sEmailList := People_GetEmailList(sSelection)
+If (sEmailList = "") { 
+    TrayTipAutoHide("Teams:Emails2Chat warning!","No email could be found in current selection!")   
+    return
+}
+Teams_Emails2Mentions(sEmailList)
+} ; eofun
+
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Emails2Mentions(sEmailList,doPerso :=""){
 If (doPerso = "")
@@ -950,6 +976,9 @@ Loop, parse, sEmailList, ";"
 SendInput {Backspace}{Backspace}{Space} ; remove final ,
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
+
+
+
 Teams_Link2Text(sLink){
 sLink := StrReplace(sLink,"%2520"," ") ; spaces in Channel Link
 sPat = [https|msteams]://teams.microsoft.com/[^>"]*
@@ -1060,12 +1089,8 @@ Run, https://teams.microsoft.com/_#/calendarv2
 }
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_Users2Excel(TeamLink:=""){
+Teams_Members2Excel(TeamLink:=""){
 ; Input can be sGroupId or Team link
-If GetKeyState("Ctrl") {
-	Run, "https://tdalon.blogspot.com/2020/08/teams-users2excel.html"
-	return
-}
 
 Domain := People_GetDomain()
 If (Domain ="") {
@@ -1409,12 +1434,13 @@ TrayTip, Could not find Meeting Window! , No unminmized active Teams meeting win
 } ; eofun
 
 ; ---------------------------------------------------------
-IsMeetingWindow(TeamsEl,Active:= true){
+IsMeetingWindow(TeamsEl){
 ; does not return true on Share / Call in progress window
 ; Share / Call in progress window has the button hangup-button, not hangup-btn
-if (TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn"))
-    if (Active)
-        return !TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button
+; If Meeting Reactions Submenus are opened AutomationId are not visible.
+; TODO Language specific ByName
+if (TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
+    return !TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button
 return false
 } ; eofun
 
@@ -2059,7 +2085,6 @@ Teams_MeetingReaction(Reaction) {
 WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
-
 WinGet, curWinId, ID, A
 
 UIA := UIA_Interface()
@@ -2129,7 +2154,9 @@ React:
 ReactionEl.Click()
 Tooltip("Teams Meeting Reaction: " . Reaction,1000)
 
-;SendInput {Esc} ; Escape Reactions Menu
+; Close Reactions Menu because it makes other buttons invisible
+Sleep 500
+SendInput {Esc}
 
 ; Restore previous window 
 WinActivate, ahk_id %curWinId%

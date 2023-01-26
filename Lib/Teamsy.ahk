@@ -38,7 +38,7 @@ Case "w": ; Web App
 Case "h","-h","help":
     Teamsy_Help(sInput)
     return
-Case "bgf","obg","backgrounds":
+Case "bgf","obg","backgrounds","cbg":
     Teams_OpenBackgroundFolder()
     return
 Case "bg","bgs","background":
@@ -221,6 +221,12 @@ Case "s2t": ; Share To teams
 Case "2c","oc": ; Selection To Chat, Open Chat
     Teams_Selection2Chat()
     return
+Case "t2xl":
+    Teams_Members2Excel()
+    return
+Case "e2m": ; emails 2 mentions
+    Teams_Selection2Mentions()
+    return
 } ; End Switch
 
 Teams_SendCommand(sKeyword,sInput,true)
@@ -280,6 +286,18 @@ Case "cl": ; clear cache
     sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html" 
 Case "2": ; second instance
     sUrl := "https://tdalon.blogspot.com/2020/12/open-multiple-microsoft-teams-instances.html"
+Case "e2t":
+    sUrl := "https://tdalon.blogspot.com/2020/03/emails-to-team.html"
+Case "obg","cbg":
+    sUrl := "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html"
+Case "t2xl": ; Export Team Members to Excel 
+    sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html"
+Case "e2m": ; Emails to Mentions
+    sUrl:= "https://tdalon.blogspot.com/2020/11/teams-shortcuts-send-mentions.html"
+/* 
+Case "ts2xl": ; Export Teams to Excel ; TODO
+    sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 
+*/
 Default:
     sUrl := "https://tdalon.github.io/ahk/Teamsy"
 } ; end switch

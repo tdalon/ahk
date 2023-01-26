@@ -8,6 +8,12 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-01-26
+  - New Keyword "e2m" Emails to Mentions
+  - New keyword "cbg": Open Custom Backgrounds Folder
+  - Add ["Add Members"](https://tdalon.blogspot.com/2020/03/emails-to-team.html) Menu (feature moved from PeopleConnector). New Launcher Keyword "t2xl"
+* 2023-01-25
+  - Bug fix meeting reactions if Reactions menus is opened
 * 2023-01-23
   - New feature: [Open Chat](https://tdalon.blogspot.com/2023/01/teams-open-chat.html); Keyword "oc","2c"
 * 2023-01-20
