@@ -1439,7 +1439,7 @@ IsMeetingWindow(TeamsEl){
 ; Share / Call in progress window has the button hangup-button, not hangup-btn
 ; If Meeting Reactions Submenus are opened AutomationId are not visible.
 ; TODO Language specific ByName
-if (TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
+if (TeamsEl.FindFirstByName("Calling controls") or TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
     return !TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button
 return false
 } ; eofun
