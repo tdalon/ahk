@@ -9,7 +9,8 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
 * 2023-01-26
-  - Add ["Add Members"](https://tdalon.blogspot.com/2020/03/emails-to-team.html) Menu (feature moved from PeopleConnector)
+  - Fix Get Meeting Window if AutomationId not available. Fallback ByName "Calling controls"
+  - Add ["Add Members"](https://tdalon.blogspot.com/2020/03/emails-to-team.html) Menu (feature moved from PeopleConnector). New Launcher Keyword "t2xl"
 * 2023-01-25
   - Bug fix meeting reactions if Reactions menus is opened
 * 2023-01-23
