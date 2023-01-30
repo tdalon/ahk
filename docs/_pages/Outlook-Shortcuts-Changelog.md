@@ -6,6 +6,8 @@ excerpt: "Release notes for Outlook Shortcuts PowerTool."
 
 [Outlook Shortcuts](Outlook-Shortcuts) Changelog
 
+* 2023-01-30
+  - [Outlook to Teams Group Chat](https://tdalon.blogspot.com/2023/01/outlook-to-teams-group-chat.html)
 * 2021-02-09
 	- Copy Link (Ctrl+Shift+C)
 * 2021-01-29

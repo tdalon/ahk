@@ -22,7 +22,6 @@ Run, %BackgroundDir%
 ; -------------------------------------------------------------------------------------------------------------------
 
 
-
 Teams_Emails2ChatDeepLink(sEmailList, askOpen:= true){
 ; Copy Chat Link to Clipboard and ask to open
 sLink := "https://teams.microsoft.com/l/chat/0/0?users=" . StrReplace(sEmailList, ";",",") ; msteams:
@@ -52,12 +51,12 @@ If askOpen {
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_Emails2Chat(sEmailList){
+Teams_Emails2Chat(sEmailList,sTopicName :=""){
 ; Open Teams 1-1 Chat or Group Chat from list of Emails
 ; See https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/build-and-test/deep-link-teams
 sLink := "msteams:/l/chat/0/0?users=" . StrReplace(sEmailList, ";",",") ; msteams:
 If InStr(sEmailList,";") { ; Group Chat
-    InputBox, sTopicName, Enter Group Chat Name,,,,100
+    InputBox, sTopicName , To Chat, Enter Group Chat Name, , , , , , , ,%sTopicName%
     if (ErrorLevel=0) { ;  TopicName defined
         sLink := sLink . "&topicName=" . StrReplace(sTopicName, ":", "")
     }
@@ -65,8 +64,41 @@ If InStr(sEmailList,";") { ; Group Chat
 Run, %sLink% 
 } ; eofun
 
+; -------------------------------------------------------------------------------------------------------------------
+; -------------------------------------------------------------------------------------------------------------------
+
+Teams_OpenChat(sSelection := "") {
+; Use Selection or Outlook Object
+
+If WinActive("ahk_exe Outlook.exe") {
+    olApp := ComObjActive("Outlook.Application")
+    oItem := Outlook_GetCurrentItem(olApp)
+    
+    Switch Outlook_Item2Type(oItem) {
+        Case "Mail":
+            sTopicName := "[Email] " . oItem.Subject
+        Case "Meeting": ; From Inbox Meeting Request
+            oItem := oItem.GetAssociatedAppointment(False)
+            sTopicName := "[Meeting] " . oItem.Subject
+        Case "Appointment":
+            sTopicName := "[Meeting] " . oItem.Subject
+    }
+    sEmailList := Outlook_Item2Emails(oItem,,True)
+    If (sEmailList=="") {
+        return
+    }
+    ; TODO Remove own email address
+
+    Teams_Emails2Chat(sEmailList,sTopicName)
+
+} Else {
+    Teams_Selection2Chat(sSelection)
+}
+
+} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
+
 Teams_Selection2Chat(sSelection:=""){
 ; Add to Favorites: either link or Email List
 ; Called from Launcher f+ command

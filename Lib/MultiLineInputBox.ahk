@@ -31,5 +31,5 @@ MultiLineInputBox(Text:="", Default:="", Caption:="Multi Line Input Box"){
     ButtonCancel:= true
     
     Gui, Cancel
-    return
+    return 
 }

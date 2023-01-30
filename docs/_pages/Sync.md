@@ -6,7 +6,7 @@ excerpt: "PowerTool features around Microsoft SharePoint, OneDrive, Teams Sync f
 
 This feature is implemented in the [NWS PowerTool](NWS-PowerTool)
 
-See related blog posts tagged with #nws-powertool #sync
+See related blog posts tagged with [#nws-powertool #sync](https://tdalon.blogspot.com/search?q=label:sync+label:nws-powertool)
 
 ## Prerequisite
 

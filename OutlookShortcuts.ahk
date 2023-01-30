@@ -99,6 +99,7 @@ loop {
 Menu, OutlookShortcutsMenu, add, CopyLink (Ctrl+Shift+C), CopyLink
 Menu, OutlookShortcutsMenu, add, Meeting to Emails, Meeting2Emails
 Menu, OutlookShortcutsMenu, add, Meeting Recipients to Excel, Meeting2Excel
+Menu, OutlookShortcutsMenu, add, Item to Teams Chat, Teams_OpenChat
 ; -------------------------------------------------------------------------------------------------------------------
 
 return

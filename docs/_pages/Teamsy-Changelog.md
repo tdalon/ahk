@@ -8,8 +8,10 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-01-30
+  - [Outlook to Teams Group Chat](https://tdalon.blogspot.com/2023/01/outlook-to-teams-group-chat.html)
 * 2023-01-26
-  - Fix Get Meeting Window if AutomationId not available. Fallback ByName "Calling controls"
+  - Fix Get Meeting Window if AutomationId not available. Fallback FindByName "Calling controls"
   - New Keyword "e2m" Emails to Mentions
   - New keyword "cbg": Open Custom Backgrounds Folder
   - Add ["Add Members"](https://tdalon.blogspot.com/2020/03/emails-to-team.html) Menu (feature moved from PeopleConnector). New Launcher Keyword "t2xl"

@@ -219,7 +219,7 @@ Case "s2t": ; Share To teams
     Teams_ShareToTeams()
     return
 Case "2c","oc": ; Selection To Chat, Open Chat
-    Teams_Selection2Chat()
+    Teams_OpenChat()
     return
 Case "t2xl":
     Teams_Members2Excel()

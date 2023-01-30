@@ -57,6 +57,94 @@ return sEmailList
 } ; eofun
 ; ------------------------------------------------------------------
 
+
+
+Outlook_Recipient2Email(oRecip) {
+;  https://stackoverflow.com/a/51939384/2043349
+; takes a Display Name (i.e. "James Smith") and turns it into an email address (james.smith@myco.com)
+; necessary because the Outlook address is a long, convoluted string when the email is going to someone in the organization.
+; source:  https://stackoverflow.com/questions/31161726/creating-a-check-names-button-in-excel
+
+Address := oRecip.Address
+If (SubStr(Address, 1,1) == "/") { ; Inside Organization -> Resolve to SMTP email
+    oRecip.Resolve    
+    If oRecip.Resolved {
+        Switch oRecip.AddressEntry.AddressEntryUserType
+        {
+        Case 0,5:                                ;olExchangeUserAddressEntry & olExchangeRemoteUserAddressEntry
+            oEU := oRecip.AddressEntry.GetExchangeUser
+            return oEU.PrimarySmtpAddress
+        Case 10, 30:                              ;olOutlookContactAddressEntry & 'olSmtpAddressEntry
+            return oRecip.AddressEntry.Address
+        Default:
+        } ; end switch
+    } ; End If
+} Else
+    return Address
+} ; eofun
+
+; ------------------------------------------------------------------
+Outlook_Item2Emails(oItem:="",sMode :="",validate:=False) {
+; sEmailList := Outlook_Item2Emails(oItem:="",sMode:="",validate:= False)
+; If oItem is empty, GetCurrentItem
+; If sMode is empty, user will be prompted for selection noFrom|noTo|noCc
+; sMode string containing noFrom, noTo, noCc
+; validate: if True user will have the possibility to edit the email List in an InputBox
+
+olApp := ComObjActive("Outlook.Application")
+If (oItem == "")
+    oItem := Outlook_GetCurrentItem(olApp)
+
+If (sMode == "") { ; Prompt user for selection
+    sMode := ListView("To Chat","Select Fields to exclude","noCc|noFrom|noTo","Fields",False)
+    If (sMode == "ListViewCancel")
+        return
+}
+
+/* 
+; From Inbox Meeting Request
+If (oItem.Type == olApp.MeetingItem) Then
+    oItem = oItem.GetAssociatedAppointment(False)
+End If 
+*/
+
+
+; Loop on Recipients
+cnt := oItem.Recipients.Count
+Loop, %cnt%
+{
+    oRecip := oItem.Recipients.Item(A_Index)
+    ; https://learn.microsoft.com/en-us/office/vba/api/outlook.olmailrecipienttype
+    
+    If ((oRecip.Type == 1) and !InStr(sMode,"noTo")) 
+        or ((oRecip.Type == 2) and !InStr(sMode,"noCc")) 
+        or ((oRecip.Type == 0) and !InStr(sMode,"noFrom"))       
+     {
+        sEmail := Outlook_Recipient2Email(oRecip) 
+        sEmailList := sEmailList . ";" . sEmail
+    } 
+}
+
+
+/* 
+; Add Sender
+If !InStr(sMode,"noFrom") {
+    sEmailList := sEmailList . ";" . GetSenderEmail(oItem)
+} 
+*/
+RegExReplace(sEmailList, ";" , , nCount)
+sEmailList :=	SubStr(sEmailList,2) ; remove starting ;
+
+If (validate) {
+    sEMailList:=MultiLineInputBox("Edit Email List (" . nCount . "):", sEmailList, "To Chat")
+    if (ErrorLevel)
+        return
+}
+
+return sEmailList
+} ; eofun
+; ------------------------------------------------------------------
+
 Outlook_Meeting2Excel(oItem :="") {
 
 If (oItem ="") {
@@ -97,38 +185,36 @@ Loop, %cnt%
     Switch MeetingResponseStatus
     {
         Case 5:
-            MeetingResponseStatus = None
+            MeetingResponseStatus := "None"
         Case 4:
-            MeetingResponseStatus = Declined
+            MeetingResponseStatus := "Declined"
         Case 3:
-            MeetingResponseStatus = Accepted
+            MeetingResponseStatus := "Accepted"
         Case 2:
-            MeetingResponseStatus = Tentative
+            MeetingResponseStatus := "Tentative"
         Case 1:
-            MeetingResponseStatus = Organizer ; not used Outlook Bug - Organizer returns 0
+            MeetingResponseStatus := "Organizer" ; not used Outlook Bug - Organizer returns 0
         Case 0:
-            MeetingResponseStatus = N/A
+            MeetingResponseStatus := "N/A"
     } 
     oSheet.Range("E" . RowCount).Value := MeetingResponseStatus
     
     Type := oItem.Recipients.Item(A_Index).Type
-     MsgBox % Type
+    ; MsgBox % Type DBG
     Switch Type
     {
         Case 3:
-            Type = Resource
+            Type := "Resource"
         Case 2:
-            Type = Optional
+            Type := "Optional"
         Case 1:
-            Type = Required
+            Type := "Required"
         Case 0:
-            Type = Organizer ; not used Outlook Bug. Organizer = Required
+            Type := "Organizer" ; not used Outlook Bug. Organizer = Required
     }
     oSheet.Range("F" . RowCount).Value := Type
-
     RowCount +=1
 }
-
 
 ; expression.Add (SourceType, Source, LinkSource, XlListObjectHasHeaders, Destination, TableStyleName)
 oTable := oSheet.ListObjects.Add(1, oSheet.UsedRange,,1)
@@ -137,6 +223,7 @@ oTable.Name := "OutlookRecipientsExport"
 oTable.Range.Columns.AutoFit
 oExcel.StatusBar := "READY"
 } ; eofun
+
 ; ------------------------------------------------------------------
 Outlook_CopyLink(oItem:="") {
 If (oItem ="") {
@@ -164,15 +251,29 @@ TrayTipAutoHide("Outlook Shortcuts: Copy Link","Outlook link was copied to the c
 ; ------------------------------------------------------------------
 
 
-Item2Type(oItem){
+Outlook_Item2Type(oItem){
+; Returns Mail, Appointment, Meeting
+; https://learn.microsoft.com/en-us/office/vba/api/Outlook.OlObjectClass
 sClass := oItem.Class
 Switch sClass
 {
-Case "43":
-    return "Email"
-Case "26":
+Case "43": ; olMail
+    return "Mail"
+Case "26": ; olAppointment
     return "Appointment"
+Case "53": ; olMeetingRequest
+    return "Meeting"
 Default:
     return
 } ; end switch
 }
+
+
+
+GetSenderEmail(oItem) {
+; Works also for meetings https://stackoverflow.com/a/52150247/2043349
+; 
+oPA = oItem.PropertyAccessor
+return oPA.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x5D01001E")
+
+} ; eofun

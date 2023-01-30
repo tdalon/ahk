@@ -3,7 +3,7 @@
 ; See help/homepage: https://tdalon.github.io/ahk/People-Connector
 
 ; Calls: ExtractEmails, TrayTipAutoHide, ToStartup
-LastCompiled = 20211014103643
+LastCompiled = 20230123165715
 
 #SingleInstance force ; for running from editor
 
@@ -62,7 +62,7 @@ Menu, MainMenu, add, Teams &Pop out Chat, TeamsPop
 Menu, MainMenu, add, &Teams Call, TeamsCall
 Menu, MainMenu, add, Create Teams Meeting, TeamsMeet
 Menu, MainMenu, add, Add to Teams &Favorites, Emails2TeamsFavs
-Menu, MainMenu, add, Add Users to Team, Emails2TeamUsers
+Menu, MainMenu, add, Add Users to Team, Email2Team
 Menu, MainMenu, add, Teams Chat - Copy Link, TeamsChatCopyLink
 Menu, MainMenu,Add ; Separator
 If !(PT_TeamsOnly)
@@ -141,7 +141,7 @@ If GetKeyState("Ctrl") {
 	Teamsy_Help("2c")
 	return
 }
-Teams_Selection2Chat(sSelection)
+Teams_OpenChat(sSelection)
 return
 
 ; ------------------------------------------------------------------
@@ -351,13 +351,18 @@ Teams_Emails2Favs(sEmailList)
 return
 
 ; ------------------------------------------------------------------
-Emails2TeamUsers:
+Email2Team:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("e2t")
+	return
+}
+
 sEmailList := People_GetEmailList(sSelection)
 If (sEmailList = "") { 
     TrayTipAutoHide("People Connector warning!","No email could be found!")   
     return
 }
-Teams_Emails2Users(sEmailList)
+Teams_Emails2Team(sEmailList)
 return
 ; ------------------------------------------------------------------
 

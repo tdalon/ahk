@@ -14,6 +14,12 @@ See separate page here [PowerTools Setup](PowerTools-Setup).
 
 ## How to use
 
+When the tool is running, you can access some functionality from the tool system tray icon.
+
+Hotkeys are implemented in the main file [OutlookShortcuts.ahk](https://github.com/tdalon/ahk/blob/main/OutlookShortcuts.ahk) and the code is the main documentation.
+
+In Outlook if you press the Hotkey 'Win+O' (**O** like <b>O</b>utlook) it will open a menu with some functionality.
+
 ## [News](https://twitter.com/search?q=%23OutlookShortcuts%20%23MicrosoftOutlook)
 
 ## YouTube Channel

@@ -6,6 +6,8 @@ excerpt: "Release notes for People Connector PowerTool."
 
 [People Connector](People-Connector) Changelog
 
+* 2023-01-30
+  - [Outlook to Teams Group Chat](https://tdalon.blogspot.com/2023/01/outlook-to-teams-group-chat.html)
 * 2021-09-30
   - Bug fix: Add to Teams Favorites, Call shortcut broken if . in folder name.
 * 2021-05-05
