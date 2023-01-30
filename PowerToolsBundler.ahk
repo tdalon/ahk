@@ -5,7 +5,7 @@
 #Include <Login>
 ; Calls: Lib/ToStartup
 
-LastCompiled = 20210319215922
+LastCompiled = 20220314141503
 
 ;IcoFile := RegExReplace(A_ScriptFullPath,"\..*",".ico")
 IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
@@ -48,8 +48,8 @@ LV_ModifyCol()  ; Auto-adjust the column widths.
 ; https://jacksautohotkeyblog.wordpress.com/2019/12/30/use-autohotkey-gui-menu-bar-for-instant-hotkeys/
 
 ; MenuBar
-Menu, ItemsMenu, Add, Check All`tCtrl+A, SelectAll
-Menu, ItemsMenu, Add, Uncheck all`tCtrl+Shift+A, UncheckAll
+Menu, ItemsMenu, Add, Check All`tCtrl+A, PTBSelectAll
+Menu, ItemsMenu, Add, Uncheck all`tCtrl+Shift+A, PTBUncheckAll
 
 If !a_iscompiled {
     Menu, ActionsMenu, Add, &Compile`tCtrl+C, Compile
@@ -108,10 +108,10 @@ LoadConfig:
 PowerTools_LoadConfig()
 return
 
-SelectAll:
+PTBSelectAll:
 LV_Modify(0, "Check")  ; Uncheck all the checkboxes.
 return
-UncheckAll:
+PTBUncheckAll:
 LV_Modify(0, "-Check")  ; Uncheck all the checkboxes.
 return
 ; -------------------------------------------------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20230111205929
+LastCompiled = 20230126140909
 
 #Include <Teams>
 #Include <PowerTools>
@@ -112,7 +112,8 @@ Menu, Tray, Add,Start Second Instance, Teams_OpenSecondInstance
 Menu, Tray, Add,Clear Cache, Teams_ClearCache
 Menu, Tray, Add,Open Web App, Teams_OpenWebApp
 Menu, Tray, Add
-Menu, Tray, Add,Export Team Members, Users2Excel
+Menu, Tray, Add,Export Team Members, Members2Excel
+Menu, Tray, Add,Add Users to Team, Users2Team
 Menu, Tray, Add,Refresh Teams List, Teams_ExportTeams
 Menu, Tray, Add
 
@@ -155,7 +156,6 @@ Menu, TeamsShortcutsMenu, add, Personalize &Mention (Alt+1), PersonalizeMention
 Menu, TeamsShortcutsMenu, add, View &Unread (Win+U), ViewUnread
 Menu, TeamsShortcutsMenu, add, View &Saved (Win+S), ViewSaved
 Menu, TeamsShortcutsMenu, add, &Pop-out Chat (Win+P), Pop
-Menu, TeamsShortcutsMenu, add, Add to &Favorites, Link2TeamsFavs
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; Reset Main WinId at startup because of some possible hwnd collision
@@ -326,33 +326,26 @@ return
 ~#q::
 SendMentions:
 If GetKeyState("Ctrl") {
-	Run, "https://tdalon.blogspot.com/teams-shortcuts-send-mentions"
+	Teamsy_Help("e2m")
 	return
 }
-sEmailList := Clipboard
-doPerso := PowerTools_RegRead("TeamsMentionPersonalize")
-Teams_Emails2Mentions(sEmailList, doPerso)
+SendInput, !{Esc} ; remove focus from menu
+Teams_Selection2Mentions()
 
 return
 
 ; ----------------------------------------------------------------------
-Link2TeamsFavs:
-Teams_Link2Fav()
-return
-
-; ----------------------------------------------------------------------
-Email2TeamsFavs:
-Teams_Emails2Favs()
-return
-
 
 TeamsOpenChat:
 If GetKeyState("Ctrl") {
 	Teamsy_Help("oc")
 	return
 }
+SendInput, !{Esc} ; remove focus from menu
+
 Teams_Selection2Chat()
-Return
+return
+; ----------------------------------------------------------------------
 
 TeamsOpenFavs:
 If GetKeyState("Ctrl") {
@@ -362,33 +355,54 @@ If GetKeyState("Ctrl") {
 Teams_FavsOpenDir()
 Return
 
+; ----------------------------------------------------------------------
 TeamsFavsAdd:
 If GetKeyState("Ctrl") {
 	Teamsy_Help("f+")
 	return
 }
+SendInput, !{Esc} ; remove focus from menu
 Teams_FavsAdd()
 return
 
 ; ----------------------------------------------------------------------
-Users2Excel:
+Members2Excel:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("t2xl")
+	return
+}
 TeamLink := Clipboard
 sPat = \?groupId=([^&]*)
 If (RegExMatch(TeamLink,sPat,sId)) {
 	sGroupId := sId1
-	Teams_Users2Excel(sGroupId)
+	Teams_Members2Excel(sGroupId)
 } Else
-	Teams_Users2Excel()
+	Teams_Members2Excel()
+return
+
+; ----------------------------------------------------------------------
+Users2Team:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("e2t")
+	return
+}
+SendInput, !{Esc} ; remove focus from menu
+Teams_Selection2Team()
 return
 
 ; ----------------------------------------------------------------------
 OpenCustomBackgrounds:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("cbg")
+	return
+}
 Teams_OpenBackgroundFolder()
 return
 
+; ----------------------------------------------------------------------
 OpenCustomBackgroundsLibrary:
 If GetKeyState("Ctrl") {
-	Run, "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html#openlib"
+	Teamsy_Help("cbg")
 	return
 }
 sIniFile = %A_ScriptDir%\PowerTools.ini
