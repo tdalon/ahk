@@ -101,14 +101,6 @@ If (sMode == "") { ; Prompt user for selection
         return
 }
 
-/* 
-; From Inbox Meeting Request
-If (oItem.Type == olApp.MeetingItem) Then
-    oItem = oItem.GetAssociatedAppointment(False)
-End If 
-*/
-
-
 ; Loop on Recipients
 cnt := oItem.Recipients.Count
 Loop, %cnt%
@@ -125,13 +117,6 @@ Loop, %cnt%
     } 
 }
 
-
-/* 
-; Add Sender
-If !InStr(sMode,"noFrom") {
-    sEmailList := sEmailList . ";" . GetSenderEmail(oItem)
-} 
-*/
 RegExReplace(sEmailList, ";" , , nCount)
 sEmailList :=	SubStr(sEmailList,2) ; remove starting ;
 

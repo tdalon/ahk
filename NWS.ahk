@@ -6,7 +6,7 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SetWorkingDir %A_ScriptDir%
 
-include_cond("ET,Connections")
+include_cond("ET,Connections,Goodreads")
 ; creates  %A_ScriptDir%\~NWS_includes.ahk. provide empty file with install or uncomment line below at first run
 #Include %A_ScriptDir%\~NWS_includes.ahk
 
@@ -835,17 +835,24 @@ If !sUrl { ; empty
 }
 
 ; Make Libraries optional
-QuickSearches := "Confluence,Connections,Blogger,Jira"
+/* 
+If Goodreads_IsUrl(sUrl) {
+	Goodreads_Search(sUrl)
+	return
+} 
+*/
+
+QuickSearches := "Confluence,Jira,Connections,Blogger,Goodreads"
 Loop, parse, QuickSearches, `,
 {
-	FunStr := A_LoopField . "_IsUrl"
-	If IsFunc(FunStr) {
+	If FileExist("Lib/" . A_LoopField . ".ahk") {
+		FunStr := A_LoopField . "_IsUrl"
 		If  %FunStr%(sUrl) {
 			FunStr := A_LoopField . "_Search"
 			%FunStr%(sUrl)
 			return
 		}		
-	} 
+	}
 }
 
 If RegExMatch(sUrl,"youtube\.com/(?:c|channel)/") { ; YouTube Channel Search

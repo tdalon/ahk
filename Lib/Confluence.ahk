@@ -165,6 +165,9 @@ ExpandLink(sLink){
 	return
 }
 
+
+; -------------------------------------------------------------------------------------------------------------------
+; -------------------------------------------------------------------------------------------------------------------
 ; Confluence Search - Search within current Confluence Space
 ; Called by: NWS.ahk (Win+F Hotkey)
 ; 
@@ -302,7 +305,7 @@ Send {Enter}
 
 ; https://confroot/dosearchsite.action?cql=type+=+%22page%22+and+space=%22EMIK%22+and+label+%3D+%22r4j%22
 ; https://confroot/dosearchsite.action?cql=siteSearch+~+%22reuse%22+and+space+%3D+%22EMIK%22+and+type+%3D+%22page%22+and+label+%3D+%22r4j%22&queryString=reuse
-} ; eofun
+} ; eofun Confluence_Search
 
 ; -------------------------------------------------------------------------------------------------------------------
 Confluence_PersonalizeMention() {
@@ -372,4 +375,4 @@ RegExMatch(sResponse, sPat, sMatch)
 
 sLinkText := sMatch2 " (" sMatch1 " Confluence)"
 return [sUrl, sLinkText]
-}
+} ; eofun
