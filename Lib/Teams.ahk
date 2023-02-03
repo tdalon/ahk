@@ -2183,8 +2183,8 @@ If !ReactionEl {
 } 
 
 React:
-ReactionEl.Click()
 Tooltip("Teams Meeting Reaction: " . Reaction,1000)
+ReactionEl.Click()
 
 ; Close Reactions Menu because it makes other buttons invisible
 Sleep 500

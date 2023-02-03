@@ -82,14 +82,19 @@ The list below might not be exhaustive. Look at the code for the full up to date
 Keywords  |  Action
 --|--
 mu   |  Toggle mute
-vi  |  Toggel video
+mu+  |  Mute microphone
+mu-   | Unmute microphone  
+vi  |  Toggle video
+vi+  |  Camera on
+vi-  |  Camera off
 sh  |  Toggle share
+sh+  |  Share
+sh-  |  Unshare
 lo  |  Love (Meeting Reaction)  
 li  |  Like (Meeting Reaction)    
 ap  |  Applause (Meeting Reaction)
 lol  |  Laugh (Meeting Reaction)
-sa  |  Sad (Meeting Reaction)  
-an  |  Angry (Meeting Reaction)  
+su  |  Surprised (Meeting Reaction)   
 rh  |  Raise your Hand (Meeting Reaction)
 le  |  Leave Meeting
 
