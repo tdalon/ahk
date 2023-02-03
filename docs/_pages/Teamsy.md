@@ -73,8 +73,7 @@ If you want to run Teamsy without using an application launcher, have a look at 
 
 This is implemented in the main associated library [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teamsy.ahk).
 
-Here you can find the syntax for keywords and command. (I hope the code is clear enough.)
-<script src="http://gist-it.appspot.com/https://github.com/tdalon/ahk/raw/main/Lib/Teamsy.ahk"></script>
+In the source code you can find the full up to date syntax for keywords and command. (I hope the code is clear enough.)
 
 ### Examples
 
