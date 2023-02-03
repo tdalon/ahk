@@ -10,7 +10,7 @@ excerpt: "Microsoft Teams Application Launcher Plugin and Commander"
 
 Teamsy is a
  * Microsoft Teams *Plugin for an Application Launcher* like [Launchy](http://launchy.net/) or [Executor](http://executor.dk/) and
- * a *Teams Commander* i.e. it can also be used from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html) to send commands to Microsoft Teams; for example, as bridge between a Stream Deck and Microsoft Teams.
+ * a *Teams Commander* or [*Teams Controller*](https://www.msxfaq.de/teams/client/teams_controller.htm) i.e. it can also be used from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html) to send commands to Microsoft Teams; for example, as bridge between a Stream Deck and Microsoft Teams.
 
 You can also run Teamsy from the [Teamsy Launcher](Teamsy-Launcher) or the [Teams Shortcuts](Teams-Shortcuts) PowerTool.
 
@@ -57,6 +57,13 @@ Thanks to this, the working configuration in Launchy looks like:
 You will need to add a custom command to the Runner plugin.
 To run it in launcher, type the command keyword t in the screenshot, then TAB followed by the Teamsy command.
 
+### Setup with a Stream Deck
+
+Use the [compiled exe](https://tdalon.blogspot.com/2022/03/ahk-command-line.html) and pass optional arguments as command keywords.
+
+#### [Download Teamsy.exe](https://github.com/tdalon/ahk/raw/main/PowerTools/Teamsy.exe) ###
+
+See detailed post [here](https://tdalon.blogspot.com/2023/02/teamsy-with-deckboard.html).
 
 ### Alternative without application launcher
 
@@ -64,11 +71,36 @@ If you want to run Teamsy without using an application launcher, have a look at 
 
 ## List of supported commands/ Keywords
 
-This is implemented in the main associated library [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teamsy.ahk)
+This is implemented in the main associated library [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teamsy.ahk).
+
 Here you can find the syntax for keywords and command. (I hope the code is clear enough.)
 <script src="http://gist-it.appspot.com/https://github.com/tdalon/ahk/raw/main/Lib/Teamsy.ahk"></script>
 
+### Examples
+
+The list below might not be exhaustive. Look at the code for the full up to date implementation.
+
+Keywords  |  Action
+--|--
+mu   |  Toggle mute
+vi  |  Toggel video
+sh  |  Toggle share
+lo  |  Love (Meeting Reaction)  
+li  |  Like (Meeting Reaction)    
+ap  |  Applause (Meeting Reaction)
+lol  |  Laugh (Meeting Reaction)
+sa  |  Sad (Meeting Reaction)  
+an  |  Angry (Meeting Reaction)  
+rh  |  Raise your Hand (Meeting Reaction)
+le  |  Leave Meeting
+
 <hr>
+
+## Download ##
+
+You can download the portable standalone compiled .exe here: [Download Teamsy.exe](https://github.com/tdalon/ahk/raw/main/PowerTools/Teamsy.exe)
+
+The source code is available here: https://github.com/tdalon/ahk
 
 ## Feature Highlights
 

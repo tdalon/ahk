@@ -5,6 +5,8 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2023-02-02
+  - [Goodreads Quick Search](https://tdalon.blogspot.com/2023/02/goodreads-quick-search.html)
 * 2023-01-09
   - Fix: Confluence clean link/ copy nice link in case auth failed (multiple accounts)
 * 2023-01-03
