@@ -1,3 +1,19 @@
+Outlook_GetApp() {
+; olApp := Outlook_GetApp()
+; check if !olApp to abort
+try {
+    olApp := ComObjActive("Outlook.Application") 
+    return olApp  
+} catch {
+    MsgBox 0x14, Start Outlook,Outlook is not running.`nDo you want to start it?
+		IfMsgBox, No
+			return
+    Run, outlook.exe
+    return 
+}
+} ; eofun
+; ------------------------------------------------------------------
+
 Outlook_PersonalizeMentions(sName:=""){
  If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/2020/11/teams-shortcuts-personalize-mentions.html"
@@ -33,7 +49,9 @@ SendInput {Right}
 
 Outlook_GetCurrentItem(olApp:="") {
 If (olApp = "")
-    olApp := ComObjActive("Outlook.Application")
+    olApp := Outlook_GetApp()
+    If !olApp
+        return
 try
     olItem := olApp.ActiveWindow.CurrentItem
 catch
@@ -86,12 +104,14 @@ If (SubStr(Address, 1,1) == "/") { ; Inside Organization -> Resolve to SMTP emai
 ; ------------------------------------------------------------------
 Outlook_Item2Emails(oItem:="",sMode :="",validate:=False) {
 ; sEmailList := Outlook_Item2Emails(oItem:="",sMode:="",validate:= False)
-; If oItem is empty, GetCurrentItem
+; If oItem is empty, GetCurrentItem is used by default
+; sMode : string containing noFrom, noTo, noCc
 ; If sMode is empty, user will be prompted for selection noFrom|noTo|noCc
-; sMode string containing noFrom, noTo, noCc
-; validate: if True user will have the possibility to edit the email List in an InputBox
+; validate: Default False. if True user will have the possibility to edit the email List in an InputBox
 
-olApp := ComObjActive("Outlook.Application")
+olApp := Outlook_GetApp()
+If !olApp
+    return
 If (oItem == "")
     oItem := Outlook_GetCurrentItem(olApp)
 
@@ -132,7 +152,7 @@ return sEmailList
 
 Outlook_Meeting2Excel(oItem :="") {
 
-If (oItem ="") {
+If (oItem = "") {
     olApp := ComObjActive("Outlook.Application")
     oItem := Outlook_GetCurrentItem(olApp)
 }
@@ -211,7 +231,7 @@ oExcel.StatusBar := "READY"
 
 ; ------------------------------------------------------------------
 Outlook_CopyLink(oItem:="") {
-If (oItem ="") {
+If (oItem = "") {
     olApp := ComObjActive("Outlook.Application")
     oItem := Outlook_GetCurrentItem(olApp)
 }
@@ -260,5 +280,179 @@ GetSenderEmail(oItem) {
 ; 
 oPA = oItem.PropertyAccessor
 return oPA.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x5D01001E")
+
+} ; eofun
+
+; ------------------------------------------------------------------
+
+
+
+
+Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false) {
+; Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false)
+; If oItem is empty, call Outlook_GetTeamsMeeting: user will be prompted to select Today's Teams meeting to join (Meetings are extracted from Outlook main calendar)
+If (oItem == "") 
+    oItem := Outlook_GetTeamsMeeting()
+    
+; Join meeting
+RegExMatch(oItem.Body,"<(https://teams.microsoft.com/l/meetup-join/[^>]*)>",sMeetingLink)
+If (sMeetingLink = "")
+    return
+sMeetingLink := sMeetingLink1
+; Use microsoft edge because better integrated. Teams Links can be whitelisted (Application Links) to be always opened in Teams Client
+Run, microsoft-edge:%sMeetingLink%
+WinWaitActive, Join conversation ahk_exe msedge.exe 
+
+Title := oItem.Subject
+WinWaitActive, %Title% ahk_exe Teams.exe,,2 ; Title can be misleading if meetings are copied/pasted->Timeout 2s in this case to be sure to catch the Join window and not the main Window
+JoinWinId := WinExist("ahk_exe Teams.exe")
+; WinGetTitle, JoinWinTitle , ahk_id %JoinWinId%
+
+; Close remaining browser window
+WinActivate, Join conversation ahk_exe msedge.exe 
+Sleep 5
+Send ^w ; close tab
+
+
+; Click on join button
+If (autoJoin) {
+    UIA := UIA_Interface()
+    TeamsEl := UIA.ElementFromHandle(JoinWinId)
+    
+    TeamsJoinBtn := TeamsEl.FindFirstBy("AutomationId=prejoin-join-button")
+
+    If !TeamsJoinBtn {
+        TrayTip, Join Teams Meeting! , "Join button not found!",,0x2
+        return
+    }
+    TeamsJoinBtn.Click()   
+
+    Timeout := 2000
+    SleepTime := 100
+    Loop {
+        Sleep, %SleepTime%
+        If ! Teams_IsMeetingWindow(TeamsEl)
+            break
+        If (%A_Count% * %SleepTime% > %Timeout%)
+            break
+    }
+
+    ; Unmute
+    TeamsEl.FindFirstByNameAndType("Unmute", "button",,2).Click
+
+    WinMaximize, ahk_exe Teams.exe
+
+}
+
+; Open Meeting Chat in Web browser
+If (openChat) 
+    Teams_MeetingOpenChat(sMeetingLink)
+
+} ; eofun
+
+
+
+Outlook_GetTeamsMeeting() {
+; oItem := Outlook_GetTeamsMeeting()
+; Get Teams Meeting Appointment Item from today meetings in Outlook main calendar
+; User is prompted to pick up the meeting via ListBox sorted by Start date with Meeting Title, Start and End Time information
+olApp := Outlook_GetApp()
+If !olApp {
+    msg := "Retry after starting Outlook!" 
+    TrayTip, Outlook not running! , %msg%,,0x2
+    return
+}
+   
+; DEMO: adjust today time for Demo
+;EnvAdd, today, -1 , days
+
+FormatTime, today, %today%, ShortDate
+
+myStart := today . " 0:00am"
+myEnd := today . " 11:59pm"
+
+
+; Construct filter 
+strRestriction := "[Start] >= """ . myStart . """ AND [End] < """ . myEnd . """"
+;MsgBox % strRestriction
+
+oCalendar := olApp.GetNameSpace("MAPI").GetDefaultFolder(olFolderCalendar := 9)  ; olFolderCalendar = 9
+oItems := oCalendar.items
+oItems.IncludeRecurrences := True
+oItems.Sort("[Start]")
+; Restrict the Items collection for the date range
+oItemsInDateRange := oItems.Restrict(strRestriction)
+
+appts := Array()
+cnt := 0
+for appt in oItemsInDateRange  {
+    ;MsgBox % appt.Subject
+    If !RegExMatch(appt.Body,"<(https://teams.microsoft.com/l/meetup-join/[^>]*)>",teamslink)  
+        Continue
+    cnt += 1
+    ti := DateParse(appt.Start)
+    FormatTime, stTime, %ti%, Time
+    
+    ti := DateParse(appt.End)
+    FormatTime, endTime, %ti%, Time
+    
+    
+    Title := appt.Subject . " (" . stTime " - " . endTime . ")"
+    ApptList .= ( (ApptList<>"") ? "|" : "" ) . Title . "  {" . cnt . "}"
+    appts.Push(appt)       
+} ; end for
+
+If (cnt= 0) {
+    msg := "No Teams meeting found in Calendar for " . strRestriction . "!"
+    TrayTip, No Online Meeting found! , %msg%,,0x2
+    return
+}
+
+;-------------------------------------------------------------------------
+; Select Meeting closest to current time
+EnvAdd, myStartSel, -30 , Minutes
+EnvAdd, myEndSel, +30 , Minutes
+
+FormatTime, stTime, %myStartSel%, Time
+myStartSel := today . " " . stTime
+
+
+FormatTime, endTime, %myEndSel%, Time
+myEndSel := today . " " . endTime
+
+; Construct filter 
+strRestriction := "[Start] >= """ . myStartSel . """ AND [Start] < """ . myEndSel . """"
+
+; Restrict the Items collection for the date range
+oItemsInDateRange := oItems.Restrict(strRestriction)
+
+cnt := 0
+for apptsel in oItemsInDateRange  {
+    If !RegExMatch(apptsel.Body,"<(https://teams.microsoft.com/l/meetup-join/[^>]*)>",teamslink)  
+        Continue
+    cnt := 1
+    break   
+} ; end for
+
+sel = 1
+If (cnt=1) {
+    For index, appt in appts {
+        If (appt.Subject == apptsel.Subject) and (appt.Start == apptsel.Start) {
+            sel := A_Index
+            break
+        }    
+    }
+}
+; end find preselection closest to current time
+;-------------------------------------------------------------------------
+
+
+LB := ListBox("Join Meeting","Select Teams Meeting",ApptList,sel)
+If (LB ="")
+    return
+RegExMatch(LB,"\{([^}]*)\}$",ApptId)
+oItem := appts[ApptId1]
+
+return oItem
 
 } ; eofun

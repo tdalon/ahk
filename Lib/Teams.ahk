@@ -927,51 +927,125 @@ If  (doPerso=True) {
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_PersonalizeMention() {
+; Works for any Mention with format Lastname, Firstname xxx
+; xxx can be (company) or company multiple words
+; Runs right after mention autocomplete in Teams
 If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/2020/11/teams-shortcuts-personalize-mentions.html"
 	return
 }
-SendInput +{Left} ; Shift+Left
-;sLastLetter := Clip_GetSelectionHtml()
-;MsgBox %sLastLetter% ; DBG
-;IsRealMention := InStr(sLastLetter,"http://schema.skype.com/Mention") 
 
-sLastLetter := Clip_GetSelection()  
+ClipBackup:=  ClipboardAll
+
+; Check for (company name) format
+SendInput ^+{Left} ; Ctrl+Shift+Left
+sSelection := Clip_GetSelection(false) 
+MsgBox % sSelection
+If (InStr(sSelection,")",0))  { ; last letter is )
+    ; loop till (
+    while (!InStr(sSelection,"(",1)) {
+        SendInput ^+{Left} ; Ctrl+Shift+Left
+        sSelection := Clip_GetSelection(false) 
+    }
+
+    ; TODO Check for (guest)
+    If (InStr(sSelection,"(guest)")) {
+        ; delete (guest)
+        SendInput {Backspace}
+        SendInput ^+{Left} ; Ctrl+Shift+Left
+        sSelection := Clip_GetSelection(false) 
+        ; loop till (
+        while (!InStr(sSelection,"(",1)) {
+            SendInput ^+{Left} ; Ctrl+Shift+Left
+            sSelection := Clip_GetSelection(false) 
+        }
+    }
+
+    ; delete (company name)
+    SendInput {Backspace}
+
+    ; two cases Firstname Lastname or Lastname, Firstname
+    SendInput ^+{Left 2} ; Ctrl+Shift+Left
+
+    Sleep 10
+    sSelection := Clip_GetSelection(false) 
+    
+    
+    If (InStr(sSelection,",")) {
+        SendInput ^+{Right} ; Ctrl+Right/Right does not always work. Sometimes jump to the end of the name Lastname, Firstname and vice-versa -> use Shift
+        
+        SendInput {Left} ; remove selection
+        Sleep 10
+        SendInput {Backspace} 
+        SendInput {delete} ; delete extra space
+        ; restore cursor to the right
+        SendInput ^{Right} 
+    } Else { ; Assume Firstname Lastname
+        SendInput ^{Right}
+        Sleep 10
+        SendInput {Backspace} 
+    }
+
+
+    Clipboard := ClipBackup
+    return ; exit/ end format with (company name)
+}
+
+; For format without (company name)
+
+; Look for , between Lastname, Firstname
+; select till , is found 0; navigating wiht Ctrl pressed jump to nex words/ skip spaces
+while (!InStr(sSelection,",") and A_Index < 10) {
+    SendInput ^+{Left} ; Ctrl+Shift+Left
+    oldLen := StrLen(sSelection)
+    Sleep 10
+    sSelection := Clip_GetSelection(false) 
+    nwMention := A_Index + 1 ; number of words in Mention
+    If (StrLen(sSelection) = oldLen) { ; beginning of line reached
+        break
+    }
+}
+
+If (!InStr(sSelection,",")) { ; no , found
+    MsgBox % sSelection
+    sSelection := Clip_GetSelectionHtml(false) 
+}
+
+; Set cursor back to end of mention
 SendInput {Right}
 
+; Delete post firstname: from right to nwMention-2
+nCount := nwMention -1
 
-; remove (company)
-If (Asc(sLastLetter) = 8203) { ; standalone chat returns zero-width space - get selection does not work (return null)
-    SendInput {Ctrl down}{Backspace}{Backspace}{Left}{Backspace}{Right}{Ctrl up}
-    return
-    ; hard coded with one space in company name #TODO
-    ; does not handle
-    
-    /* 
-    ; Get selection does not work in flat chats (returns null) 
-    SendInput {Left}
-    sLeft := Clip_GetSelection()
-    MsgBox Left:%sLeft% ;DBG
-    
-    If RegExMatch(sLeft,".*\)$") ; ending with )
-        If InStr(sLeft,"(") 
-            SendInput {Backspace} ; Company Name without space
-        Else
-            SendInput {Backspace}{Backspace} ; Name with one space; #TODO support multiple spaces 
-    */
+Loop, %nCount% 
+    SendInput ^+{Left}
 
-}  Else If (sLastLetter = ")") ; group chat / get selection works
-    SendInput {Backspace}^{Left}
-Else 
-    SendInput ^{Left} ; Ctrl Left
+return
+Sleep 10 ; weird pause required
+SendInput {Backspace}
 
+; Delete Lastname
+SendInput ^{Left} ; skip firstname
+SendInput ^+{Left}{Backspace} 
+
+; reposition cursor after firstname-only Mention
+SendInput ^{Right} 
+
+
+Clipboard := ClipBackup
+return
+
+; NOT USED
 ; handling - in names
 SendInput +{Left} 
-sLastLetter := Clip_GetSelection()   
+sLastLetter := Clip_GetSelection(false)   
 If (sLastLetter = "-")
     SendInput ^{Left}{Backspace}
 Else 
     SendInput {Backspace}
+
+
+
 
 } ; eofun
 
@@ -1408,7 +1482,7 @@ Loop %Win% {
     WinId := Win%A_Index%
     TeamsEl := UIA.ElementFromHandle(WinId)
     
-    If IsMeetingWindow(TeamsEl)  {
+    If Teams_IsMeetingWindow(TeamsEl)  {
         if (Mode = 0)
             return WinId  
         Else
@@ -1454,7 +1528,7 @@ Loop, 3 {
         WinId := Win%A_Index%
         TeamsEl := UIA.ElementFromHandle(WinId)
         
-        If IsMeetingWindow(TeamsEl)  {
+        If Teams_IsMeetingWindow(TeamsEl)  {
             if Activate
                 WinActivate, ahk_id %WinId%
             return TeamsEl     
@@ -1466,7 +1540,7 @@ TrayTip, Could not find Meeting Window! , No unminmized active Teams meeting win
 } ; eofun
 
 ; ---------------------------------------------------------
-IsMeetingWindow(TeamsEl){
+Teams_IsMeetingWindow(TeamsEl){
 ; does not return true on Share / Call in progress window
 ; Share / Call in progress window has the button hangup-button, not hangup-btn
 ; If Meeting Reactions Submenus are opened AutomationId are not visible.
@@ -1506,6 +1580,28 @@ If ! (Title="Calendar | Microsoft Teams") {
 }
 SendInput !+n ; schedule a meeting alt+shift+n
 } ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_MeetingOpenChat(sMeetingLink){
+; Open Meeting Chat in Web browser from Teams Meeting urlThierry Dalon
+; Used for Quick Join+
+;sLink := UrlDecode(sMeetingLink)
+RegExMatch(sMeetingLink,"https://teams.microsoft.com/l/meetup-join/([^/]*)",sId)
+sChatLink := "https://teams.microsoft.com/_#/conversations/" . sId1 . "?ctx=chat"
+Run, %sChatLink%
+; Open in new window
+;Run, chrome.exe "%sChatLink%" " --new-window --profile-directory=""Default"""
+;WinWait, ahk_exe chrome.exe
+;WinId := WinExist("ahk_exe chrome.exe") ; get last window
+Browser_WinWaitActive()
+WinId := Browser_WinExist()
+
+; Send to second monitor
+Monitor_MoveToSecondary(WinId)  
+} ; eofun
+
+
+
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_NewConversation(){
 ; Using hotkeys - broken
@@ -1548,7 +1644,7 @@ SendInput {enter}
 Teams_MeetingShare(ShareMode := 2){
 ; ShareMode = 0 : unshare
 ; ShareMode = 1 : share
-; ShareMode =2: toggle share
+; ShareMode = 2: toggle share
 
 TeamsEl := Teams_GetMeetingWindow(1) 
 If !TeamsEl ; empty
@@ -1625,7 +1721,7 @@ If (MonitorCount > 1) and !(IsSharing) { ; only if IsActive (=>multiple monitors
     Sleep 500 ; Time for Meeting Window to be restored
     WinWaitActive, ahk_exe Teams.exe
     WinId := WinActive("A")
-    Monitor_MoveToSecondary(WinId)   ; bug: unshare on winactivate
+    Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
 
 } 
 

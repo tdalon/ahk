@@ -109,7 +109,7 @@ Case "he","heart","lo","love":
     Else
         Teams_MeetingReaction("Love")
     return
-Case "su","surprised":
+Case "su","surprised","wow":
     If Teams_IsMainWindowActive()
         Teams_ConversationReaction("Surprised")
     Else
@@ -227,6 +227,12 @@ Case "t2xl":
 Case "e2m": ; emails 2 mentions
     Teams_Selection2Mentions()
     return
+Case "jo","join": ; join current meeting
+    Outlook_JoinTeamsMeeting()
+    return
+Case "jo+": ; join meeting with autoJoin and openChat
+    Outlook_JoinTeamsMeeting("",true,true)
+    return
 } ; End Switch
 
 Teams_SendCommand(sKeyword,sInput,true)
@@ -294,6 +300,8 @@ Case "t2xl": ; Export Team Members to Excel
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html"
 Case "e2m": ; Emails to Mentions
     sUrl:= "https://tdalon.blogspot.com/2020/11/teams-shortcuts-send-mentions.html"
+Case "jo": ; Emails to Mentions
+    sUrl:= "https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 

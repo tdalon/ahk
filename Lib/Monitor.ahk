@@ -93,12 +93,20 @@ return monitorIndex
 } ; eofun
 
 
-Monitor_MoveToSecondary(WinId){
+Monitor_MoveToSecondary(WinId,doCheck:=true){
+; doCheck= true: Check if 2 monitors
 ; https://www.autohotkey.com/boards/viewtopic.php?t=64784
+
+If (doCheck){
+    SysGet, MonitorCount, MonitorCount
+    If (MonitorCount <2)
+        return
+}
+
 MonitorIndex := Monitor_GetMonitorIndex(WinId)
 SysGet, MonitorPrimaryIndex, MonitorPrimary
 If (MonitorIndex = MonitorPrimaryIndex) {
-    ;WinActivate, ahk_id %WinId% ; requires activate to move
+    WinActivate, ahk_id %WinId% ; requires activate to move
     SendInput #+{Right}; Win+Shift+Right Arrow 
 }
 

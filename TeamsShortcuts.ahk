@@ -118,6 +118,8 @@ Menu, Tray, Add,Refresh Teams List, Teams_ExportTeams
 Menu, Tray, Add
 
 ; SubMenu Meeting
+Menu, SubMenuMeeting, Add, Quick Join (jo), TeamsJoin
+Menu, SubMenuMeeting, Add, Quick Join (Advanced) (jo+), TeamsJoinAdvanced
 Menu, SubMenuMeeting, Add, Open Teams Web Calendar, Teams_OpenWebCal
 ; Add Cursor Highlighter
 Menu, SubMenuMeeting, Add, Cursor Highlighter, PowerTools_CursorHighlighter
@@ -331,6 +333,28 @@ If GetKeyState("Ctrl") {
 }
 SendInput, !{Esc} ; remove focus from menu
 Teams_Selection2Mentions()
+
+return
+
+; ----------------------------------------------------------------------
+
+TeamsJoin:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("jo")
+	return
+}
+Teamsy("jo")
+
+return
+
+; ----------------------------------------------------------------------
+
+TeamsJoinAdvanced:
+If GetKeyState("Ctrl") {
+	Teamsy_Help("jo")
+	return
+}
+Teamsy("jo+")
 
 return
 

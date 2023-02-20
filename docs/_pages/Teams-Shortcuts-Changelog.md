@@ -8,6 +8,10 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-02-20
+  * [Quick Join Teams Meeting](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html) using Outlook Calendar Integration
+* 2023-02-09
+  * Update Personalize Mentions to work for Lastname, Firstname (company) mention format
 * 2023-01-30
   - [Outlook to Teams Group Chat](https://tdalon.blogspot.com/2023/01/outlook-to-teams-group-chat.html)
 * 2023-01-26
