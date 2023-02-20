@@ -97,6 +97,8 @@ lol  |  Laugh (Meeting Reaction)
 su  |  Surprised (Meeting Reaction)   
 rh  |  Raise your Hand (Meeting Reaction)
 le  |  Leave Meeting
+jo | [Join Meeting](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html)
+jo+ | [Join Meeting (Advanced)](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html)
 
 <hr>
 

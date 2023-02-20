@@ -1583,7 +1583,7 @@ SendInput !+n ; schedule a meeting alt+shift+n
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_MeetingOpenChat(sMeetingLink){
-; Open Meeting Chat in Web browser from Teams Meeting urlThierry Dalon
+; Open Meeting Chat in Web browser from Teams Meeting url
 ; Used for Quick Join+
 ;sLink := UrlDecode(sMeetingLink)
 RegExMatch(sMeetingLink,"https://teams.microsoft.com/l/meetup-join/([^/]*)",sId)
