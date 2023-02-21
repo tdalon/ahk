@@ -112,7 +112,13 @@ The source code is available here: https://github.com/tdalon/ahk
 
 ### Status Change
 
+#### Using an external Application Launcher
+
 <div style="text-align:center"><img src="/ahk/assets/images/Teamsy_StatusChange.gif" alt="Teamsy Status Change"></div>
+
+#### Using the built-in Teamsy Launcher
+
+<div style="text-align:center"><img src="/ahk/assets/images/Teamsy_Launcher_StatusChange.gif" alt="Teamsy Status Change"></div>
 
 ### [Meeting Live Reactions](Teams-Meeting-Reactions)
 
@@ -122,7 +128,7 @@ Keyword: 's2t'
 
 ## YouTube Playlist
 
-<div align="center"><iframe width="560" height="315" src="https://www.youtube.com/embed/zLFWKFfLHnU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><br><a href="https://www.youtube.com/watch?v=zLFWKFfLHnU">Direct Link to YouTube video</a></div>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=PLUSZfg60tAwLDw9tBZXLYH3OXlP3f4Awn" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ## Source Code
 
