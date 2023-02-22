@@ -76,9 +76,7 @@ Else If RegExMatch(sLink,"https://web.microsoftstream.com/browse\?q=(.*)",sQuery
 	
 	If InStr(sLink,".") { ; file with extension
 		FileName := RegExReplace(sMatch1,".*/","")
-		Result := ListBox("IntelliPaste: File Link","Choose text to display",linktext . "|" . FileName,1)
-		If Not (Result ="")
-			linktext := Result
+		linktext := ListBox("IntelliPaste: File Link","Choose text to display",linktext . "|" . FileName,1)
 	}
 	return linktext
 
@@ -134,11 +132,9 @@ If (RegExMatch(sInput,"[A-Z]:\\")) or (RegExMatch(sInput,"^\\\\"))  { ; local fi
 
 If SharePoint_IsUrl(sInput) {
 	sInput := SharePoint_CleanUrl(sInput) ; keep name used as link for ico
-	linktext := SharePoint_Link2Text(sInput)
-	If InStr(linktext,">") ; use breadcrumbs
-		sHtml := SharePoint_IntelliHtml(sInput)
-	Else
-		sHtml =<a href="%sInput%">%linktext%</a>
+	sHtml := Sharepoint_Link2Html(sInput)
+	If (sHtml ="") ; user cancelled
+		return
 
 	If RegExMatch(sInput,"/teams/(team_[^/]*)/",sMatch) {
 		CsvFile = %A_ScriptDir%\Teams_list.csv
@@ -442,6 +438,8 @@ If !InStr(sClipboard,"`n") { ; single input
 	}
 	
 	sHtml := IntelliHtml(sLink, useico)
+	If (sHtml = "") ; user cancelled
+		return
 
 	If (sLink = sClipboard) { ; no action on clean -> transform to html
 		Clip_PasteHtml(sHtml,sHtml)
@@ -601,13 +599,13 @@ GetFileLink(sFile) {
 	
 	sFile := StrReplace(sFile,"%20"," ") ; replace %20 by spaces etc (uri decode does not work on file path)
    	   
-	sUrl := SharePoint_Sync2Url(sFile)
+	sUrl := SharePoint_Sync2Url(sFile,false)
 	If !(sUrl = "")
 		return sUrl
 
 	StringLeft sDrive, sFile, 2
 	sShare := DriveMap_Get(sDrive)
-	If sShare <> 
+	If !(sShare = "") 
 	{
 		sFile := StrReplace(sFile, sDrive ,sShare)
 	}

@@ -5,6 +5,9 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2023-02-21
+  * IntelliPaste: [SharePoint Sync Ini automatically updated](https://tdalon.blogspot.com/2023/02/sharepoint-sync-get-url.html)
+  * Fix IntelliPaste cancel on SharePoint linktext breadcrumb selection
 * 2023-02-02
   - [Goodreads Quick Search](https://tdalon.blogspot.com/2023/02/goodreads-quick-search.html)
 * 2023-01-09
