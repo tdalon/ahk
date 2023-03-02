@@ -6,7 +6,7 @@
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 SetWorkingDir %A_ScriptDir%
 
-include_cond("ET,Connections,Goodreads")
+include_cond("ET,Connections,Goodreads,Stackoverflow")
 ; creates  %A_ScriptDir%\~NWS_includes.ahk. provide empty file with install or uncomment line below at first run
 #Include %A_ScriptDir%\~NWS_includes.ahk
 
@@ -85,6 +85,7 @@ If (SettingNotificationAtStartup) {
 
 ; IntelliPaste Hotkey setting
 Menu, SubMenuSettingsIntelliPaste, Add, &Hotkey, IntelliPaste_HotkeySet
+Menu, SubMenuSettingsIntelliPaste, Add, &Update SharePoint Sync Ini, SharePoint_UpdateSync
 Menu, SubMenuSettingsIntelliPaste, Add, &Refresh Teams List and SPSync.ini, IntelliPaste_Refresh
 Menu, SubMenuSettingsIntelliPaste, Add, Help, IntelliPaste_Help
 Menu, SubMenuSettings, Add, IntelliPaste, :SubMenuSettingsIntelliPaste
@@ -448,7 +449,7 @@ return
 ^+c:: ; <--- [Browser] Intelli Copy Active Url
 IntelliCopyActiveUrl:
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/intellicopy_active_url" ; TODO
+	Run, "https://tdalon.blogspot.com/2023/02/intellicopy-browser-url.html" 
 	return
 }
 
@@ -562,7 +563,6 @@ return
 
 ; Shift Mouse click
 +LButton:: ; <--- [Chrome] Open link in preferred browser
-; Calls OpenLink
 SavedClipboard := ClipboardAll  ; Save the entire clipboard to a variable
 Clipboard := ""  ; Empty the clipboard to allow ClipWait work
 
@@ -578,8 +578,8 @@ If (sUrl = "") {
 }
 
 sUrl := IntelliPaste_CleanUrl(sUrl)
-Run %sUrl% ; Handled by BrowserSelect
-;OpenLink(sUrl)
+Run %sUrl% ; Handled by Browser Tamer
+
 
 Clipboard := SavedClipboard ; Restore the original clipboard
 return
@@ -842,7 +842,7 @@ If Goodreads_IsUrl(sUrl) {
 } 
 */
 
-QuickSearches := "Confluence,Jira,Connections,Blogger,Goodreads"
+QuickSearches := "Confluence,Jira,Connections,Blogger,Goodreads,Stackoverflow"
 Loop, parse, QuickSearches, `,
 {
 	If FileExist("Lib/" . A_LoopField . ".ahk") {

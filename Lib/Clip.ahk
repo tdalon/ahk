@@ -34,7 +34,7 @@ Clip_GrabWord(){
 ; Based on AHK Help Launcher. Credit RaptorX https://www.the-automator.com/autohotkey-webinar-notepad-a-solid-well-loved-but-dated-autohotkey-editor/
 oldClip := clipboardAll
 ;If WinActive("ahk_exe Code.exe") or WinActive("ahk_exe Code - Insiders.exe") ; needs to select word with double click else copy whole line
-    
+
 clipboard =
 sendinput ^c
 Clip_Wait()
@@ -72,11 +72,11 @@ Clip_SetHtml(sHtml,sText:=""){
 ; Syntax: Clip_SetHtml(sHtml,sText:="",HtmlHead := "")
 ; If sHtml is a link (starts with http), the Html link will be wrapped around it sHtml=<a href="%sHtml%">%sText%</a>
 ; If no Text display is passed as argument sText := sHtml
-If (sText="")
+If (sText = "")
     sText := sHtml
 If RegExMatch(sHtml,"^http") {
     WinClip.SetText(sHtml)
-    sHtml =<a href="%sHtml%">%sText%</a>
+    sHtml := "<a href=""" . sHtml . """>" . sText . "</a>"
 } else {
     WinClip.SetText(sText)
 }
@@ -87,20 +87,29 @@ Clip_Wait()
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Clip_PasteHtml(sHtml,sText:="",restore := True) {
+Clip_PasteHtml2(sHtml,sText:="",restore := True) {
 ; Syntax: Clip_PasteHtml(sHtml,sText,restore := True)
 ; If sHtml is a link (starts with http), the Html link will be wrapped around it i.e. sHtml=<a href="%sHtml%">%sText%</a>
-
-
+; Replaced by Clip_PasteHtml - see https://tdalon.blogspot.com/2023/03/confluence-intellipaste-issue.html
 If (restore)
-    ClipBackup:= ClipboardAll
+    ClipBackup := ClipboardAll
 Clip_SetHtml(sHtml,sText)
-
-; Paste
 WinClip.Paste()  
-If (restore) {
+If (restore) 
     Clip_Restore(ClipBackup)
-}   
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+; -------------------------------------------------------------------------------------------------------------------
+Clip_PasteHtml(sHtml,restore := True) {
+; Syntax: Clip_PasteHtml(sHtml,restore := True)
+; If sHtml is a link (starts with http), the Html link will be wrapped around it i.e. sHtml=<a href="%sHtml%">%sText%</a>
+If (restore)
+    ClipBackup := ClipboardAll
+SetClipboardHTML(sHtml)
+WinClip.Paste()  
+If (restore) 
+    Clip_Restore(ClipBackup)
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
@@ -253,6 +262,11 @@ Clip_GetHtmlBuggy( byref Data ) { ; www.autohotkey.com/forum/viewtopic.php?p=392
  DllCall( "CloseClipboard" )
 Return dataL ? dataL : 0
 }
+
+; SetHtml using SetClipboardHTML function
+Clip_SetH(sHtml){
+    SetClipboardHTML(sHtml)
+} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=80706&sid=af626493fb4d8358c95469ef05c17563

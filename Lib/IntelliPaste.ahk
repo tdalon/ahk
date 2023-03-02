@@ -66,7 +66,7 @@ Else If RegExMatch(sLink,"https://web.microsoftstream.com/browse\?q=(.*)",sQuery
 	linktext = Stream videos matching: %sQuery1% 
 	linktext := StrReplace(linktext,"%23","#")		
 } Else If RegExMatch(sLink,"/teams/team_[^/]*/[^/]*/(.*)",sMatch) {
-; #TODO replace by SharePoint_IntelliHtml
+; #TODO not exectuted replace by SharePoint_IntelliHtml
 	sMatch1 := uriDecode(sMatch1)
 	linktext := StrReplace(sMatch1,"/"," > ") ; Breadcrumb navigation for Teams link to folder
 	 
@@ -136,6 +136,7 @@ If SharePoint_IsUrl(sInput) {
 	If (sHtml ="") ; user cancelled
 		return
 
+	; TODO Replace by Teams_GetTeamName()
 	If RegExMatch(sInput,"/teams/(team_[^/]*)/",sMatch) {
 		CsvFile = %A_ScriptDir%\Teams_list.csv
 		If !FileExist(CsvFile) {
@@ -371,8 +372,9 @@ If InStr(sClipboard,"`n") { ; MultiLine
 		If (sStyle = "Abort")
 			return
 	}
-} Else 
+} Else {
 	sStyle = single-line ; Default
+}
 
 SetTitleMatchMode, 2 ; partial match
 
@@ -441,11 +443,7 @@ If !InStr(sClipboard,"`n") { ; single input
 	If (sHtml = "") ; user cancelled
 		return
 
-	If (sLink = sClipboard) { ; no action on clean -> transform to html
-		Clip_PasteHtml(sHtml,sHtml)
-	} Else {
-		Clip_PasteHtml(sHtml,sLink)
-	}
+	Clip_PasteHtml(sHtml)
 	return
 }
 
@@ -465,8 +463,9 @@ If (useico) {
 	} ; end loop
 }
 
-WinGet WinId, ID, A
+
 If (useico) {
+	WinGet WinId, ID, A
 	MsgBox, 3,IntelliPaste: Question, Would you like to insert icons before links?	
 	IfMsgBox Yes
 		useico := True
@@ -474,33 +473,17 @@ If (useico) {
 		useico := False
 	IfMsgBox Cancel
 		return
-}
 
-WinActivate, ahk_id %WinId% ; Bug with Chrome: window looses focus (cursor deactivated)
-
-sFullHtml =
-sFullText =
-; IntelliPaste Links
-
-If !InStr(sClipboard,"`n") { ; single input
-	sLink := sClipboard
-	If RegExMatch(sClipboard,"^http") ; only for links - exclude script, html code	
-		sLink := IntelliPaste_CleanUrl(sLink)
-
-	sHtml := IntelliHtml(sLink, useico)
-	If (sLink = sClipboard) { ; no action on clean -> transform to html
-		Clip_PasteHtml(sHtml,sHtml)
-	} Else {
-		Clip_PasteHtml(sHtml,sLink)
-	}
-	return
+	WinActivate, ahk_id %WinId% ; TODO: Bug with Chrome: window looses focus (cursor deactivated)
 }
 
 If WinActive("ahk_group PlainEditor") { ;-> Plain-text
-	Fmt = Text
+	Fmt := "Text"
 } Else {
-	Fmt = HTML
+	Fmt := "HTML"
 }
+sFullHtml := ""
+sFullText := ""
 
 Loop, parse, sClipboard, `n, `r
 {
@@ -534,7 +517,7 @@ If (Fmt = "Text") {
 } Else If (Fmt = "HTML") {
 	If (sStyle = "bullet-list")
 		sFullHtml :=  "<ul>" . sFullHtml . "</ul>"
-	Clip_PasteHtml(sFullHtml,sFullText)
+	Clip_PasteHtml(sFullHtml)
 }
 
 

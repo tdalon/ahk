@@ -100,8 +100,8 @@ If WinActive("ahk_exe Outlook.exe") {
 ; -------------------------------------------------------------------------------------------------------------------
 
 Teams_Selection2Chat(sSelection:=""){
-; Add to Favorites: either link or Email List
-; Called from Launcher f+ command
+; Selection to Chat
+; Called from Launcher 2c command
 If (sSelection == "")
     sSelection := People_GetSelection()
 sEmailList := People_GetEmailList(sSelection)
@@ -774,7 +774,7 @@ Else
     sQuoteHtml = <blockquote>%sQuoteTitleHtml%<br>%sQuoteBodyHtml%</blockquote>
 
 ;MsgBox %sQuoteHtml% ; DBG
-Clip_PasteHtml(sQuoteHtml,,False)
+Clip_PasteHtml(sQuoteHtml,False)
 
 ; Escape Block quote in Teams: twice Shift+Enter
 If WinActive("ahk_exe Teams.exe") {
