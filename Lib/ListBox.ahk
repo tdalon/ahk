@@ -3,36 +3,42 @@
 ; -------------------------------------------------------------------------------
 
 ListBox(Title := "", Prompt := "", List := "", Select := 0, AlwaysOnTop := True) {
-;-------------------------------------------------------------------------------
+; LB := ListBox(Title := "", Prompt := "", List := "", Select := 0, AlwaysOnTop := True)
+    ;-------------------------------------------------------------------------------
 ; show a custom input box with a ListBox control
-; return the text of the selected item
+; return the text of the selected item. Empty if cancelled
 ;---------------------------------------------------------------------------
 ; Title is the title for the GUI
 ; Prompt is the text to display
 ; List is a pipe delimited list of choices
 ; Select (if present) is the index of the preselected item. Default is 0 for no selection
 
-static LB ; used as a GUI control variable
+static LB, OK, Cancel ; used as a GUI control variable
 
 ; create GUI
 Gui, ListBox: New, ,%Title%
 Gui, -MinimizeBox
-Gui, Margin, 30, 18
+;Gui, Margin, 30, 18
 If Prompt ; not empty
     Gui, Add, Text,, %Prompt%
-Gui, Add, ListBox, vLB hwndHLB Choose%Select%, %List%
+
+Loop Parse, List,|
+    rCnt++
+Gui, Add, ListBox, r%rCnt% vLB hwndHLB Choose%Select%, %List%
 
 W := LB_EX_CalcWidth(HLB)
-H := LB_EX_CalcHeight(HLB)
-GuiControl, Move, LB, w%W% h%H%
+GuiControl, Move, HLB, w%W% ; h%H%
 
 Gui, Add, Button, w60 Default, &OK
 Gui, Add, Button, x+m wp, &Cancel
 
+;GuiControl, Move, OK, y%H%
+;GuiControl, Move, Cancel, % "y" H
+
 If (AlwaysOnTop = True)
     Gui, +AlwaysOnTop
 
-Gui, Show, AutoSize
+Gui, Show , AutoSize
 
 ; main wait loop
 Gui, +LastFound
@@ -78,14 +84,4 @@ LB_EX_CalcWidth(HLB) { ; calculates the width of the list box needed to show the
    }
    DllCall("User32.dll\ReleaseDC", "Ptr", HLB, "Ptr", HDC)
    Return MaxW + 8 ; + 8 for the margins
-}
-; ----------------------------------------------------------------------------------------------------------------------
-LB_EX_CalcHeight(HLB) { ; calculates the height of the list box needed to show the whole content.
-   ; HLB - Handle to the ListBox.
-   Static LB_GETITEMHEIGHT := 0x01A1
-   Static LB_GETCOUNT := 0x018B
-   SendMessage, % LB_GETITEMHEIGHT, 0, 0, , % "ahk_id " . HLB
-   H := ErrorLevel
-   SendMessage, % LB_GETCOUNT, 0, 0, , % "ahk_id " . HLB
-   Return (H * ErrorLevel) + 8 ; + 8 for the margins
 }

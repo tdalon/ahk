@@ -294,10 +294,10 @@ class UIA_Mozilla extends UIA_Browser {
 	CloseTab(tabElementOrName:="", matchMode:=3, caseSensitive:=True) { 
 		if (tabElementOrName != "") {
 			if IsObject(tabElementOrName) {
-				if (tabElementOrName.CurrentControlType == this.UIA.TabItemControlType)
+				if (tabElementOrName.CurrentControlType == this.UIA.TabItemControlTypeId)
 					tabElementOrName.Click()
 			} else {
-				try this.TabBarElement.FindFirstByNameAndType(searchPhrase, "TabItem",, matchMode, caseSensitive).Click()
+				try this.TabBarElement.FindFirstByNameAndType(tabElementOrName, "TabItem",, matchMode, caseSensitive).Click()
 			}
 		}
 		ControlSend, ahk_parent, {LCtrl up}{LAlt up}{LShift up}{RCtrl up}{RAlt up}{RShift up}, % "ahk_id " this.BrowserId
@@ -347,11 +347,18 @@ class UIA_Browser {
 			if RegexMatch(member, "PatternId|EventId|PropertyId|AttributeId|ControlTypeId|AnnotationType|StyleId|LandmarkTypeId|HeadingLevel|ChangeId|MetadataId", match) 
 				return IsFunc("UIA_Enum.UIA_" match) ? UIA_Enum["UIA_" match](member) : UIA_Enum[match](member)
 			else if (SubStr(member,1,1) != "_") {
-				try
-					return this.UIA[member]
-				try
-					return this.BrowserElement[member]
+				try return this.UIA[member]
+				try return this.BrowserElement[member]
 			}
+		}
+	}
+
+	__Set(member, value) {
+		if (member != "base") {
+			if ObjRawGet(this, "UIA")
+				try return this.UIA[member] := value
+			if ObjRawGet(this, "BrowserElement")
+				try return this.BrowserElement[member] := value
 		}
 	}
 	
@@ -729,13 +736,13 @@ class UIA_Browser {
 	; Close tab by either providing the tab element or the name of the tab. If tabElementOrName is left empty, the current tab will be closed.
 	CloseTab(tabElementOrName:="", matchMode:=3, caseSensitive:=True) { 
 		if IsObject(tabElementOrName) {
-			if (tabElementOrName.CurrentControlType == this.UIA.TabItemControlType)
+			if (tabElementOrName.CurrentControlType == this.UIA.TabItemControlTypeId)
 				try this.TWT.GetLastChildElement(tabElementOrName).Click()
 		} else {
 			if (tabElementOrName == "") {
 				try this.TWT.GetLastChildElement(this.GetTab()).Click()
 			} else
-				try this.TWT.GetLastChildElement(this.TabBarElement.FindFirstByNameAndType(searchPhrase, "TabItem",, matchMode, caseSensitive)).Click()
+				try this.TWT.GetLastChildElement(this.TabBarElement.FindFirstByNameAndType(tabElementOrName, "TabItem",, matchMode, caseSensitive)).Click()
 		}
 	}
 	

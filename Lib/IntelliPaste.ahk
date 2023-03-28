@@ -443,7 +443,7 @@ If !InStr(sClipboard,"`n") { ; single input
 	If (sHtml = "") ; user cancelled
 		return
 
-	Clip_PasteHtml(sHtml)
+	Clip_PasteHtml(sHtml,sLink)
 	return
 }
 
@@ -517,7 +517,7 @@ If (Fmt = "Text") {
 } Else If (Fmt = "HTML") {
 	If (sStyle = "bullet-list")
 		sFullHtml :=  "<ul>" . sFullHtml . "</ul>"
-	Clip_PasteHtml(sFullHtml)
+	Clip_PasteHtml(sFullHtml,sFullText)
 }
 
 

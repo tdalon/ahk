@@ -774,7 +774,7 @@ Else
     sQuoteHtml = <blockquote>%sQuoteTitleHtml%<br>%sQuoteBodyHtml%</blockquote>
 
 ;MsgBox %sQuoteHtml% ; DBG
-Clip_PasteHtml(sQuoteHtml,False)
+Clip_PasteHtml(sQuoteHtml,sQuoteBodyHtml,False)
 
 ; Escape Block quote in Teams: twice Shift+Enter
 If WinActive("ahk_exe Teams.exe") {

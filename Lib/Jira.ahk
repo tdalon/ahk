@@ -6,33 +6,97 @@
 #Include <Clip>
 
 ; ----------------------------------------------------------------------
-Jira_Get(sUrl){
-; Syntax: sResponse .= Jira_Get(sUrl)
+Jira_Get(sUrl,sPassword:=""){
+; Syntax: sResponseText := Jira_Get(sUrl,sPassword*)
 ; Calls: b64Encode
 
-sPassword := Login_GetPassword()
-If (sPassword="") ; cancel
-    return	
-
+If (sPassword = "") {
+	sPassword := Jira_GetPassword()
+	If (sPassword="") ; cancel
+		return	
+}
+If !RegExMatch(sUrl,"^http") { ; missing root url
+	sUrl:=Jira_GetRootUrl() . sUrl
+}
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("GET", sUrl, false) ; Async=false
 
- ; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
-JiraUserName :=  PowerTools_RegRead("JiraUserName")
-If !JiraUserName
-	JiraUserName := A_UserName
+; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
+JiraUserName :=  Jira_GetUserName()
 sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
 WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
 WebRequest.setRequestHeader("Content-Type", "application/json")
-
 WebRequest.Send()        
-sResponse := WebRequest.responseText
-return sResponse
+return WebRequest.responseText
 }
 
 ; ----------------------------------------------------------------------
+Jira_Post(sUrl,sBody:="",sPassword:=""){
+; Syntax: sResponseText .= Jira_Get(sUrl,sPassword*)
+; Calls: b64Encode
+	
+If (sPassword = "") {
+	sPassword := Jira_GetPassword()
+	If (sPassword="") ; cancel
+		return	
+}
+If !RegExMatch(sUrl,"^http") { ; missing root url
+	sUrl:=Jira_GetRootUrl() . sUrl
+}
+WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+WebRequest.Open("POST", sUrl, false) ; Async=false
+
+; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
+JiraUserName :=  Jira_GetUserName()
+sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
+WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
+WebRequest.setRequestHeader("Content-Type", "application/json")
+If (sBody = "")
+	WebRequest.Send() 
+Else
+	WebRequest.Send(sBody)   
+WebRequest.WaitForResponse()
+;MsgBox %sUrl%`n%sBody% 
+;MsgBox % WebRequest.Status    ; DBG
+return WebRequest.responseText
+}
+
+; ----------------------------------------------------------------------
+Jira_WebRequest(sReqType,sUrl,sBody:="",sPassword:=""){
+; Syntax: WebRequest := Jira_WebRequest(sReqType,sUrl,sBody:="",sPassword:="")
+; Output WebRequest with fields Status and ResponseText
+; Uses JiraUserName in PowerTools Settings
+; Calls: b64Encode
+	
+If (sPassword = "") {
+	sPassword := Jira_GetPassword()
+	If (sPassword="") ; cancel
+		return	
+}
+If !RegExMatch(sUrl,"^http") { ; missing root url
+	sUrl:=Jira_GetRootUrl() . sUrl
+}
+WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+WebRequest.Open(sReqType, sUrl, false) ; Async=false
+
+; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
+JiraUserName :=  Jira_GetUserName()
+sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
+WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
+WebRequest.setRequestHeader("Content-Type", "application/json")
+If (sBody = "")
+	WebRequest.Send() 
+Else
+	WebRequest.Send(sBody)   
+WebRequest.WaitForResponse()
+
+return WebRequest
+}
+
+
+; ----------------------------------------------------------------------
 Jira_IsUrl(sUrl){
-return  (InStr(sUrl,"jira.")) ; TODO: edit according your need/ add setting
+return  ( InStr(sUrl,"jira.") or RegExMatch(sUrl,"/(servicedesk|desk)/.*/portal/") ) ; TODO: edit according your need/ add setting
 } ;eofun
 ; ----------------------------------------------------------------------
 
@@ -44,21 +108,43 @@ return Jira_IsUrl(sUrl)
 } ; eofun
 
 ; ----------------------------------------------------------------------
+Jira_Url2IssueKey(sUrl){
+sUrl := RegExReplace(sUrl,"\?.*$","") ; remove optional arguments after ? in url
+if RegExMatch(sUrl,"/([A-Z]*\-\d*)$",sMatch) ; url ending with Issue Key
+	return sMatch1
+} ; eofun
+
+; ----------------------------------------------------------------------
+Jira_Url2ProjectKey(sUrl){
+; sProjectKey := Jira_Url2ProjectKey(sUrl)
+; /browse/issuekey
+if RegExMatch(sUrl,"/browse/([A-Z]*)\-\d*$",sMatch) ; url ending with Issue Key
+	return sMatch1
+; /com.easesolutions.jira.plugins.requirements/project?detail=RDMO&issueKey=RDMO-14
+if RegExMatch(sUrl,"/project\?detail=([A-Z]*)",sMatch) ; url ending with Issue Key
+	return sMatch1
+; com.easesolutions.jira.plugins.requirements/coverage?prj=RDMO
+; com.easesolutions.jira.plugins.requirements/tracematrix?prj=RDMO
+if RegExMatch(sUrl,"\?prj=([A-Z]*)",sMatch) ; url ending with Issue Key
+	return sMatch1
+} ; eofun
+
+; ----------------------------------------------------------------------
 ; Jira Search - Search within current Jira Project
 ; Called by: NWS.ahk Quick Search (Win+F Hotkey)
 Jira_Search(sUrl){
-static sJiraSearch, sProjectKey	
+static S_JiraSearch, S_ProjectKey	
 
 RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
 ReRootUrl := StrReplace(sRootUrl,".","\.")
 ; issue detailed view
 If RegExMatch(sUrl,ReRootUrl . "/browse/([^/]*)",sNewProjectKey) {
     sNewProjectKey := RegExReplace(sNewProjectKey1,"-.*","")
-	If sNewProjectKey = %sProjectKey%
-		sDefSearch := sJiraSearch
+	If (sNewProjectKey = %S_ProjectKey%) and (!S_JiraSearch)
+		sDefSearch := S_JiraSearch
 	Else {
-		sProjectKey := sNewProjectKey
-		sDefSearch := "project=" . sProjectKey . " AND summary ~"
+		S_ProjectKey := sNewProjectKey
+		sDefSearch := "project=" . S_ProjectKey . " AND summary ~"
 	}
 ; filter view	
 } Else If  RegExMatch(sUrl,ReRootUrl . "/issues/\?jql=(.*)",sJql) { ; https://jira.etelligent.ai/issues/?jql=project%20%3D%20TPI%20AND%20summary%20~%20reuse
@@ -70,8 +156,19 @@ If RegExMatch(sUrl,ReRootUrl . "/browse/([^/]*)",sNewProjectKey) {
 InputBox, sJql , Search string, Enter Jql string:,,640,125,,,,,%sDefSearch% 
 if ErrorLevel
 	return
+S_JiraSearch := sJql
+; Convert labels to CQL
+sPat := "#([^#\s]*)" 
+Pos=1
+While Pos :=    RegExMatch(sJql, sPat, label,Pos+StrLen(label)) {
+	sJqlLabels := sJqlLabels . " and labels = " . label1
+} ; end while
+
+; remove labels from search string
+sJql := RegExReplace(sJql, sPat , "")
+
 sJql := Trim(sJql) 
-sJiraSearch := sJql
+S_JiraSearch := sJql
 
 ; Enclose summary~ description~ with "" if using wildcards ? or * see https://tdalon.blogspot.com/2022/02/jira-partial-text-search.html
 sPat1 = [^(?:\s*AND\s*|\s*OR\s*|"\*\(\))]*
@@ -88,7 +185,7 @@ sJql := RegExReplace(sJql,sPat,sRep)
 sJql := StrReplace(sJql," ","%20")
 sJql := StrReplace(sJql,"=","%3D")
 
-sSearchUrl = %sRootUrl%/issues/?jql=%sJql%
+sSearchUrl := sRootUrl . "/issues/?jql=" . sJql . sJqlLabels
 
 If sJql ; not empty means update search 
 	Send ^l
@@ -142,16 +239,13 @@ Jira_CleanLink(sUrl){
 ; Works also for issue link from Confluence with ?src=confmacro
 
 ; remove url parameters e.g. ?src=confmacro
-sUrl := RegExReplace(sUrl,"\?.*","")
-
-RegExMatch(sUrl, "https://[^/]*", sRootUrl)
-
+sUrl := RegExReplace(sUrl,"\?.*=.*$","")
 
 ; Jira Issue link
 If RegExMatch(sUrl,"/browse/(?P<IssueKey>.*)$",OutputVar) {
-	sUrl :=StrReplace(sUrl,"/browse/","/rest/api/latest/issue/")
-	sUrl := sUrl . "?fields=summary"
-	sResponse := Jira_Get(sUrl)
+	sRestUrl :=StrReplace(sUrl,"/browse/","/rest/api/latest/issue/")
+	sRestUrl := sRestUrl . "?fields=summary"
+	sResponse := Jira_Get(sRestUrl)
 	sPat = "summary":"(.*?)"
 	If RegExMatch(sResponse,sPat,sSummary)
 		sLinkText = %OutputVarIssueKey%: %sSummary1%
@@ -160,20 +254,30 @@ If RegExMatch(sUrl,"/browse/(?P<IssueKey>.*)$",OutputVar) {
 }
 Else If RegExMatch(sUrl,"/browse/(?P<ProjectKey>[A-Z]*)-(?P<IssueNb>\d*)$",OutputVar) {
 	sLinkText = %OutputVarProjectKey%-%OutputVarIssueNb%
-; Jira ServiceDesk
-} Else If RegExMatch(sUrl,"/desk/portal/1/(?P<IssueKey>.*)$",OutputVar) {
-	RestUrl = https://%sRootUrl%/rest/api/2/issue/%OutputVarIssueKey%?fields=summary
+
+; Jira ServiceDesk e.g. https://xxx.atlassian.net/servicedesk/customer/portal/15/PPP-632
+} Else If RegExMatch(sUrl,"/portal/\d*/(?P<ProjectKey>[A-Z]*)-(?P<IssueNb>\d*)$",OutputVar) {
+	
+	/* 
+	RegExMatch(sUrl, "https://[^/]*", sRootUrl) ; Get RootUrl
+	RestUrl = %sRootUrl%/rest/api/2/issue/%OutputVarIssueKey%?fields=summary
 	sResponse := Jira_Get(RestUrl)
+
 	sPat = "summary":"(.*?)"
 	If RegExMatch(sResponse,sPat,sSummary)
 		sLinkText = %OutputVarIssueKey%: %sSummary1%
 	Else
-		sLinkText = %OutputVarIssueKey%
-    
+		sLinkText = %OutputVarIssueKey% 
+	*/
+    sIssueKey := OutputVarProjectKey . "-" . OutputVarIssueNb
     ; Convert Ticket Link to Issue link
 	MsgBox, 0x24,IntelliPaste: Question, Do you want to convert Ticket link into an Issue link?	
 	IfMsgBox Yes 
-		sUrl = https://%JiraRoot%/browse/%OutputVarIssueKey%
+	{
+		RegExMatch(sUrl, "https://[^/]*", sRootUrl) ; Get RootUrl
+		sUrl = %sRootUrl%/browse/%sIssueKey%
+	}
+	sLinkText := sIssueKey	
 }
 
 return [sUrl, sLinkText]
@@ -183,11 +287,60 @@ return [sUrl, sLinkText]
 Jira_CreateIssue(Json){
 
 
-JiraUserName :=  PowerTools_RegRead("JiraUserName")
-If !JiraUserName
-	JiraUserName := A_UserName
+JiraUserName :=  Jira_GetUserName()
 
 
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
+Jira_ProjectKey2Id(sProjectKey) {
+; sProjectId := Jira_ProjectKey2Id(sProjectKey)
+	; Get ProjectId from ProjectKey
+	
+sUrl := Jira_GetRootUrl() . "/rest/api/2/project/" . sProjectKey
+sResponse := Jira_Get(sUrl)
+sPat = "id":"([^"]*)"
+RegExMatch(sResponse,sPat,sMatch)
+return sMatch1
+}
+
+
+; -------------------------------------------------------------------------------------------------------------------
+
+Jira_InputProjectKey(sTitle:="Project Key?",sPrompt:="Enter Project Key:"){
+; sProjectKey := Jira_InputProjectKey()
+; Last entered ProjectKey is memorized for next call
+; Input can be lower case
+; Default Project is got from Active Browser Url
+static S_JiraProjectKey
+; Get ProjectKey from Url
+If Browser_WinActive()
+	sUrl := Browser_GetActiveUrl()
+sProjectKey := Jira_Url2ProjectKey(sUrl)
+If (sProjectKey="")
+	sProjectKey := S_JiraProjectKey ; previous value
+; Confirm ProjectKey
+InputBox, sProjectKey, %sTitle%, %sPrompt%,, 250, 125, , , , ,%sProjectKey%
+If ErrorLevel
+    return
+StringUpper, sProjectKey, sProjectKey
+S_JiraProjectKey := sProjectKey
+return sProjectKey
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+
+Jira_GetRootUrl() {
+return PowerTools_GetSetting("JiraRootUrl")
+}
+
+Jira_GetUserName() {
+JiraUserName :=  PowerTools_RegRead("JiraUserName")
+If !JiraUserName
+	JiraUserName := A_UserName
+return JiraUserName
+}
+
+Jira_GetPassword() {
+return Login_GetPassword()
+}

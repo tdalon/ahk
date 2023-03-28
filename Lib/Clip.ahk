@@ -101,17 +101,20 @@ If (restore)
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; -------------------------------------------------------------------------------------------------------------------
-Clip_PasteHtml(sHtml,restore := True) {
+Clip_PasteHtml(sHtml,sText:="",restore := True) {
 ; Syntax: Clip_PasteHtml(sHtml,restore := True)
 ; If sHtml is a link (starts with http), the Html link will be wrapped around it i.e. sHtml=<a href="%sHtml%">%sText%</a>
 If (restore)
     ClipBackup := ClipboardAll
-SetClipboardHTML(sHtml)
+Clip_SetH(sHtml,sText)
 WinClip.Paste()  
 If (restore) 
     Clip_Restore(ClipBackup)
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
+
+
+
 
 ; -------------------------------------------------------------------------------------------------------------------
 Clip_PasteLink(sUrl, sText:="", doEdit := True, restore:=True) {
@@ -264,8 +267,22 @@ Return dataL ? dataL : 0
 }
 
 ; SetHtml using SetClipboardHTML function
-Clip_SetH(sHtml){
-    SetClipboardHTML(sHtml)
+Clip_SetH(sHtml,sText){
+SetClipboardHTML(sHtml,,sText)
+
+    
+    /* 
+    htmlFile := ComObjCreate("HTMLfile")
+    htmlFile.write(sHtml)
+    bodyRange := htmlFile.body.createTextRange()
+    bodyRange.select()
+    bodyRange.execCommand("Copy")
+    bodyRange := ""
+    htmlFile := ""
+     */
+   
+
+
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------

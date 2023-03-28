@@ -186,7 +186,7 @@ sIniFile := SharePoint_GetSyncIniFile()
 FileRead, IniContent, %sIniFile%
 
 oExcel := ComObjCreate("Excel.Application") 
-oExcel.Visible := True ; DBG
+oExcel.Visible := False ; DBG
 oExcel.DisplayAlerts := false
 
 Loop, Reg, HKEY_CURRENT_USER\Software\SyncEngines\Providers\OneDrive, K
@@ -210,15 +210,14 @@ Loop, Reg, HKEY_CURRENT_USER\Software\SyncEngines\Providers\OneDrive, K
 	xlWorkbook := oExcel.Workbooks.Add ;add a new workbook
 	oSheet := oExcel.ActiveSheet
 	oSheet.Range("A1").Formula := "=CELL(""filename"")" ; escape quotes
+	oSheet.Range("A1").Dirty ; so that .Calculate updates the formula
 
 	; Save Workbook https://learn.microsoft.com/en-us/office/vba/api/excel.workbook.saveas
 	Try ; sometimes return error "Enable to get the SaveAs property" but still work
 		xlWorkbook.SaveAs(xlFile,xlWorkbookDefault := 51)
 	
 	; Calculate Formula
-	;oSheet.Calculate ; does not work
-	WinActivate, ahk_exe excel.exe
-	Send {f9}
+	oSheet.Calculate ; works after Range set to Dirty ; no need Send {f9}
 
 	; Get value
 	UrlNamespace := oSheet.Range("A1").Value 
@@ -243,6 +242,7 @@ Loop, Reg, HKEY_CURRENT_USER\Software\SyncEngines\Providers\OneDrive, K
 
 
 oExcel.Quit()
+Run "%sIniFile%"
 
 } ; eofun
 

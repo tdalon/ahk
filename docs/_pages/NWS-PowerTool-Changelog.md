@@ -5,6 +5,12 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2023-03-16
+  * Jira Quick Search support # for labels
+* 2023-03-08
+  * Bug fix: IntelliPaste Jira issue
+* 2023-02-28
+  * [Bug fix](https://tdalon.blogspot.com/2023/03/confluence-intellipaste-issue.html) IntelliPaste Html Clipboard in Confluence: SharePoint links are rendered as image. Change Clip_PasteHtml from WinClip to SetClipboardHTML
 * 2023-02-21
   * IntelliPaste: [SharePoint Sync Ini automatically updated](https://tdalon.blogspot.com/2023/02/sharepoint-sync-get-url.html)
   * Fix IntelliPaste cancel on SharePoint linktext breadcrumb selection

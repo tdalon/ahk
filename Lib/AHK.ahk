@@ -69,7 +69,8 @@ If (Extension = "ahk") {
 }
 
 ; ---------------------------------------------------------------------- 
-AHK_Help(kw){
+AHK_Help2(kw){
+; InternetExplorer not supported anymore
 ; Based on AHK Help Launcher. Credit RaptorX https://www.the-automator.com/autohotkey-webinar-notepad-a-solid-well-loved-but-dated-autohotkey-editor/
 pwb := WinExist("ahk_id " pwbHandle) ? pwb : ComObjCreate("InternetExplorer.Application"), pwbHandle := pwb.hwnd
 pwb.navigate("https://www.autohotkey.com/docs/")
@@ -90,4 +91,10 @@ pwb.document.querySelectorAll("#left > div.search > div.input > input[type=searc
 pwb.document.querySelectorAll("button[aria-label='Search tab']")[0].click()
 
 ControlSend, Internet Explorer_Server1, {enter 2}, % "Ahk_id " pwb.hwnd
+}
+
+
+AHK_Help(kw){
+sUrl := "https://www.autohotkey.com/docs/v1/lib/" . kw . ".htm"
+Run, %sUrl%
 }
