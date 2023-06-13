@@ -8,6 +8,11 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-06-13
+  * Update/Refactoring Teams_GetMeetingWindow. Client change new split Join button
+  * Fix RaiseHand if Meeting window is minimized
+* 2023-04-17
+  * Favorites for Chat links open in Web browser instead of app client (client does not work)
 * 2023-02-20
   * [Quick Join Teams Meeting](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html) using Outlook Calendar Integration
 * 2023-02-09

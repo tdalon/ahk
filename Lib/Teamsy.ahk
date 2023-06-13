@@ -75,7 +75,7 @@ Case "ca","cal","calendar":
     SendInput ^4; open calendar
     return
 Case "m","me","meet": ; activate meeting window
-    Teams_ActivateMeetingWindow()
+    Teams_GetMeetingWindow(true,true)
     ;Teams_NewMeeting()
     return
 Case "le","leave": ; leave meeting

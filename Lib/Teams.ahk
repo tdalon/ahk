@@ -164,7 +164,9 @@ If !(sFileName) {
         return
 }
 
-sUrl:= StrReplace(sUrl,"https:","msteams:") ; open by default in app
+; open by default in app: does not work for chat link
+If Not InStr(sUrl,"?ctx=chat")
+    sUrl:= StrReplace(sUrl,"https:","msteams:") 
 sFile := FavsDir . "\" . sFileName . ".url"
 
 ;FileDelete %sFile%
@@ -1446,7 +1448,6 @@ If (SubStr(sKeyword,1,1) = "@") {
 If (sInput=="") ; empty
     return
 
-
 ;sLastChar := SubStr(sInput,StrLen(sInput)) 
 doBreak := (SubStr(sInput,StrLen(sInput)) == "-")
 If (doBreak) {
@@ -1463,16 +1464,19 @@ Sleep %Delay%
 SendInput +{enter}
 
 
-}
+} ; eofun
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_GetMeetingWindow(Mode :=0, Activate:=false){
-; Syntax: hwnd := Teams_GetMeetingWindow(Mode:=0)
-;         UIAEl := Teams_GetMeetingWindow(Mode:=1|2,Activate:=true|false*)
+Teams_GetMeetingWindow(Maximize:=false, Activate:=false){
+; Syntax: 
+;      hWnd := Teams_GetMeetingWindow(Maximize:=true*|false,Activate:=true|false*) 
 ;   If window is not found, hwnd is empty
-; Mode=1: return Share/ Call in progress window 
-; Mode=2 return Meeting window even if Call in progress Share Window is active
+; Input Arguments:
+;   Maximize: if true, minimized (aka Call in Progress) meeting window is maximized/clicked
+;      This allows access for further meeting actions
+;   Activate: if true, found Meeting Window will be activated
+;
 ; See implementation explanations here: 
 ;   https://tdalon.blogspot.com/2022/07/ahk-get-teams-meeting-win.html
 
@@ -1481,80 +1485,103 @@ WinGet, Win, List, ahk_exe Teams.exe
 Loop %Win% {
     WinId := Win%A_Index%
     TeamsEl := UIA.ElementFromHandle(WinId)
-    
+
     If Teams_IsMeetingWindow(TeamsEl)  {
-        if (Mode = 0)
-            return WinId  
-        Else
-            return TeamsEl     
-    }
-    
-    If RegExMatch(TeamsEl.Name,"Microsoft Teams Call in progress.*") {
-        If (Mode = 1) {
-            if Activate
-                WinActivate, ahk_id %WinId%
-            return TeamsEl
-        }
-        Else If (Mode = 2) {
+
+        If (Maximize) {
+           
+            El := TeamsEl.FindFirstByNameAndType("Navigate back to call window.", "button") ; TODO lang specific
             
-            El := TeamsEl.FindFirstByType("image")
-            if !El
-                El:=  TeamsEl.FindFirstByNameAndType("Call is in progress", "text", , 1) ; partial match ; weird case: nobody joined the meeting
+            If !Activate
+                WinGet, prevWinId, ID, A
+            
             If El {
                 El.Click()
                 Sleep 500
-                TeamsEl := Teams_FindMeetingWindow(Activate)
-                return TeamsEl
             }
+
+            WinGet, WinId, ID, A ; WinId changes after max
+                
+            If !Activate
+                WinActivate, ahk_id %prevWinId%
         }
+
+        If Activate {
+            ;MsgBox Activate %WinId%
+            WinActivate, ahk_id %WinId% ; sometimes does not work
+        }
+        return WinId
+
     }
 
     ;MsgBox % TeamsEl.DumpAll()
 } ; End Loop
 
-TrayTip, Could not find Meeting Window! , No unminmized active Teams meeting window!.,,0x2
+TrayTip, Could not find Meeting Window! , No active Teams meeting window found!,,0x2
 } ; eofun
+
 
 
 ; -------------------------------------------------------------------------------------------------------------------
 
 Teams_FindMeetingWindow(Activate:= false) {
-; Loop through Teams.exe Window to find Meeting Window
-; Try multiple times untill it is found
+; TeamsEl := Teams_FindMeetingWindow(Activate:= false)
+; Loop through Teams.exe Window to find unminimized Meeting Window
+; Does not return Minimized Window
+; returns empty if not found and display a traytip message
 UIA := UIA_Interface()
-Loop, 3 {
-    WinGet, Win, List, ahk_exe Teams.exe
-    Loop %Win% {
-        WinId := Win%A_Index%
-        TeamsEl := UIA.ElementFromHandle(WinId)
-        
-        If Teams_IsMeetingWindow(TeamsEl)  {
-            if Activate
-                WinActivate, ahk_id %WinId%
-            return TeamsEl     
-        }
+WinGet, Win, List, ahk_exe Teams.exe
+Loop %Win% {
+    WinId := Win%A_Index%
+    TeamsEl := UIA.ElementFromHandle(WinId)
+    
+    If Teams_IsMeetingWindow(TeamsEl)  {
+        if Activate
+            WinActivate, ahk_id %WinId%
+        return TeamsEl     
     }
-    Sleep 500
 }
+Sleep 500
+
 TrayTip, Could not find Meeting Window! , No unminmized active Teams meeting window!.,,0x2
 } ; eofun
 
 ; ---------------------------------------------------------
-Teams_IsMeetingWindow(TeamsEl){
+Teams_IsMeetingWindow(TeamsEl,ExOnHold:=true){
 ; does not return true on Share / Call in progress window
-; Share / Call in progress window has the button hangup-button, not hangup-btn
+
 ; If Meeting Reactions Submenus are opened AutomationId are not visible.
 ; TODO Language specific ByName
-if (TeamsEl.FindFirstByName("Calling controls") or TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
-    return !TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button
+If TeamsEl.FindFirstByName("Calling controls") {
+    ;or TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
+    If (ExOnHold) { ; exclude On Hold meeting windows
+        If TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button ; TODO lang specific
+            return false
+    }
+    
+    return true
+}
 return false
 } ; eofun
 
+; ---------------------------------------------------------
+Teams_IsMeetingShareWindow(TeamsEl){
+    ; does not return true on Share / Call in progress window
+    ; Share / Call in progress window has the button hangup-button, not hangup-btn
+    ; If Meeting Reactions Submenus are opened AutomationId are not visible.
+    ; TODO Language specific ByName
 
-; -------------------------------------------------------------------------------------------------------------------
-Teams_ActivateMeetingWindow(){
-Teams_GetMeetingWindow(2,true)
+   If TeamsEl.FindFirstBy("AutomationId=hangup-button")
+        return True
+   Else 
+        return False
+
+    If TeamsEl.FindFirstByName("Calling controls") 
+        ;or TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
+        return !TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button
+    return false
 } ; eofun
+
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ActivateMainWindow(){
@@ -1646,33 +1673,20 @@ Teams_MeetingShare(ShareMode := 2){
 ; ShareMode = 1 : share
 ; ShareMode = 2: toggle share
 
-TeamsEl := Teams_GetMeetingWindow(1) 
-If !TeamsEl ; empty
+WinId :=    () 
+
+If !WinId ; empty
     return
 
-WinGetTitle, title, ahk_id %WinId%
-If RegExMatch(title,"Microsoft Teams Call in progress.*") and (ShareMode !=1) {
-    ; button "Stop sharing"
-    El :=  TeamsEl.FindFirstByNameAndType("Stop sharing", "button")
-    El.Click()
-    return
-}
+UIA := UIA_Interface()
+TeamsEl := UIA.ElementFromHandle(WinId)
 
-; WinShiftRight Arrow
-
-ShareEl:= TeamsEl.FindFirstBy("AutomationId=share-button")
+ShareEl := TeamsEl.FindFirstBy("AutomationId=share-button")
+;MsgBox % TeamsEl.DumpAll()
 If !ShareEl {
     TrayTip TeamsShortcuts: ERROR, Share button not found!,,0x2
+    return
 }
-
-SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
-If (MonitorCount > 1) {
-    IsActive := WinActive("ahk_id " . WinId)
-    IsActive := Not (IsActive = 0)
-} Else 
-    IsActive := False ; Set to False if only one monitor is used
-
-;WinActivate, ahk_id %WinId%
 
 IsSharing := !RegExMatch(ShareEl.Name,"^Share content")
 
@@ -1686,6 +1700,10 @@ If (ShareMode = 0) and !(IsSharing) ; already not sharing
 
 ShareEl.Click() ; does not require Window to be active
 
+If (ShareMode=0) or ((ShareMode=2) and IsSharing) ; unshare->done
+    return 
+
+
 ; Wait for share tray to open
 Delay := PowerTools_GetParam("TeamsShareDelay")
 Sleep %Delay% 
@@ -1694,36 +1712,28 @@ Sleep %Delay%
 El :=  TeamsEl.FindFirstByNameAndType("Include computer sound", "checkbox")
 El.Click()
 
-If !(IsSharing)
-    SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
+SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
 
 
-If (MonitorCount > 1) and !(IsSharing) { ; only if IsActive (=>multiple monitors) and not sharing before = sharing now
-; Bring back meeting window (multiple screen setup) - it is else minimized while sharing by Teams
-    Sleep 1000 ; Time for Call in progress window to be created
+; Move Meeting Window to secondary screen
+; WinShiftRight Arrow
+SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
+If (MonitorCount > 1) {
 
-    WinGet, Win, List, ahk_exe Teams.exe
-    Loop %Win% {
-        WinId := Win%A_Index%
-        TeamsEl := UIA.ElementFromHandle(WinId)
-        El:=  TeamsEl.FindFirstByNameAndType("Call is in progress", "text", , 2) ; partial match
-        If El {
-            El.Click()
-            Break
-        }
-    } ; End Loop
+    ; Maximize Meeting Window
+    El := TeamsEl.FindFirstByNameAndType("Navigate back to call window.", "button") ; TODO lang specific
     
-
-    If !El {
-        return
+    If El {
+        El.Click()
+        Sleep 500
     }
 
-    Sleep 500 ; Time for Meeting Window to be restored
-    WinWaitActive, ahk_exe Teams.exe
-    WinId := WinActive("A")
+
     Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
 
+    WinMaximize, ahk_id %WinId%Arrow
 } 
+
 
 
 
@@ -1829,10 +1839,11 @@ Teams_Mute(State := 2){
 ;    1: mute on
 ;    2*: (Default): Toggle mute state
 
-TeamsEl := Teams_GetMeetingWindow(1) 
-If !TeamsEl ; empty
+WinId := Teams_GetMeetingWindow() 
+If !WinId ; empty
     return
-
+UIA := UIA_Interface()
+TeamsEl := UIA.ElementFromHandle(WinId)
 El :=  TeamsEl.FindFirstByNameAndType("Mute", "button",,2)
 If El {
     If (State = 0) {
@@ -1900,28 +1911,18 @@ WinActivate, ahk_id %curWinId%
 
 } ; eofun
 
-
+; -------------------------------------------------------------------------------------------------------------------
 Teams_Leave() {
-TeamsEl := Teams_GetMeetingWindow(1)
-If !TeamsEl ; empty
+WinId := Teams_GetMeetingWindow(false,true)
+If !WinId ; empty
     return
-El:=  TeamsEl.FindFirstByNameAndType("Hang up", "button")
-If El {
-    El.Click()
-    return
-}
-
-El:=  TeamsEl.FindFirstByName("Leave",,1)
-If El {
-    El.Click()
-    return
-}
+SendInput ^+h ; Ctrl+Shift+H
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_PushToTalk(){
 
-WinId := Teams_GetMeetingWindow() ; mute can be run from Main window
+WinId := Teams_GetMeetingWindow() 
 
 If !WinId ; empty
     return
@@ -2012,9 +2013,9 @@ If (showTrayTip) {
 ; -------------------------------------------------------------------------------------------------------------------
 
 Teams_IsMuted(hwnd:="") {
-; IsMuted := Teams_IsMuted(hwnd)
-; hwnd: Meeting Window. If not input Teams_GetMeetingWindow is called;
-; Output logical. Empty if no meeting window found.
+; IsMuted := Teams_IsMuted(hwnd*)
+; hwnd: Meeting Window. If not input, Teams_GetMeetingWindow is called;
+; Output IsMuted logical. Empty if no meeting window found.
 if !hwnd {
     hwnd:=Teams_GetMeetingWindow()
     If !hwnd ; empty
@@ -2028,9 +2029,9 @@ If !TeamsEl.FindFirstBy("AutomationId=microphone-button") {
     MsgBox % TeamsEl.DumpAll()
 }
 return !TeamsEl.FindFirstBy("Name=Mute (Ctrl+Shift+M)") 
-}
+} ; eofun
 
-
+; -------------------------------------------------------------------------------------------------------------------
 Teams_Video(State := 2){
 ; State: 
 ;    0: video off
@@ -2038,9 +2039,11 @@ Teams_Video(State := 2){
 ;    2*: (Default): Toggle video
 
 
-TeamsEl := Teams_GetMeetingWindow(1)
-If !TeamsEl ; empty
+WinId := Teams_GetMeetingWindow() 
+If !WinId ; empty
     return
+UIA := UIA_Interface()
+TeamsEl := UIA.ElementFromHandle(WinId)
 
 ;El :=  TeamsEl.FindFirstByNameAndType("Turn camera on", "button",,1)
 El :=  TeamsEl.FindFirstByName("Turn camera on",,1) ; menu item on meeting window; button on Call in progress
@@ -2066,7 +2069,6 @@ If El {
         return
     }
 }
-
 
 } ; eofun
 
@@ -2117,12 +2119,11 @@ return SVVExe
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_RaiseHand() {
 ; Toggle Raise Hand on/off ; Default Hotkey Ctrl+Shift+K
-WinId := Teams_GetMeetingWindow()
+WinGet, curWinId, ID, A
+WinId := Teams_GetMeetingWindow(true,true)
 If !WinId ; empty
     return
 Tooltip("Teams Toggle Raise Hand...") 
-WinGet, curWinId, ID, A
-WinActivate, ahk_id %WinId%
 SendInput ^+k ; toggle video Ctl+Shift+k
 WinActivate, ahk_id %curWinId%
 } ; eofun
@@ -2130,7 +2131,7 @@ WinActivate, ahk_id %curWinId%
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_React(sReaction) {
 ; sReaction can be Like | Applause| Heart | Laugh
-WinId := Teams_GetMeetingWindow()
+WinId := Teams_GetMeetingWindow(true)
 If !WinId ; empty
     return
 If  A_IsCompiled
@@ -2210,12 +2211,12 @@ return False
 Teams_MeetingReaction(Reaction) {
 ; Reaction can be Like | Applause| Love | Laugh | Surprised
 ; See documentation https://tdalon.blogspot.com/2022/07/ahk-teams-meeting-reactions-uia.html
-WinId := Teams_GetMeetingWindow()
+WinId := Teams_GetMeetingWindow(true,true)
 If !WinId ; empty
     return
 WinGet, curWinId, ID, A
 
-UIA := UIA_Interface()
+UIA := UIA_Interface()  
 TeamsEl := UIA.ElementFromHandle(WinId)
 
 ; Shortcut if Reactions toolbar already available-> directly click and exit
@@ -2227,9 +2228,9 @@ ReactionsEl :=  TeamsEl.FindFirstBy("AutomationId=reaction-menu-button")
 If ReactionsEl
     Goto ClickReactions
 
-; Click by position
+; Workaround button not found: Click by position
 
-WinActivate, ahk_id %WinId% ; needs to be activated for UIA.ElementFromPoint to work
+;WinActivate, ahk_id %WinId% ; needs to be activated for UIA.ElementFromPoint to work
 
 ;MsgBox % TeamsEl.DumpAll()
 
@@ -2430,9 +2431,11 @@ If (restore)
 
 Teams_MeetingAction(id){
 ; id: recording, fullscreen, device-settings, incoming-video
-teamsEl := Teams_GetMeetingWindow(2,1) ; Activate window
-If !teamsEl ; empty
+WinId := Teams_GetMeetingWindow() 
+If !WinId ; empty
     return
+UIA := UIA_Interface()
+TeamsEl := UIA.ElementFromHandle(WinId)
 sFindBtn := "AutomationId=" . id . "-button"
 
 /* 
@@ -2443,12 +2446,12 @@ If actionEl
     Goto ClickAction 
 */
 
-moreEl := teamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn")
+moreEl := TeamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn")
 Sleep, 200
 ;moreEl.Highlight()
 moreEl.Click()
 Sleep, 100
-actionEl:= teamsEl.WaitElementExist(sFindBtn,,,,1000)
+actionEl:= TeamsEl.WaitElementExist(sFindBtn,,,,1000)
 ;actionEl:= teamsEl.WaitElementExist("AutomationId=fullscreen-button")
 If !actionEl
     return
