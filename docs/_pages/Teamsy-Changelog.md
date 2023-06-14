@@ -8,6 +8,9 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-06-13
+  * Update/Refactoring Teams_GetMeetingWindow. Client change new split Leave button
+  * Fix RaiseHand if Meeting window is minimized
 * 2023-02-20
   * [Quick Join Teams Meeting](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html) using Outlook Calendar Integration
 * 2023-01-30

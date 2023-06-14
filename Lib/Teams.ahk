@@ -1500,7 +1500,7 @@ Loop %Win% {
                 Sleep 500
             }
 
-            WinGet, WinId, ID, A ; WinId changes after max
+            WinGet, WinId, ID, A ; Weird Teams Client Behavior: WinId changes after maximization
                 
             If !Activate
                 WinActivate, ahk_id %prevWinId%
@@ -1562,24 +1562,6 @@ If TeamsEl.FindFirstByName("Calling controls") {
     return true
 }
 return false
-} ; eofun
-
-; ---------------------------------------------------------
-Teams_IsMeetingShareWindow(TeamsEl){
-    ; does not return true on Share / Call in progress window
-    ; Share / Call in progress window has the button hangup-button, not hangup-btn
-    ; If Meeting Reactions Submenus are opened AutomationId are not visible.
-    ; TODO Language specific ByName
-
-   If TeamsEl.FindFirstBy("AutomationId=hangup-button")
-        return True
-   Else 
-        return False
-
-    If TeamsEl.FindFirstByName("Calling controls") 
-        ;or TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
-        return !TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button
-    return false
 } ; eofun
 
 
