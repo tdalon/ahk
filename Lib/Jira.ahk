@@ -6,24 +6,87 @@
 #Include <Clip>
 
 ; ----------------------------------------------------------------------
-Jira_Get(sUrl,sPassword:=""){
-; Syntax: sResponseText := Jira_Get(sUrl,sPassword*)
+Jira_BasicAuth(sUrl:="",sToken:="") {
+; Get Auth String for basic authentification
+; sAuth := Jira_BasicAuth(sUrl:="",sToken:="")
+; Default Url is Setting JiraRootUrl
+
 ; Calls: b64Encode
 
+If !RegExMatch(sUrl,"^http")  ; missing root url or default url
+	sUrl := Jira_GetRootUrl() . sUrl
+
 If (sPassword = "") {
-	sPassword := Jira_GetPassword()
-	If (sPassword="") ; cancel
-		return	
+
+	; If Cloud
+	If InStr(sUrl,".atlassian.net") {
+		; Read Jira PowerTools.ini setting
+		If !FileExist("PowerTools.ini") {
+			PowerTools_ErrDlg("No PowerTools.ini file found!")
+			return
+		}
+			
+		IniRead, JiraAuth, PowerTools.ini,Jira,JiraAuth
+		If (JiraAuth="ERROR") { ; Section [Jira] Key JiraAuth not found
+			PowerTools_ErrDlg("JiraAuth key not found in PowerTools.ini file [Jira] section!")
+			return
+		}
+		
+		JsonObj := Jxon_Load(JiraAuth)
+		For i, inst in JsonObj 
+		{
+			url := inst["url"]
+			If InStr(sUrl,url) {
+				JiraApiToken := inst["apitoken"]
+				If (JiraApiToken="") { ; Section [Jira] Key JiraAuth not found
+					PowerTools_ErrDlg("ApiToken is not defined in PowerTools.ini file [Jira] section, JiraAuth key for url '" . url . "'!")
+					return
+				}
+				JiraUserName := inst["username"]
+				break
+			}
+		}
+		If (JiraApiToken="") { ; Section [Jira] Key JiraAuth not found
+			RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
+			PowerTools_ErrDlg("No instance defined in PowerTools.ini file [Jira] section, JiraAuth key for url '" . sRootUrl . "'!")
+			return
+		} 	
+		If (JiraUserName ="")
+			JiraUserName :=  Jira_GetUserName()
+		If (JiraUserName ="")
+			return
+		sAuth := b64Encode( JiraUserName . ":" . JiraApiToken)
+	} Else { ; server
+		sPassword := Jira_GetPassword()
+		If (sPassword="") ; cancel
+			return	
+
+		JiraUserName :=  Jira_GetUserName()
+		sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
+	}
 }
-If !RegExMatch(sUrl,"^http") { ; missing root url
-	sUrl:=Jira_GetRootUrl() . sUrl
-}
+
+return sAuth
+
+} ; eofun
+; ----------------------------------------------------------------------
+Jira_Get(sUrl,sPassword:=""){
+; Syntax: sResponseText := Jira_Get(sUrl,sPassword*)
+; sPassword Password for server or Api Token for cloud
+
+; Calls: Jira_BasicAuth
+
+If !RegExMatch(sUrl,"^http")  ; missing root url or default url
+	sUrl := Jira_GetRootUrl() . sUrl
+sAuth := Jira_BasicAuth(sUrl,sPassword)
+If (sAuth="")
+	return
+
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("GET", sUrl, false) ; Async=false
 
 ; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
-JiraUserName :=  Jira_GetUserName()
-sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
+
 WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
 WebRequest.setRequestHeader("Content-Type", "application/json")
 WebRequest.Send()        
@@ -32,23 +95,18 @@ return WebRequest.responseText
 
 ; ----------------------------------------------------------------------
 Jira_Post(sUrl,sBody:="",sPassword:=""){
-; Syntax: sResponseText .= Jira_Get(sUrl,sPassword*)
-; Calls: b64Encode
+; Syntax: sResponseText := Jira_Post(sUrl,sBody,sPassword*)
+; Calls: Jira_BasicAuth
 	
-If (sPassword = "") {
-	sPassword := Jira_GetPassword()
-	If (sPassword="") ; cancel
-		return	
-}
-If !RegExMatch(sUrl,"^http") { ; missing root url
-	sUrl:=Jira_GetRootUrl() . sUrl
-}
+If !RegExMatch(sUrl,"^http")  ; missing root url or default url
+	sUrl := Jira_GetRootUrl() . sUrl
+sAuth := Jira_BasicAuth(sUrl,sPassword)
+If (sAuth="")
+	return
+
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("POST", sUrl, false) ; Async=false
 
-; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
-JiraUserName :=  Jira_GetUserName()
-sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
 WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
 WebRequest.setRequestHeader("Content-Type", "application/json")
 If (sBody = "")
@@ -65,23 +123,17 @@ return WebRequest.responseText
 Jira_WebRequest(sReqType,sUrl,sBody:="",sPassword:=""){
 ; Syntax: WebRequest := Jira_WebRequest(sReqType,sUrl,sBody:="",sPassword:="")
 ; Output WebRequest with fields Status and ResponseText
-; Uses JiraUserName in PowerTools Settings
-; Calls: b64Encode
+
+; Calls: Jira_BasicAuth
 	
-If (sPassword = "") {
-	sPassword := Jira_GetPassword()
-	If (sPassword="") ; cancel
-		return	
-}
-If !RegExMatch(sUrl,"^http") { ; missing root url
-	sUrl:=Jira_GetRootUrl() . sUrl
-}
+If !RegExMatch(sUrl,"^http")  ; missing root url or default url
+	sUrl := Jira_GetRootUrl() . sUrl
+sAuth := Jira_BasicAuth(sUrl,sPassword)
+If (sAuth="")
+	return
+
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open(sReqType, sUrl, false) ; Async=false
-
-; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
-JiraUserName :=  Jira_GetUserName()
-sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
 WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
 WebRequest.setRequestHeader("Content-Type", "application/json")
 If (sBody = "")
@@ -96,7 +148,7 @@ return WebRequest
 
 ; ----------------------------------------------------------------------
 Jira_IsUrl(sUrl){
-return  ( InStr(sUrl,"jira.") or RegExMatch(sUrl,"/(servicedesk|desk)/.*/portal/") ) ; TODO: edit according your need/ add setting
+return  ( InStr(sUrl,"jira.") or InStr(sUrl,".atlassian.net") or RegExMatch(sUrl,"/(servicedesk|desk)/.*/portal/") ) ; TODO: edit according your need/ add setting
 } ;eofun
 ; ----------------------------------------------------------------------
 
@@ -109,9 +161,14 @@ return Jira_IsUrl(sUrl)
 
 ; ----------------------------------------------------------------------
 Jira_Url2IssueKey(sUrl){
-sUrl := RegExReplace(sUrl,"\?.*$","") ; remove optional arguments after ? in url
-if RegExMatch(sUrl,"/([A-Z]*\-\d*)$",sMatch) ; url ending with Issue Key
-	return sMatch1
+If R4J_IsUrl(sUrl) 
+	return R4J_Url2IssueKey(sUrl)
+Else {
+	sUrl := RegExReplace(sUrl,"\?.*$","") ; remove optional arguments after ? in url
+	If RegExMatch(sUrl,"/([A-Z]*\-\d*)$",sMatch) ; url ending with Issue Key
+		return sMatch1
+}
+
 } ; eofun
 
 ; ----------------------------------------------------------------------
@@ -157,7 +214,7 @@ InputBox, sJql , Search string, Enter Jql string:,,640,125,,,,,%sDefSearch%
 if ErrorLevel
 	return
 S_JiraSearch := sJql
-; Convert labels to CQL
+; Convert labels to Jql
 sPat := "#([^#\s]*)" 
 Pos=1
 While Pos :=    RegExMatch(sJql, sPat, label,Pos+StrLen(label)) {
@@ -344,3 +401,561 @@ return JiraUserName
 Jira_GetPassword() {
 return Login_GetPassword()
 }
+
+; -------------------------------------------------------------------------------------------------------------------
+Jira_Excel_GetIssueKey() {
+oExcel := XL_Handle(1)
+;oExcel := ComObjCreate("Excel.Application") 
+tblSelected := oExcel.ActiveCell.ListObject
+If IsObject(tblSelected)  { ; table
+	Found := tblSelected.Range.Rows(1).Find("Key", , -4163,1)
+	If IsObject(Found) {
+		KeyCell := tblSelected.Range.Cells(oExcel.ActiveCell.Row - tblSelected.HeaderRowRange.Row + 1, Found.Column - tblSelected.HeaderRowRange.Column + 1)
+		GoTo, LabelFound
+	} Else 
+		GoTo, LabelNotFound
+} Else { ; No Table
+	
+	Found := oExcel.ActiveSheet.UsedRange.Find("Key", , -4163,1)  ;After: upper left, LookIn= xlValues=-4163, LookAt: xlWhole=1 https://learn.microsoft.com/en-us/office/vba/api/excel.range.find
+	
+	If !IsObject(Found)
+		GoTo, LabelNotFound
+	FoundFirst := Found
+	
+	LabelGIKFindNext:
+	;FoundNext := oExcel.ActiveSheet.UsedRange.FindNext() ; FindNext does not work
+	FoundNext := oExcel.ActiveSheet.UsedRange.Find("Key",Found , -4163,1)
+
+	; MsgBox % Found.Address ; DBG
+	; MsgBox % FoundNext.Address ; DBG
+	If (FoundNext.Address <> FoundFirst.Address) {
+		If (FoundNext.Column < oExcel.ActiveCell.Column) {
+			Found := FoundNext
+			GoTo, LabelGIKFindNext
+		}
+	}			
+	KeyCell := oExcel.ActiveSheet.UsedRange.Cells(oExcel.ActiveCell.Row,Found.Column)
+}
+
+LabelFound:
+sKey := Trim(KeyCell.Value)	
+If !RegExMatch(sKey,"[A-Z]*\-\d*") {
+	TrayTip, Error, Wrong format for issue Key= '%sKey%'!,,3
+	return
+}
+return sKey
+
+LabelNotFound:
+TrayTip, Error, No Header Cell with 'Key' as Text value found!,,3
+return
+
+} ;eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+; -------------------------------------------------------------------------------------------------------------------
+Jira_Excel_GetIssueKeys() {
+; Return an array of String for Issue Keys matching to the current Selection
+; Issue Keys are searched by matching the column with a "Key" header row
+oExcel := XL_Handle(1)
+;oExcel := ComObjCreate("Excel.Application") 
+tblSelected := oExcel.ActiveCell.ListObject
+KeyArray := []
+If IsObject(tblSelected)  { ; table
+	Found := tblSelected.Range.Rows(1).Find("Key", , -4163,1)
+	If !IsObject(Found)
+		GoTo, LabelKeyNotFound
+
+	For curCell In oExcel.Selection 
+	{
+		KeyCell := tblSelected.Range.Cells(curCell.Row - tblSelected.HeaderRowRange.Row + 1, Found.Column - tblSelected.HeaderRowRange.Column + 1)
+		sKey := Trim(KeyCell.Value)	
+		If RegExMatch(sKey,"[A-Z]*\-\d*") {
+			KeyArray.Push(sKey)
+		}		
+	}		
+			
+} Else { ; No Table
+	
+	Found := oExcel.ActiveSheet.UsedRange.Find("Key", , -4163,1)  ;After: upper left, LookIn= xlValues=-4163, LookAt: xlWhole=1 https://learn.microsoft.com/en-us/office/vba/api/excel.range.find
+	If !IsObject(Found)
+		GoTo, LabelKeyNotFound
+	FoundFirst := Found
+
+	For curCell In oExcel.Selection  
+	{
+		Found := oExcel.ActiveSheet.UsedRange.Find("Key", , -4163,1)  ;After: upper left, LookIn= xlValues=-4163, LookAt: xlWhole=1 https://learn.microsoft.com/en-us/office/vba/api/excel.range.find
+		FoundFirst := Found
+		
+		LabelGIKsFindNext:
+		;FoundNext := oExcel.ActiveSheet.UsedRange.FindNext() ; FindNext does not work
+		FoundNext := oExcel.ActiveSheet.UsedRange.Find("Key",Found , -4163,1)
+
+		If (FoundNext.Address <> FoundFirst.Address) {
+			If (FoundNext.Column < curCell.Column) {
+				Found := FoundNext
+				GoTo, LabelGIKsFindNext
+			}
+		}			
+		KeyCell := oExcel.ActiveSheet.UsedRange.Cells(curCell.Row,Found.Column)
+		sKey := Trim(KeyCell.Value)	
+		If RegExMatch(sKey,"[A-Z]*\-\d*") {
+			KeyArray.Push(sKey)
+		}
+	}
+	
+}
+return KeyArray
+
+LabelKeyNotFound:
+For curCell In oExcel.Selection 
+{
+	sKey := Trim(curCell.Value)	
+	If RegExMatch(sKey,"[A-Z]*\-\d*") {
+		KeyArray.Push(sKey)
+	}		
+}		
+
+;TrayTip, Error, No Header Cell with 'Key' as Text value found!,,3
+return KeyArray
+
+} ;eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Jira_GetIssueKey() {
+; IssueKey := Jira_GetIssueKey()
+; Get IssueKey from current url or text selection
+
+; From Browser Url
+If Browser_WinActive() {
+	sUrl := Browser_GetUrl()
+	If Jira_IsUrl(sUrl) {
+		IssueKey := Jira_Url2IssueKey(sUrl)
+		If (IssueKey <> "")
+			return IssueKey
+	}
+}
+; From selection
+ClipSaved := ClipboardAll
+
+; Try first if selection is manually set (Triple click doesn't work in Outlook #35)
+sSelection := Clip_GetSel()
+
+If (sSelection = "")
+{
+	Click 3 ; Click 2 won't get the word because "-" split it. Select the line
+	; Does not work in Outlook
+	Send, ^c			;Copy (Ctrl+C)	
+	Click ; Remove word selection
+	
+}
+
+sSelection := Clipboard
+Clipboard := ClipSaved ; restore clipboard
+
+If (sSelection = "")
+	return
+
+sPat := "([A-Z]{3,})-([\d]{1,})"
+RegExMatch(sSelection,sPat,sMatch)
+return sMatch 
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Jira_Jql2IssueKeys(sJql,RootUrl:=""){
+If (RootUrl="")
+	RootUrl:=Jira_GetRootUrl()
+sUrl := RootUrl . "/rest/api/2/search?jql=" . sJql
+sResponse := Jira_Get(sUrl)
+Json := Jxon_Load(sResponse)
+;MsgBox % Jxon_Dump(Json)
+JsonIssues := Json["issues"]
+
+
+For i, issue in JsonIssues 
+	{
+		MsgBox % Jxon_Dump(issue)
+		issueJson := Jxon_Load(issue)
+		key := issueJson["key"]
+	}
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+Jira_GetIssueKeys(sIssueKeys :=""){
+; KeyArray := Jira_GetIssueKeys()
+; returns an Array which each element contains an IssueKey (string)
+
+KeyArray := []
+
+If !(sIssueKeys = "") {
+	sSelection := sIssueKeys
+	GoTo GetIssueKeysFromSelection
+}
+
+If Browser_WinActive() { 
+	sUrl := Browser_GetUrl()
+	If Jira_IsUrl(sUrl) {
+		sUrl := RegExReplace(sUrl,"&.*$","") ; remove optional arguments after & in url
+		; From Search Jql
+		; https://jira.etelligent.ai/issues/?jql=Key%20in(%20RDMO-16%2CRDMO-5) Key or issueKey work
+		sUrl := StrReplace(sUrl,"%2C",",")
+		sUrl := StrReplace(sUrl,"%20"," ")
+		
+		If RegExMatch(sUrl,"i)/issues/\?jql=(?:issue)?Key=([^&])",sMatch) {
+			sIssueKeys := StrReplace(sMatch1,"%2C",",")
+			Loop sMatch1,  `,
+			{
+				KeyArray.Push(A_LoopField)
+			}
+			return KeyArray
+		}
+		; From Bulk Edit e.g. R4J
+		; https://jira.etelligent.ai/secure/views/bulkedit/BulkEdit1!default.jspa?issueKeys=RDMO-16%2CRDMO-18&reset=true
+		
+		
+		If RegExMatch(sUrl,"i)/bulkedit/.*\?issueKeys=([^&]*)",sMatch) {
+			Loop,Parse, sMatch1,`,
+			{
+				KeyArray.Push(Trim(A_LoopField))
+			}
+			return KeyArray
+		}
+		If R4J_IsUrl(sUrl) {
+			sIssueKey := R4J_Url2IssueKey(sUrl)
+			If !(sIssueKey = "") {
+				KeyArray.Push(sIssueKey)
+				return KeyArray
+			}
+				
+		} ; end if R4J_IsUrl
+					
+
+		sUrl := RegExReplace(sUrl,"\?.*$","") ; remove optional arguments after ? in url
+		If RegExMatch(sUrl,"/([A-Z]*\-\d{1,})$",sMatch) { ; url ending with Issue Key
+			KeyArray.Push(sMatch1)
+			return KeyArray
+		}
+
+	} ; end if Jira_IsUrl
+	
+} Else If WinActive("ahk_exe EXCEL.EXE") {
+	KeyArray := Jira_Excel_GetIssueKeys()
+	return KeyArray
+}
+
+sSelection := Clip_GetSelection()
+
+If (sSelection = "")
+	return []
+
+; Loop on issue keys
+GetIssueKeysFromSelection:
+sKeyPat := "([A-Z]{3,})-([\d]{1,})"
+Pos = 1 
+While Pos := RegExMatch(sSelection,sKeyPat,sMatch,Pos+StrLen(sMatch)){ 
+	sIssueKey := sMatch1 . "-" . sMatch2
+	If InStr(sIssueKeyList,sIssueKey . ";")
+		continue
+	sIssueKeyList := sIssueKeyList . sIssueKey . ";"
+	KeyArray.Push(sIssueKey)
+}
+
+return KeyArray
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Jira_OpenIssueSelection() {
+; Called by Hotkey Ctrl+Shift+I
+; Open issues from selection
+; Open multiple issues if multiple keys are selected
+ClipSaved := ClipboardAll
+
+; Try first if selection is manually set (Triple click doesn't work in Outlook #35)
+sSelection := Clip_GetSel()
+
+If (sSelection = "")
+{
+	Click 3 ; Click 2 won't get the word because "-" split it. Select the line
+	; Does not work in Outlook
+	Send, ^c			;Copy (Ctrl+C)	
+	Click ; Remove word selection
+	
+}
+
+sSelection := Clipboard
+Clipboard := ClipSaved ; restore clipboard
+
+If (sSelection = "")
+	return
+
+; Loop on issue keys
+
+sPat := "([A-Z]{3,})-([\d]{1,})"
+Pos = 1 
+While Pos := RegExMatch(sSelection,sPat,sMatch,Pos+StrLen(sMatch)){ 
+	sIssueKey := sMatch1 . "-" . sMatch2
+	If InStr(sIssueKeyList,sIssueKey . ";")
+		continue
+	sIssueKeyList := sIssueKeyList . sIssueKey . ";"
+	Jira_OpenIssue(sIssueKey)
+}
+return SubStr(sIssueKeyList,1,-1) ; remove ending ;
+} ; eofun
+; ---------------------------------------------------------------------------------
+
+
+Jira_OpenIssues(IssueArray) {
+If IsObject(IssueArray) {
+	for index, element in IssueArray 
+		{
+			 Jira_OpenIssue(element)
+		}
+} Else {
+	Jira_OpenIssue(IssueArray)
+}
+
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Jira_OpenIssue(sIssueKey) {
+; Open Issue given its key. Key-Url Mapping is looked in settings defined the INI file 
+sIssueUrl := Jira_IssueKey2Url(sIssueKey)
+Sleep 1000 ; pause required for BrowserTamer
+Run, %sIssueUrl%
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Jira_IssueKey2Url(sIssueKey) {
+; IssueUrl := Jira_IssueKey2Url(sIssueKey)
+JiraRootUrl := Jira_IssueKey2RootUrl(sIssueKey)
+return JiraRootUrl . "/browse/" . sIssueKey
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Jira_IssueKey2RootUrl(sKey) {
+; RootUrl := Jira_IssueKey2RootUrl(sKey)
+; Key-Url Mapping is looked in settings defined the PowerTools.ini file 
+If !FileExist("PowerTools.ini")
+	return Jira_GetRootUrl()
+
+ProjectKey := RegExReplace(sKey,"\-.*$")
+IniRead, JiraUrlMap, PowerTools.ini,Jira,JiraUrlMap
+If (JiraUrlMap="ERROR") ; Section [Jira] Key JiraUrlMap not found
+	return Jira_GetRootUrl()
+
+JsonObj := Jxon_Load(JiraUrlMap)
+JiraRootUrl := JsonObj[ProjectKey]
+If !(JiraRootUrl)
+	return Jira_GetRootUrl()
+
+JiraRootUrl := RegExReplace(JiraRootUrl,"/$") ; remove ending /
+return JiraRootUrl		
+
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Jira_AddLinkByName(sLinkName, inwardIssueKey, outwardIssueKey) {
+; suc := Jira_AddLinkByName(sLinkName, inwardIssueKey, outwardIssueKey)
+sRootUrl := Jira_IssueKey2RootUrl(inwardIssueKey)
+sUrl := sRootUrl . "/rest/api/2/issueLink"
+sBody = {"type":{"name":"%sLinkName%"},"inwardIssue":{"key":"%inwardIssueKey%"},"outwardIssue":{"key":"%outwardIssueKey%"}}
+;sResponse:= Jira_Post(sUrl, sBody)
+; MsgBox %sUrl%`n%sBody%`n%sResponse%
+
+WebRequest := Jira_WebRequest("POST",sUrl, sBody)
+suc := (WebRequest.Status = "201")
+return suc
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Jira_AddLink(sLinkName:="",srcIssueKey:="",tgtIssueKey:="") {
+; sLog := Jira_AddLink(sLinkName,srcIssueKey,tgtIssueKey)
+; srcIssueKey and tgtIssueKey can be a string containing multiple keys
+
+If (srcIssueKey="") {
+	InputBox, srcIssueKey , Input Keys, Input issue Key(s) for link source(s):,, 640, 125
+	If ErrorLevel ; user cancelled
+		return
+}
+If (tgtIssueKey="") {
+	InputBox, tgtIssueKey , Input Keys, Input issue Key(s) for link target(s):,, 640, 125
+	If ErrorLevel ; user cancelled
+		return
+}
+
+; Input linkName
+If (sLinkName = "") {
+	InputBox, sLinkName , Input Link, Input (inward or outward) Link name:,, 640, 125
+	If ErrorLevel ; user cancelled
+		return
+}
+
+; Get Link definition
+sRootUrl := Jira_IssueKey2RootUrl(inwardIssueKey)
+sUrl := sRootUrl . "/rest/api/2/issueLinkType"	
+sResponse:= Jira_Get(sUrl, sBody)
+
+Json := Jxon_Load(sResponse)
+JsonLinks := Json["issueLinkTypes"]
+
+; Shorten LinkName matching
+sPat:= StrReplace(sLinkName," ","[^\s]*\s")
+sPat := RegExReplace(sPat,"\s$") ; remove trailing \s
+sPat := "i)^" . sPat . "[^\s]*" ; case insensitive, start with 
+; Loop on Links to find the relevant one and direction
+
+
+For i, link in JsonLinks 
+{
+	If RegExMatch(link["inward"],sPat,sMatch) { ;(l["inward"] = sLinkName)
+        If !(StrLen(sMatch) = StrLen(link["inward"])) ; full match only
+			continue
+		inwardIssueKey := tgtIssueKey
+		outwardIssueKey := srcIssueKey
+		linkName := link["name"]
+        Break
+    }
+
+	If RegExMatch(link["outward"],sPat,sMatch) {
+		If !(StrLen(sMatch) = StrLen(link["outward"])) ; full match only
+			continue
+		inwardIssueKey := srcIssueKey
+		outwardIssueKey := tgtIssueKey
+		linkName := link["name"]
+        Break
+    }
+}     
+
+If (linkName ="") {
+	TrayTip, Error, No link found matching input name '%sLinkName%'!,,3
+	return
+}
+
+; Convert to array if necessary
+
+If  (inwardIssueKey.Length() ="") ; no array
+	inwardKeys := Jira_GetIssueKeys(inwardIssueKey)
+Else 
+	inwardKeys := inwardIssueKey
+
+If (outwardIssueKey.Length() ="") ; no array
+	outwardKeys := Jira_GetIssueKeys(outwardIssueKey)
+Else
+	outwardKeys := outwardIssueKey
+
+
+sPrompt:= "Create '" . linkName . "'' link(s) from:"
+; Prompt for confirmation
+for index_in, inKey in inwardKeys 
+{
+	sPrompt := 	sPrompt . inKey . ", "
+} ; end for
+
+sPrompt := RegExReplace(sPrompt,", $")
+sPrompt:= sPrompt . " to: "
+for index_out, outKey in outwardKeys 
+{
+	sPrompt := sPrompt . outKey . ", "
+}
+sPrompt := RegExReplace(sPrompt,", $","?")
+
+MsgBox, 4, Create Links?, %sPrompt%
+IfMsgBox No ; Exit
+	return
+
+; Add Links
+for index_in, inKey in inwardKeys 
+{
+	for index_out, outKey in outwardKeys 
+	{
+		suc := Jira_AddLinkByName(linkName, inKey, outKey)
+		If (suc)
+			sLog := sLog . "`n'" . linkName . "' link between " . inKey " and " . outKey . " added."
+		Else
+			sLog := sLog . "`n'" . linkName . "' link between " . inKey " and " . outKey . " failed to add."
+	}
+} ; end for
+
+sLog := RegExReplace(sLog,"$\n") ; remove starting \n
+return sLog
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+
+Jira_ViewLinkedIssues(IssueKey:="",sLinkName:="") {
+If (IssueKey="") {
+	InputBox, IssueKey , Input Key, Input issue Key:,, 300, 125
+	If ErrorLevel ; user cancelled
+		return
+}
+
+; Input linkName
+If (sLinkName = "") {
+	InputBox, sLinkName , Input Link, Input (inward or outward) Link name(s) (separate by `,):,, 640, 125
+	If ErrorLevel ; user cancelled
+		return
+}
+
+; Get Link definition
+sRootUrl := Jira_IssueKey2RootUrl(inwardIssueKey)
+sUrl := sRootUrl . "/rest/api/2/issueLinkType"	
+sResponse:= Jira_Get(sUrl, sBody)
+
+Json := Jxon_Load(sResponse)
+JsonLinks := Json["issueLinkTypes"]
+
+Loop, Parse, sLinkName,`,
+	{
+			; Shorten LinkName matching
+		sPat:= StrReplace(A_LoopField," ","[^\s]*\s")
+		sPat := RegExReplace(sPat,"\s$") ; remove trailing \s
+		sPat := "i)^" . sPat . "[^\s]*" ; case insensitive, start with 
+		; Loop on Links to find the relevant one and direction	
+		For i, link in JsonLinks 
+		{
+			li := link["inward"]
+			If RegExMatch(li,sPat,sMatch) { 
+				If !(StrLen(sMatch) = StrLen(li)) ; full match only
+					continue
+				inwardIssueKey := tgtIssueKey
+				outwardIssueKey := srcIssueKey
+				linkName := li
+				Break
+			}
+	
+			li := link["outward"]
+			If RegExMatch(li,sPat,sMatch) {
+				If !(StrLen(sMatch) = StrLen(li)) ; full match only
+					continue
+				inwardIssueKey := srcIssueKey
+				outwardIssueKey := tgtIssueKey
+				linkName := li
+				Break
+			}
+		}  
+	
+		If (linkName ="") {
+			TrayTip, Error, No link found matching input name '%A_LoopField%'!,,3
+			return
+		}
+	
+		linkNames :=  linkNames . ",'" . linkName . "'"
+	
+	} ; End Loop
+
+
+linkNames := RegExReplace(linkNames, "^,","") ; remove first ,
+
+sJql := "issueFunction in linkedIssuesOf('key =" . IssueKey . "'," . linkNames . ")"
+
+sRootUrl := Jira_GetRootUrl()
+sUrl := sRootUrl . "/issues/?jql=" . sJql
+Run, %sUrl%
+
+
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
