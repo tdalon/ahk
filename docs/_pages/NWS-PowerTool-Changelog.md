@@ -5,6 +5,14 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2023-06-16
+  * [OpenLink replacement to Browser Tamer](https://tdalon.blogspot.com/2023/06/ahk-browser-link-redirector.html): 
+    * implemented in AHK because change of Default browser to BrowserTamer is blocked by IT. Browser Settings defined in PowerTools.ini 
+    * Shift+Mouse Click: Open Link with associated default browser (Replaces previous Middle mouse click hotkey)
+    * Merge TeamsShortcuts ByPass Teams SafeLink check
+    * Merge with previous Chrome Hotkey: Open Link with default browser
+* 2023-04-18
+  * Fix: Confluence: Clean Link/ IntelliPaste to page section/ heading
 * 2023-03-16
   * Jira Quick Search support # for labels
 * 2023-03-08

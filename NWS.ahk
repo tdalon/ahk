@@ -47,6 +47,8 @@ GroupAdd, OpenLinks, ahk_exe word.exe
 GroupAdd, OpenLinks, ahk_exe winword.exe
 GroupAdd, OpenLinks, ahk_exe Teams.exe
 GroupAdd, OpenLinks, ahk_exe lync.exe ; Skype
+GroupAdd, OpenLinks, ahk_exe chrome.exe 
+GroupAdd, OpenLinks, ahk_exe EXCEL.exe 
 
 GroupAdd, MSOffice, ahk_exe outlook.exe
 GroupAdd, MSOffice, ahk_exe powerpoint.exe
@@ -180,9 +182,8 @@ Menu, NWSMenu, add, (Browser) Quick &Search (Win+F), QuickSearch
 If FileExist("Lib/Conti.ahk") and (Config = "Conti")
 	Menu, NWSMenu, add, (Browser) Create IT &Ticket, Conti_CreateTicket
 
-If FileExist("Lib/ET.ahk") and (Config = "ET") {
-	Menu, NWSMenu, Add, Open Issue (Ctrl+Shift+I), ET_OpenIssue
-}
+Menu, NWSMenu, Add, Open Issue (Ctrl+Shift+I), OpenIssue
+
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; EDIT : SCRIPT PARAMETERS
@@ -312,8 +313,8 @@ return
 #IfWinActive, ahk_group OpenLinks
 ; Open in Default Browser (incl. Office applications) - see OpenLink function
 
-; Middle Mouse Click
-MButton:: ; <--- Open in Preferred Browser/ App
+; Shift Mouse click
++LButton:: ;
 
 ; If target window is not under focus, e.g. MButton on Chrome Tab
 Clip_All := ClipboardAll  ; Save the entire clipboard to a variable
@@ -325,24 +326,34 @@ sleep, 200 ;(wait in ms) give time for the menu to popup
 
 If WinActive("ahk_exe onenote.exe")
 	SendInput i ; Copy Link
-Else
+Else If WinActive("ahk_exe Teams.exe") ; ByPass SafeLink
+	SendInput {Up} {Enter}
+Else If WinActive("ahk_exe chrome.exe") 
+	SendInput e ; Send the underlined key https://superuser.com/questions/1721702/how-to-show-the-underlines-for-navigation-key-hotkey-in-context-menu-when-ri that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
+	; See also https://stackoverflow.com/questions/62707998/chrome-windows10-right-click-context-menu-option-underline-on-key-missing Press Alt+Shift before Right-Click
+Else If WinActive("ahk_exe EXCEL.exe") {
+	SendInput H
+	sleep 500
+	Send ^c
+	Send {Esc}
+} Else
 	SendInput c ; Copy Link
 
 ClipWait, 2
 sUrl := Clipboard
 
 If sUrl { ; Not empty
-	;OpenLink(sUrl)
-	sUrl := IntelliPaste_CleanUrl(sUrl) ; convert e.g. teams links to SP links
-	Run %sUrl% ; Handled by BrowserSelect
+	;sUrl := IntelliPaste_CleanUrl(sUrl) ; convert e.g. teams links to SP links
+	;Run %sUrl% ; Handled by BrowserTamer -> blocked by IT
+	OpenLink(sUrl)
 } Else {
-	Send {MButton}
+	Send {LButton}
 }		
 
 Clipboard := Clip_All ; Restore the original clipboard
 return
 
-
+; -------------------------------------------------------------------------------------------------------------------
 #If WinActive("ahk_exe Code - Insiders.exe") || WinActive("ahk_exe Code.exe")
 ;Alt+C
 !c:: ;  <--- Toggle Block comment Uncomment. Block need to be selected
@@ -511,7 +522,6 @@ If FileExist("Lib/Connections.ahk") {
 	}
 }
 
-
 sHTMLBody = Hello<br>I thought you might be interested in this post: <a href="%sLink%">%linktext%</a>.<br>
 ; Create Email using ComObj
 Try
@@ -536,53 +546,6 @@ return
 ; -------------------------------------------------------------------------------------------------------------------
 #IfWinActive ahk_exe chrome.exe
 ;https://autohotkey.com/board/topic/84792-opening-a-link-in-non-default-browser/
-; Shift+ middle mouse button
-+MButton:: ;  <--- [Chrome] Open Link in IE
-
-SavedClipboard := ClipboardAll  ; Save the entire clipboard to a variable
-Clipboard := ""  ; Empty the clipboard to allow ClipWait work
-
-Click Right ; Click Right mouse button
-sleep, 100 ;(wait in ms) give time for the menu to popup
-Sendinput e ; Send the underlined key that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
-ClipWait, 2
-
-sUrl := Clipboard
-If (sUrl = "") {
-	Exit
-}
-
-Run, iexplore.exe %sUrl%
-;Sleep 1000
-;WinActivate, ahk_exe, iexplore.exe
-;Run, C:\Users\%A_UserName%\AppData\Local\Google\Chrome\Application\chrome.exe %clipboard% ; Open in Google Chrome
-;Run, %A_ProgramFiles%\Mozilla Firefox\firefox.exe %clipboard%; open in Firefox
-
-Clipboard := SavedClipboard ; Restore the original clipboard
-return
-
-; Shift Mouse click
-+LButton:: ; <--- [Chrome] Open link in preferred browser
-SavedClipboard := ClipboardAll  ; Save the entire clipboard to a variable
-Clipboard := ""  ; Empty the clipboard to allow ClipWait work
-
-Click Right ; Click Right mouse button
-sleep, 100 ;(wait in ms) give time for the menu to popup
-SendInput e ; Send the underlined key https://superuser.com/questions/1721702/how-to-show-the-underlines-for-navigation-key-hotkey-in-context-menu-when-ri that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
-; See also https://stackoverflow.com/questions/62707998/chrome-windows10-right-click-context-menu-option-underline-on-key-missing Press Alt+Shift before Right-Click
-ClipWait, 2
-
-sUrl := Clipboard
-If (sUrl = "") {
-	Exit
-}
-
-sUrl := IntelliPaste_CleanUrl(sUrl)
-Run %sUrl% ; Handled by Browser Tamer
-
-
-Clipboard := SavedClipboard ; Restore the original clipboard
-return
 
 ; Ctrl+Right mouse button
 ^RButton:: ; <--- [Chrome] Open link in File Explorer
@@ -713,12 +676,21 @@ Send {Esc}
 return
 
 
-; Open Issue
-#If FileExist("Lib/ET.ahk") and (Config = "ET") 
+; Open Issue Ctrl+Shift+I
 ^+i:: ; <--- Open Issue (Jira, ServiceDesk)
-ET_OpenIssue:
-FunStr := "ET_OpenIssue"
-%FunStr%()
+OpenIssue:
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+	Run, "" ;TODO add link to documentation
+	return
+}
+If WinActive("ahk_exe EXCEL.EXE") {
+	sKey := Jira_Excel_GetIssueKeys()
+	If (sKey="")
+		return
+	Jira_OpenIssues(sKey)
+} Else {
+	Jira_OpenIssueSelection()
+}
 return
 
 
@@ -764,7 +736,7 @@ return
 ;IsIELink(url)
 ; true if link shall be opened with Internet Explorer rather than another browser e.g. Chrome because of incompatibility
 IsIELink(sUrl){
-	If SharePoint_IsUrl(sUrl) || InStr(sUrl,"file://") || InStr(sUrl,"/pkit/") || InStr(sUrl,"/BlobIT/") || InStr(sUrl,"/openscapeuc/dial/") 
+	If InStr(sUrl,"file://") || InStr(sUrl,"/pkit/") || InStr(sUrl,"/BlobIT/") || InStr(sUrl,"/openscapeuc/dial/") 
 		return true
 	Else 	
 		return false	
@@ -799,8 +771,55 @@ PasteCleanUrl(encode:= False){
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Function OpenLink
-; Open Link in Default browser
+; Open Link in Default browser - See https://tdalon.blogspot.com/2023/06/ahk-browser-link-redirector.html
 OpenLink(sUrl) {
+; Based on PowerTools.ini files [Browsers] and [BrowserRules] definition
+
+;sUrl := IntelliPaste_CleanUrl(sUrl)
+
+If !FileExist("PowerTools.ini") {
+	PowerTools_ErrDlg("OpenLink: No PowerTools.ini file found!")
+	GoTo OpenDefault
+}
+
+ProjectKey := RegExReplace(sKey,"\-.*$")
+IniRead, BrowserRules, PowerTools.ini,BrowserRules
+If (BrowserRules="ERROR") { ; Section [BrowserRules] not found
+	PowerTools_ErrDlg("No section [BrowserRules] in PowerTools.ini file was found!")
+	GoTo OpenDefault
+}
+
+Loop Parse, BrowserRules,`n,`r
+{
+	RegExMatch(A_LoopField,"(.*)=(.*)",sMatch)
+	Loop Parse, sMatch2, CSV 
+		{
+			If InStr(sUrl,A_LoopField) {
+				BrowserName := sMatch1
+				break
+			}	
+		}
+	If BrowserName
+		break
+}
+
+If BrowserName { ; not empty 
+	IniRead, BrowserCmd, PowerTools.ini,Browsers,%BrowserName%
+	If (BrowserCmd="ERROR") { ; Section [BrowserRules] not found
+		PowerTools_ErrDlg("OpenLink: No Browser Key matching BrowserName=" . BrowserName . " found in section [Browsers] in PowerTools.ini file!")
+		return
+	}
+	sCmd = "%BrowserCmd%" "%sUrl%" ; Reading String in Ini files removes trailing quotes
+	Run, %sCmd%
+	return
+} 
+	
+
+OpenDefault:
+Run, "%sUrl%" ; Default Browser
+return
+
+
 	If SharePoint_IsUrl(sUrl) {
 		If InStr(sUrl,".xlsx") {
 			sUrl := "ms-excel:ofe|u|" . sUrl
@@ -819,7 +838,7 @@ OpenLink(sUrl) {
 		;sUrl := IntelliPaste_CleanUrl(sUrl) ; No need to clean because handled by Redirector
 		Run, "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 1" "%sUrl%"
 	} ; End If
-} ; End Function OpenLink
+} ; eofun End Function OpenLink
 
 ; ----------------------------------------------------------------------
 QuickSearch(){
