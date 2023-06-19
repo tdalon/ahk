@@ -354,6 +354,22 @@ OnIntelliPasteMultiStyleMsgBox() {
 IntelliPaste() {
 
 sClipboard := Clipboard  
+sPat = ^<img src="data:image/.*base64,([^"]*)
+If RegExMatch(sClipboard,sPat,sMatch) {
+	If !pToken := Gdip_Startup()
+		{
+			MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+			return
+		}
+	ClipBackup := clipboardAll
+	b64 := sMatch1
+	pBitmap := Gdip_BitmapFromBase64(b64)
+	suc := Gdip_SetBitmapToClipboard(pBitmap)
+	Clip_Wait()
+	Send ^v
+	Clip_Restore(ClipBackup)
+	return
+}
 
 If InStr(sClipboard,"`n") { ; MultiLine 
 	;MsgBox 0x21, MultiLine, You are pasting Multiple lines!
@@ -417,7 +433,6 @@ If !InStr(sClipboard,"`n") { ; single input
 			}
 		}
 	} ; eif Text editors
-
 
 	sLink := sClipboard
 

@@ -8,6 +8,10 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-06-19
+  * fix: icon for favorites shortcuts
+* 2023-06-16
+  * OpenLink [ByPass SafeLink check](https://tdalon.blogspot.com/2023/01/teams-bypass-safelink.html): moved to NWS PowerTool OpenLink feature
 * 2023-06-13
   * Update/Refactoring Teams_GetMeetingWindow. Client change new split Leave button
   * Fix RaiseHand if Meeting window is minimized

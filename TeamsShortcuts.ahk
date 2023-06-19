@@ -172,29 +172,6 @@ return
 
 #If Teams_IsWinActive()
 
-; Shift Mouse click: Open Link with default browser (ByPass SafeLink)
-+LButton:: ; <--- [Teams] Open link with default browser
-SavedClipboard := ClipboardAll  ; Save the entire clipboard to a variable
-Clipboard := ""  ; Empty the clipboard to allow ClipWait work
-
-; release shift key
-Sendinput, {Shift up}
-Click Right ; Click Right mouse button
-sleep, 200 ;(wait in ms) give time for the menu to popup
-SendInput {Up} {Enter}
-ClipWait, 2
-
-sUrl := Clipboard
-If (sUrl = "") {
-	Exit
-}
-Send {Esc} ; Close menu (weird that it stays open)
-Run %sUrl% ; Handled by BrowserSelect
-
-Clipboard := SavedClipboard ; Restore the original clipboard
-return
-
-
 ; -------------------------------------------------------------------------------------------------------------------
 ~!1:: ; <--- Personalize Mention
 PersonalizeMention:
@@ -503,6 +480,10 @@ Return
 
 Teams_ShareCb:
 Teams_MeetingShare()
+Return
+
+Teams_ActivateMeetingWindowCb:
+Teams_GetMeetingWindow(true, true)
 Return
 
 Teams_ShareToTeamsCb:

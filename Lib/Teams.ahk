@@ -173,7 +173,7 @@ sFile := FavsDir . "\" . sFileName . ".url"
 IniWrite, %sUrl%, %sFile%, InternetShortcut, URL
 
 ; Add icon file:
-TeamsExe = Teams_GetExe()
+TeamsExe := Teams_GetExe()
 IniWrite, %TeamsExe%, %sFile%, InternetShortcut, IconFile
 IniWrite, 0, %sFile%, InternetShortcut, IconIndex
 
@@ -291,7 +291,7 @@ Run %FavsDir%	; open Favorites directory
 ; ----------------------------------------------------------------------
 
 Email2TeamsFavs(sEmail,FavsDir){
-; Calls: Teams_Link2Fav
+; Calls: Teams_Link2Fav, Teams_FavsAdd
 
 ; Get Firstname
 sName := RegExReplace(sEmail,"\..*" ,"")

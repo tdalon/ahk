@@ -5,6 +5,8 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2023-06-19
+  * IntelliPaste: [paste images issue workaround](https://tdalon.blogspot.com/2023/06/workaround-copypaste-images.html)
 * 2023-06-16
   * [OpenLink replacement to Browser Tamer](https://tdalon.blogspot.com/2023/06/ahk-browser-link-redirector.html): 
     * implemented in AHK because change of Default browser to BrowserTamer is blocked by IT. Browser Settings defined in PowerTools.ini 
