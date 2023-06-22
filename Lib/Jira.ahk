@@ -16,7 +16,7 @@ Jira_BasicAuth(sUrl:="",sToken:="") {
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
 	sUrl := Jira_GetRootUrl() . sUrl
 
-If (sPassword = "") {
+If (sToken = "") {
 
 	; If Cloud
 	If InStr(sUrl,".atlassian.net") {
@@ -37,8 +37,8 @@ If (sPassword = "") {
 		{
 			url := inst["url"]
 			If InStr(sUrl,url) {
-				JiraApiToken := inst["apitoken"]
-				If (JiraApiToken="") { ; Section [Jira] Key JiraAuth not found
+				JiraToken := inst["apitoken"]
+				If (JiraToken="") { ; Section [Jira] Key JiraAuth not found
 					PowerTools_ErrDlg("ApiToken is not defined in PowerTools.ini file [Jira] section, JiraAuth key for url '" . url . "'!")
 					return
 				}
@@ -46,26 +46,23 @@ If (sPassword = "") {
 				break
 			}
 		}
-		If (JiraApiToken="") { ; Section [Jira] Key JiraAuth not found
+		If (JiraToken="") { ; Section [Jira] Key JiraAuth not found
 			RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
 			PowerTools_ErrDlg("No instance defined in PowerTools.ini file [Jira] section, JiraAuth key for url '" . sRootUrl . "'!")
 			return
 		} 	
-		If (JiraUserName ="")
-			JiraUserName :=  Jira_GetUserName()
-		If (JiraUserName ="")
-			return
-		sAuth := b64Encode( JiraUserName . ":" . JiraApiToken)
+		
 	} Else { ; server
-		sPassword := Jira_GetPassword()
-		If (sPassword="") ; cancel
+		JiraToken := Jira_GetPassword()
+		If (JiraToken="") ; cancel
 			return	
-
-		JiraUserName :=  Jira_GetUserName()
-		sAuth := b64Encode( JiraUserName . ":" . sPassword) ; user:password in base64 
 	}
 }
-
+If (JiraUserName ="")
+	JiraUserName :=  Jira_GetUserName()
+If (JiraUserName ="")
+	return
+sAuth := b64Encode( JiraUserName . ":" . JiraToken)
 return sAuth
 
 } ; eofun
@@ -79,6 +76,7 @@ Jira_Get(sUrl,sPassword:=""){
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
 	sUrl := Jira_GetRootUrl() . sUrl
 sAuth := Jira_BasicAuth(sUrl,sPassword)
+Clipboard := sAuth
 If (sAuth="")
 	return
 
@@ -87,7 +85,9 @@ WebRequest.Open("GET", sUrl, false) ; Async=false
 
 ; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
 
-WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
+
+sAuth := "Basic " . sAuth
+WebRequest.setRequestHeader("Authorization", sAuth) 
 WebRequest.setRequestHeader("Content-Type", "application/json")
 WebRequest.Send()        
 return WebRequest.responseText
@@ -353,8 +353,8 @@ JiraUserName :=  Jira_GetUserName()
 Jira_ProjectKey2Id(sProjectKey) {
 ; sProjectId := Jira_ProjectKey2Id(sProjectKey)
 	; Get ProjectId from ProjectKey
-	
-sUrl := Jira_GetRootUrl() . "/rest/api/2/project/" . sProjectKey
+
+sUrl := Jira_GetRootUrl() . "/rest/api/latest/project/" . sProjectKey
 sResponse := Jira_Get(sUrl)
 sPat = "id":"([^"]*)"
 RegExMatch(sResponse,sPat,sMatch)
@@ -460,11 +460,14 @@ oExcel := XL_Handle(1)
 ;oExcel := ComObjCreate("Excel.Application") 
 tblSelected := oExcel.ActiveCell.ListObject
 KeyArray := []
+
 If IsObject(tblSelected)  { ; table
 	Found := tblSelected.Range.Rows(1).Find("Key", , -4163,1)
-	If !IsObject(Found)
+	If !IsObject(Found) {
+		TrayTip, Error, No Header Cell with 'Key' as Text value found!,,3
 		GoTo, LabelKeyNotFound
-
+	}
+		
 	For curCell In oExcel.Selection 
 	{
 		KeyCell := tblSelected.Range.Cells(curCell.Row - tblSelected.HeaderRowRange.Row + 1, Found.Column - tblSelected.HeaderRowRange.Column + 1)
@@ -507,6 +510,7 @@ If IsObject(tblSelected)  { ; table
 return KeyArray
 
 LabelKeyNotFound:
+
 For curCell In oExcel.Selection 
 {
 	sKey := Trim(curCell.Value)	

@@ -5,6 +5,8 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2023-06-22
+  * Bug fix b64encode
 * 2023-06-19
   * IntelliPaste: [paste images issue workaround](https://tdalon.blogspot.com/2023/06/workaround-copypaste-images.html)
 * 2023-06-16
