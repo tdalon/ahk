@@ -942,7 +942,6 @@ ClipBackup:=  ClipboardAll
 ; Check for (company name) format
 SendInput ^+{Left} ; Ctrl+Shift+Left
 sSelection := Clip_GetSelection(false) 
-MsgBox % sSelection
 If (InStr(sSelection,")",0))  { ; last letter is )
     ; loop till (
     while (!InStr(sSelection,"(",1)) {
@@ -1655,8 +1654,7 @@ Teams_MeetingShare(ShareMode := 2){
 ; ShareMode = 1 : share
 ; ShareMode = 2: toggle share
 
-WinId :=    () 
-
+WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
 
@@ -1664,7 +1662,7 @@ UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
 ShareEl := TeamsEl.FindFirstBy("AutomationId=share-button")
-;MsgBox % TeamsEl.DumpAll()
+;MsgBox % ShareEl.DumpAll() ; DBG
 If !ShareEl {
     TrayTip TeamsShortcuts: ERROR, Share button not found!,,0x2
     return
@@ -1685,7 +1683,6 @@ ShareEl.Click() ; does not require Window to be active
 If (ShareMode=0) or ((ShareMode=2) and IsSharing) ; unshare->done
     return 
 
-
 ; Wait for share tray to open
 Delay := PowerTools_GetParam("TeamsShareDelay")
 Sleep %Delay% 
@@ -1696,27 +1693,21 @@ El.Click()
 
 SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
 
-
 ; Move Meeting Window to secondary screen
 ; WinShiftRight Arrow
 SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
 If (MonitorCount > 1) {
-
-    ; Maximize Meeting Window
+    ; Maximize Meeting Window by clicking on "Navigate back to call window" button
     El := TeamsEl.FindFirstByNameAndType("Navigate back to call window.", "button") ; TODO lang specific
-    
     If El {
         El.Click()
         Sleep 500
     }
-
-
+    ; Move to secondary monitor
     Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
 
-    WinMaximize, ahk_id %WinId%Arrow
-} 
-
-
+    WinMaximize, ahk_id %WinId%
+} ; end if secondary monitor
 
 
 } ; eofun
@@ -2549,3 +2540,20 @@ WinActivate ahk_id %hcurwin%
 Click, %MouseX%, %MouseY%
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
+
+Teams_GetLang() {
+; return desktop client language
+; sLang := Teams_GetLang()
+
+; Read value of currentWebLanguage property in %AppData%\Microsoft\Teams\desktop-config.json
+; e.g. "en-US"
+JsonFile := A_AppData . "\Microsoft\Teams\desktop-config.json"
+FileRead, Json, %JsonFile%
+If ErrorLevel {
+    TrayTip, Error, Reading file %JsonFile%!,,3
+    return
+}
+oJson := Jxon_Load(Json)
+Lang := oJson["currentWebLanguage"]
+return Lang
+} ; eofun
