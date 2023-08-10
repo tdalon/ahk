@@ -1,4 +1,4 @@
-; Documentation of Lib dependencies
+﻿; Documentation of Lib dependencies
 #Include <People>
 #Include <UriDecode>
 #Include <Teamsy>
@@ -1571,7 +1571,7 @@ Default:
     CallingControlsName := "Calling controls"
     ResumeName := "Resume"
 }
-
+;   MsgBox % TeamsEl.DumpAll() ; DBG
 If TeamsEl.FindFirstByName(CallingControlsName) {
     ;or TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
     If (ExOnHold) { ; exclude On Hold meeting windows
@@ -2226,6 +2226,26 @@ WinGet, curWinId, ID, A
 
 UIA := UIA_Interface()  
 TeamsEl := UIA.ElementFromHandle(WinId)
+
+; Language specific implementation
+Lang := Teams_GetLang()
+Switch Lang 
+{
+Case "de-de":
+    Switch Reaction
+    {
+        Case "Like":
+            Reaction := "Gefällt mir"
+        Case "Applause":
+            Reaction :="Applaus"
+        Case "Love":
+            Reaction := "Liebe"
+        Case "Laugh":
+            Reaction :="Lachen"
+        Case "Surprised":
+            Reaction :="Überrascht"
+    }
+}
 
 ; Shortcut if Reactions toolbar already available-> directly click and exit
 ReactionEl := TeamsEl.FindFirstByName(Reaction)
