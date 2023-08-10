@@ -1386,7 +1386,7 @@ Loop, %id%
     hWnd := id%A_Index%
     oAcc := Acc_Get("Object","4",0,"ahk_id " hWnd)
     sName := oAcc.accName(0)
-    If RegExMatch(sName,".* \| Microsoft Teams, Main Window$") {
+    If RegExMatch(sName,".* \| Microsoft Teams, Main Window$") { ; works also for other lang
         PowerTools_RegWrite("TeamsMainWinId",hWnd)
         return hWnd
     }
@@ -1484,12 +1484,19 @@ WinGet, Win, List, ahk_exe Teams.exe
 Loop %Win% {
     WinId := Win%A_Index%
     TeamsEl := UIA.ElementFromHandle(WinId)
-
     If Teams_IsMeetingWindow(TeamsEl)  {
-
         If (Maximize) {
-           
-            El := TeamsEl.FindFirstByNameAndType("Navigate back to call window.", "button") ; TODO lang specific
+            Lang := Teams_GetLang()
+            Switch Lang 
+            {
+            Case "de-de":
+                NavigateName := "Navigieren Sie zurück zum Anruffenster."
+            Case "en-US":
+                NavigateName := "Navigate back to call window."
+            Default:
+                NavigateName := "Navigate back to call window."
+            }
+            El := TeamsEl.FindFirstByNameAndType(NavigateName, "button") ; 
             
             If !Activate
                 WinGet, prevWinId, ID, A
@@ -1550,14 +1557,27 @@ Teams_IsMeetingWindow(TeamsEl,ExOnHold:=true){
 ; does not return true on Share / Call in progress window
 
 ; If Meeting Reactions Submenus are opened AutomationId are not visible.
-; TODO Language specific ByName
-If TeamsEl.FindFirstByName("Calling controls") {
+
+Lang := Teams_GetLang()
+Switch Lang 
+{
+Case "de-de":
+    CallingControlsName := "Besprechungssteuerung"
+    ResumeName := "Fortsetzen"
+Case "en-US":
+    CallingControlsName := "Calling controls"
+    ResumeName := "Resume"
+Default:
+    CallingControlsName := "Calling controls"
+    ResumeName := "Resume"
+}
+
+If TeamsEl.FindFirstByName(CallingControlsName) {
     ;or TeamsEl.FindFirstBy("AutomationId=meeting-apps-add-btn") or TeamsEl.FindFirstBy("AutomationId=hangup-btn") or TeamsEl.FindFirstByName("Applause"))
     If (ExOnHold) { ; exclude On Hold meeting windows
-        If TeamsEl.FindFirstByName("Resume") ; Exclude On-hold meetings with Resume button ; TODO lang specific
+        If TeamsEl.FindFirstByName(ResumeName) ; Exclude On-hold meetings with Resume button ; TODO #lang specific
             return false
     }
-    
     return true
 }
 return false
@@ -1817,7 +1837,22 @@ If !WinId ; empty
     return
 UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
-El :=  TeamsEl.FindFirstByNameAndType("Mute", "button",,2)
+
+Lang := Teams_GetLang()
+Switch Lang 
+{
+Case "de-de":
+    MuteName := "Stummschalten"
+    UnmuteName := "Stummschaltung"
+Case "en-US":
+    MuteName := "Mute"
+    UnmuteName := "Unmute"
+Default:
+    MuteName := "Mute"
+    UnmuteName := "Unmute"
+}
+
+El :=  TeamsEl.FindFirstByNameAndType(MuteName, "button",,2)
 If El {
     If (State = 0) {
         Tooltip("Teams Mic is alreay on.")
@@ -1828,7 +1863,7 @@ If El {
         return
     }
 }
-El :=  TeamsEl.FindFirstByNameAndType("Unmute", "button",,2)
+El :=  TeamsEl.FindFirstByNameAndType(UnmuteName, "button",,2)
 If (State = 1) {
     Tooltip("Teams Mic is alreay off.")
     return
