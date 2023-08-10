@@ -20,7 +20,7 @@ When running these executables, you might get some Windows warning that it is un
 
 ### Run from the AutoHotkey sources
 
-Alternatively, you could run the tools from the AutoHotkey source: simply clone the [repository]((https://github.com/tdalon/ahk/).
+Alternatively, you could run the tools from the AutoHotkey source: simply clone the [repository](https://github.com/tdalon/ahk/).
 
 But I don't ensure that the current version of the repository runs properly, because I am human and might have forgotten to push some files. <a href="https://tdalon.github.io/ahk/contact/"><i class="fa fa-address-card" aria-hidden="true"></i></a>[Contact me](Contact) if you want to run from the AHK source and stumble upon some troubles.
 
@@ -31,13 +31,10 @@ Most of the users I know don't bother about the AutoHotkey source. Providing the
 <a href="https://downgit.github.io/#/home?url=https://downgit.github.io/#/home?url=https://github.com/tdalon/ahk/tree/main/PowerTools"  target="_blank"><button class="btn"><i class="fa fa-download"></i> Download</button></a>
 
 The recommended way to install the PowerTools is to download the whole [PowerTools Directory](https://github.com/tdalon/ahk/raw/main/PowerTools/) [here](https://downgit.github.io/#/home?url=https://github.com/tdalon/ahk/tree/main/PowerTools).
-This includes the subdirectory with images used for ImageSearch related features like the [Teams Meeting Reactions Shortcuts](Teams-Meeting-Reactions).
 
 ## One-by-one Setup
 
-N.B.: For features based on ImageSearch (like [Teams Shortcuts](Teams-Shortcuts) [Meeting Live reactions](Teams-Meeting-Reactions), the *img* subdirectory is also required. Therefore I recommend to always [download all](#download-all) and run what you want only.
-
-Still you can download for each PowerTool the .exe file by going here: [repo root](https://github.com/tdalon/ahk/)->[PowerTools](https://github.com/tdalon/ahk/tree/main/PowerTools) and clicking on the .exe file you want and then click the Download button. If you do so, copy it in a separate fresh directory because some auxiliary files will be downloaded or created on the same level (e.g. PowerBundler, git_updater, ini file...).
+You can download for each PowerTool the .exe file by going here: [repo root](https://github.com/tdalon/ahk/)->[PowerTools](https://github.com/tdalon/ahk/tree/main/PowerTools) and clicking on the .exe file you want and then click the Download button. If you do so, copy it in a separate fresh directory because some auxiliary files will be downloaded or created on the same level (e.g. PowerBundler, git_updater, ini file...).
 
 ## First run
 
@@ -68,5 +65,3 @@ You can update each .exe from each tool systrem tray icon menu: _Check for Updat
 And also from the [PowerTools Bundler](PowerTools-Bundler) via the _Actions-> Check for Update/ Download_.
 
 ![PowerTools Bundler Check for Update/Download](/ahk/assets/images/powertools_bundler_checkforupdate.png)
-
-If some images (used in ImageSearch-based features) were updated, you need to update the whole directory manually by re-downloading all and overwriting your previous installation directory. Be careful not to overwrite your images if you have customized some of them.
