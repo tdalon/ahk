@@ -8,6 +8,10 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-08-10
+  * DE Language specific implementation for mute and meeting reactions
+* 2023-08-08
+  * New [Teams_GetLang](https://tdalon.blogspot.com/2023/08/teams-get-client-lang.html) function
 * 2023-06-19
   * fix: icon for favorites shortcuts
 * 2023-06-16
