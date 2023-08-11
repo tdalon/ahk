@@ -1562,7 +1562,7 @@ Lang := Teams_GetLang()
 Switch Lang 
 {
 Case "de-de":
-    CallingControlsName := "Besprechungssteuerung"
+    CallingControlsName := "Aufrufen von Steuerelementen"
     ResumeName := "Fortsetzen"
 Case "en-US":
     CallingControlsName := "Calling controls"
@@ -2602,6 +2602,9 @@ Teams_GetLang() {
 
 ; Read value of currentWebLanguage property in %AppData%\Microsoft\Teams\desktop-config.json
 ; e.g. "en-US"
+static Lang
+If !(Lang = "")
+    return Lang
 JsonFile := A_AppData . "\Microsoft\Teams\desktop-config.json"
 FileRead, Json, %JsonFile%
 If ErrorLevel {
