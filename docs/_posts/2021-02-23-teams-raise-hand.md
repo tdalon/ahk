@@ -25,7 +25,7 @@ header:
 ```AutoHotkey
 Teams_RaiseHand() {
 ; Toggle Raise Hand on/off
-WinId := Teams_GetMeetingWindow()
+WinId := Teams_GetMeetingWindow(true,true)
 If !WinId ; empty
     return
 Tooltip("Teams Toggle Raise Hand...")

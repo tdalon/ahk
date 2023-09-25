@@ -315,7 +315,6 @@ return
 
 ; Shift Mouse click
 +LButton:: ;
-
 ; If target window is not under focus, e.g. MButton on Chrome Tab
 Clip_All := ClipboardAll  ; Save the entire clipboard to a variable
 Clipboard =  ; Empty the clipboard to allow ClipWait work
@@ -464,7 +463,7 @@ If GetKeyState("Ctrl") and !GetKeyState("Shift") {
 	return
 }
 
-sLink := Browser_GetActiveUrl()
+sLink := Browser_GetUrl()
 If ErrorLevel {
 	MsgBox 0x1010, Error, No url could be copied!
 	return

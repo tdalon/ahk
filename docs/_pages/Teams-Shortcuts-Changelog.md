@@ -8,6 +8,8 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-09-19
+  *  [Focus Assist Integration](https://tdalon.blogspot.com/2023/09/ahk-focus-assist.html)
 * 2023-08-10
   * DE Language specific implementation for mute and meeting reactions
 * 2023-08-08

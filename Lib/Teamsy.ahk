@@ -135,6 +135,9 @@ Case "sh+":
 Case "sh-","unsh":  
     Teams_MeetingShare(0)
     return
+Case "fa":  
+    FocusAssist(sInput)
+    return
 Case "mu","mute":  
     Switch sInput
     {

@@ -1670,65 +1670,67 @@ SendInput {enter}
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_MeetingShare(ShareMode := 2){
-; ShareMode = 0 : unshare
-; ShareMode = 1 : share
-; ShareMode = 2: toggle share
+    ; ShareMode = 0 : unshare
+    ; ShareMode = 1 : share
+    ; ShareMode = 2: toggle share
 
-WinId := Teams_GetMeetingWindow()
-If !WinId ; empty
-    return
+    WinId := Teams_GetMeetingWindow()
+    If !WinId ; empty
+        return
 
-UIA := UIA_Interface()
-TeamsEl := UIA.ElementFromHandle(WinId)
+    UIA := UIA_Interface()
+    TeamsEl := UIA.ElementFromHandle(WinId)
 
-ShareEl := TeamsEl.FindFirstBy("AutomationId=share-button")
-;MsgBox % ShareEl.DumpAll() ; DBG
-If !ShareEl {
-    TrayTip TeamsShortcuts: ERROR, Share button not found!,,0x2
-    return
-}
-
-IsSharing := !RegExMatch(ShareEl.Name,"^Share content")
-
-If (ShareMode = 1) and (IsSharing) ; already sharing
-    Return
-
-If (ShareMode = 0) and !(IsSharing) ; already not sharing
-    Return
-
-;SendInput ^+e ; ctrl+shift+e - toggle share
-
-ShareEl.Click() ; does not require Window to be active
-
-If (ShareMode=0) or ((ShareMode=2) and IsSharing) ; unshare->done
-    return 
-
-; Wait for share tray to open
-Delay := PowerTools_GetParam("TeamsShareDelay")
-Sleep %Delay% 
-
-; Include sound
-El :=  TeamsEl.FindFirstByNameAndType("Include computer sound", "checkbox")
-El.Click()
-
-SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
-
-; Move Meeting Window to secondary screen
-; WinShiftRight Arrow
-SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
-If (MonitorCount > 1) {
-    ; Maximize Meeting Window by clicking on "Navigate back to call window" button
-    El := TeamsEl.FindFirstByNameAndType("Navigate back to call window.", "button") ; TODO lang specific
-    If El {
-        El.Click()
-        Sleep 500
+    ShareEl := TeamsEl.FindFirstBy("AutomationId=share-button")
+    ;MsgBox % ShareEl.DumpAll() ; DBG
+    If !ShareEl {
+        TrayTip TeamsShortcuts: ERROR, Share button not found!,,0x2
+        return
     }
-    ; Move to secondary monitor
-    Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
 
-    WinMaximize, ahk_id %WinId%
-} ; end if secondary monitor
+    IsSharing := !RegExMatch(ShareEl.Name,"^Share content")
 
+    If (ShareMode = 1) and (IsSharing) ; already sharing
+        Return
+
+    If (ShareMode = 0) and !(IsSharing) ; already not sharing
+        Return
+
+    ;SendInput ^+e ; ctrl+shift+e - toggle share
+
+    ShareEl.Click() ; does not require Window to be active
+
+    If (ShareMode=0) or ((ShareMode=2) and IsSharing) ; unshare->done
+        return 
+
+    ; Wait for share tray to open
+    Delay := PowerTools_GetParam("TeamsShareDelay")
+    Sleep %Delay% 
+
+    ; Include sound
+    El :=  TeamsEl.FindFirstByNameAndType("Include computer sound", "checkbox")
+    El.Click()
+
+    SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
+
+    ; Move Meeting Window to secondary screen
+    ; WinShiftRight Arrow
+    SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
+    If (MonitorCount > 1) {
+        ; Maximize Meeting Window by clicking on "Navigate back to call window" button
+        El := TeamsEl.FindFirstByNameAndType("Navigate back to call window.", "button") ; TODO lang specific
+        If El {
+            El.Click()
+            Sleep 500
+        }
+        ; Move to secondary monitor
+        Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
+
+        WinMaximize, ahk_id %WinId%
+    } ; end if secondary monitor
+
+    ; Activate FocusAssistant
+    FocusAssist("+")
 
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
@@ -1741,7 +1743,7 @@ If GetKeyState("Ctrl") {
 	return
 }
 If (sUrl = "") && (Browser_WinActive()) {
-    sUrl := Browser_GetActiveUrl()
+    sUrl := Browser_GetUrl()
 }
 InputBox, sUrl , Share To Teams, Enter Link to Share:, , 640, 125,,,,, %sUrl%
 If ErrorLevel
@@ -1925,6 +1927,9 @@ WinId := Teams_GetMeetingWindow(false,true)
 If !WinId ; empty
     return
 SendInput ^+h ; Ctrl+Shift+H
+
+; Reset FocusAssistant
+FocusAssist(-)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
