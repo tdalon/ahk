@@ -172,15 +172,27 @@ If a_iscompiled {
 ; ---------------------------------------------------------------------- 
 
 PowerTools_OpenDoc(key:=""){
-RegRead, PT_DocRootUrl, HKEY_CURRENT_USER\Software\PowerTools, DocRootUrl
-If (key ="") 
-    sUrl := "https://github.com/tdalon/ahk"
-Else {
-    If InStr(PT_DocRootUrl,".blogspot.") 
-        key := StrReplace(key,"_","-")
-    sUrl = %PT_DocRootUrl%/%key% 
-}
-Run,  "%sUrl%"
+    IniRead, DocRootUrl, PowerTools.ini,Doc,DocRootUrl
+    If (DocRootUrl="ERROR") { 
+        PowerTools_ErrDlg("DocRootUrl key not found in PowerTools.ini file [Doc] section!")
+        return
+    }
+    If (key ="") {
+        sUrl := "https://github.com/tdalon/ahk"
+        Run,  "%sUrl%"
+        return
+    }
+
+    IniRead, DocMap, PowerTools.ini,Doc,DocMap
+    If (DocMap="ERROR") { 
+        PowerTools_ErrDlg("DocMap key not found in PowerTools.ini file [Doc] section!")
+        return
+    }
+    JsonObj := Jxon_Load(DocMap)
+    sUrl := JsonObj[key]
+    If !(sUrl)
+        sUrl := DocRootUrl
+    Run,  "%sUrl%"
 } ; eofun
 
 
@@ -305,8 +317,7 @@ Switch Config
         PowerTools_RegWrite("TeamsOnly",1)
         IniWrite, 1, %IniFile%, Teams, TeamsOnly
 
-        PowerTools_RegWrite("DocRootUrl","https://tdalon.blogspot.com/")
-        IniWrite, https://tdalon.blogspot.com/, %IniFile%, Main, DocRootUrl
+        IniWrite, https://tdalon.blogspot.com/, %IniFile%, Doc, DocRootUrl
 
 
         ; Load Parameters
@@ -349,8 +360,6 @@ Switch Config
         PowerTools_RegWrite("Domain",IniVal)
         IniRead, IniVal, %IniFile%, Teams, TeamsOnly
         PowerTools_RegWrite("TeamsOnly",IniVal)
-        IniRead, IniVal, %IniFile%, Main, DocRootUrl
-        PowerTools_RegWrite("DocRootUrl",IniVal)
         IniRead, IniVal, %IniFile%, Connections, ConnectionsRootUrl
         If (IniVal != "ERROR")
             PowerTools_RegWrite("ConnectionsRootUrl",IniVal)
