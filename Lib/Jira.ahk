@@ -76,10 +76,10 @@ Jira_Get(sUrl,sPassword:=""){
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
 	sUrl := Jira_GetRootUrl() . sUrl
 sAuth := Jira_BasicAuth(sUrl,sPassword)
-Clipboard := sAuth
-If (sAuth="")
+If (sAuth="") {
+	TrayTip, Error, Jira Authentication failed!,,3
 	return
-
+}
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("GET", sUrl, false) ; Async=false
 
@@ -101,8 +101,10 @@ Jira_Post(sUrl,sBody:="",sPassword:=""){
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
 	sUrl := Jira_GetRootUrl() . sUrl
 sAuth := Jira_BasicAuth(sUrl,sPassword)
-If (sAuth="")
+If (sAuth="") {
+	TrayTip, Error, Jira Authentication failed!,,3
 	return
+}
 
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("POST", sUrl, false) ; Async=false
@@ -129,8 +131,10 @@ Jira_WebRequest(sReqType,sUrl,sBody:="",sPassword:=""){
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
 	sUrl := Jira_GetRootUrl() . sUrl
 sAuth := Jira_BasicAuth(sUrl,sPassword)
-If (sAuth="")
+If (sAuth="") {
+	TrayTip, Error, Jira Authentication failed!,,3
 	return
+}
 
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open(sReqType, sUrl, false) ; Async=false
@@ -141,7 +145,6 @@ If (sBody = "")
 Else
 	WebRequest.Send(sBody)   
 WebRequest.WaitForResponse()
-
 return WebRequest
 }
 
@@ -157,6 +160,21 @@ If Not Browser_WinActive()
     return False
 sUrl := Browser_GetUrl()
 return Jira_IsUrl(sUrl)
+} ; eofun
+
+; ----------------------------------------------------------------------
+
+Jira_ServerType(sUrl:=""){
+; serverType := Jira_ServerType(sUrl:="")
+; read deploymentType from serverInfo API response
+; serverType = "Server"|"Cloud"
+If (sUrl="")  
+	sUrl := Jira_GetRootUrl() 
+sResponse := Jira_Get(sUrl . "/rest/api/2/serverInfo")
+sResponse := Jira_Get(sUrl)
+Json := Jxon_Load(sResponse)
+serverType := Json["deploymentType"]
+return serverType
 } ; eofun
 
 ; ----------------------------------------------------------------------
@@ -372,7 +390,7 @@ Jira_InputProjectKey(sTitle:="Project Key?",sPrompt:="Enter Project Key:"){
 static S_JiraProjectKey
 ; Get ProjectKey from Url
 If Browser_WinActive()
-	sUrl := Browser_GetActiveUrl()
+	sUrl := Browser_GetUrl()
 sProjectKey := Jira_Url2ProjectKey(sUrl)
 If (sProjectKey="")
 	sProjectKey := S_JiraProjectKey ; previous value
@@ -392,10 +410,7 @@ return PowerTools_GetSetting("JiraRootUrl")
 }
 
 Jira_GetUserName() {
-JiraUserName :=  PowerTools_RegRead("JiraUserName")
-If !JiraUserName
-	JiraUserName := A_UserName
-return JiraUserName
+return PowerTools_GetSetting("JiraUserName")
 }
 
 Jira_GetPassword() {
@@ -745,6 +760,9 @@ Jira_IssueKey2RootUrl(sKey) {
 If !FileExist("PowerTools.ini")
 	return Jira_GetRootUrl()
 
+If (sKey="")
+	return Jira_GetRootUrl()
+
 ProjectKey := RegExReplace(sKey,"\-.*$")
 IniRead, JiraUrlMap, PowerTools.ini,Jira,JiraUrlMap
 If (JiraUrlMap="ERROR") ; Section [Jira] Key JiraUrlMap not found
@@ -777,7 +795,7 @@ return suc
 
 Jira_AddLink(sLinkName:="",srcIssueKey:="",tgtIssueKey:="") {
 ; sLog := Jira_AddLink(sLinkName,srcIssueKey,tgtIssueKey)
-; srcIssueKey and tgtIssueKey can be a string containing multiple keys
+; srcIssueKey and tgtIssueKey can be a string containing multiple keys or an Array
 
 If (srcIssueKey="") {
 	InputBox, srcIssueKey , Input Keys, Input issue Key(s) for link source(s):,, 640, 125
@@ -800,7 +818,7 @@ If (sLinkName = "") {
 ; Get Link definition
 sRootUrl := Jira_IssueKey2RootUrl(inwardIssueKey)
 sUrl := sRootUrl . "/rest/api/2/issueLinkType"	
-sResponse:= Jira_Get(sUrl, sBody)
+sResponse:= Jira_Get(sUrl)
 
 Json := Jxon_Load(sResponse)
 JsonLinks := Json["issueLinkTypes"]
@@ -904,16 +922,15 @@ If (sLinkName = "") {
 }
 
 ; Get Link definition
-sRootUrl := Jira_IssueKey2RootUrl(inwardIssueKey)
+sRootUrl := Jira_IssueKey2RootUrl(IssueKey)
 sUrl := sRootUrl . "/rest/api/2/issueLinkType"	
-sResponse:= Jira_Get(sUrl, sBody)
-
+sResponse:= Jira_Get(sUrl)
 Json := Jxon_Load(sResponse)
 JsonLinks := Json["issueLinkTypes"]
 
 Loop, Parse, sLinkName,`,
 	{
-			; Shorten LinkName matching
+		; Shorten LinkName matching
 		sPat:= StrReplace(A_LoopField," ","[^\s]*\s")
 		sPat := RegExReplace(sPat,"\s$") ; remove trailing \s
 		sPat := "i)^" . sPat . "[^\s]*" ; case insensitive, start with 
@@ -960,6 +977,139 @@ sUrl := sRootUrl . "/issues/?jql=" . sJql
 Run, %sUrl%
 
 
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
 
+
+Jira_GetCfId(JiraRootUrl,CfName){
+; CfId := Jira_GetCfId(JiraRootUrl,CfName)
+sUrl := JiraRootUrl . "/rest/api/2/field"
+sResponse:= Jira_Get(sUrl)
+Json := Jxon_Load(sResponse)
+For i, field in Json 
+{
+	If (field["name"] = CfName) {
+		return  field["id"] 
+	}
+}
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+Jira_EditEpic(IssueKey, EpicKey:="", EpicLinkCfId:="", JiraRootUrl := "") {
+; suc := Jira_EditEpic( IssueKey, EpicKey, EpicLinkCfId:="")
+If (JiraRootUrl="")
+	JiraRootUrl := Jira_IssueKey2RootUrl(IssueKey)
+If (EpicLinkCfId ="") {
+	EpicLinkCfId := Jira_GetCfId(JiraRootUrl,"Epic Link")
+}
+
+If (EpicKey ="") {
+	EpicKey := Jira_IssueKey2EpicKey(IssueKey,"",JiraRootUrl)
+}
+
+; https://docs.atlassian.com/software/jira/docs/api/REST/9.4.2/#api/2/issue-editIssue
+sUrl := JiraRootUrl . "/rest/api/2/issue/" . IssueKey
+sBody = {"fields": {"%EpicLinkCfId%": "%EpicKey%"}}
+;sResponse:= Jira_Post(sUrl, sBody)
+; MsgBox %sUrl%`n%sBody%`n%sResponse%
+
+WebRequest := Jira_WebRequest("PUT",sUrl, sBody)
+suc := (WebRequest.Status = "204")
+return suc
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+	
+Jira_IssueKey2EpicKey(IssueKey,EpicNameCfId:="",JiraRootUrl:="") {
+; Select Epic belonging to same project as input IssueKey via ListView GUI
+If (JiraRootUrl = "")
+	JiraRootUrl := Jira_IssueKey2RootUrl(IssueKey)
+sJql := "project = " . RegExReplace(IssueKey,"-.*") . " and issuetype = Epic and resolution is EMPTY"
+sUrl := JiraRootUrl . "/rest/api/2/search?jql=" . sJql	
+
+sResponse:= Jira_Get(sUrl)
+;Run %sUrl%
+
+Json := Jxon_Load(sResponse)
+JsonIssues := Json["issues"]
+
+If (EpicNameCfId ="") 
+	EpicNameCfId := Jira_GetCfId(JiraRootUrl,"Epic Name")
+EpicNameArray := []
+
+EpicArray:= {}
+
+For i, issue in JsonIssues 
+{
+	EpicNameArray.Push(issue["fields"][EpicNameCfId])
+	EpicKeyArray.Push(issue["key"])
+	EpicArray[i,1]:=issue["fields"][EpicNameCfId]
+	EpicArray[i,2]:=issue["key"]
+}  
+
+;EpicIndex := ListView_Select(EpicNameArray,"Select Epic","Epic Name")
+EpicIndex := ListView_Select(EpicArray,"Select Epic","Epic Name|Key")
+EpicKey := JsonIssues[EpicIndex]["key"]
+
+return EpicKey
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+
+Jira_AddEpic(srcIssueKey:="", EpicIssueKey:="") {
+; sLog := Jira_AddEpic(srcIssueKey)
+; srcIssueKey can be a string containing multiple keys or an Array
+
+; Calls: Jira_GetIssueKeys
+
+If (srcIssueKey="") {
+	InputBox, srcIssueKey , Input Keys, Input issue Key(s) to link to Epic:,, 640, 125
+	If ErrorLevel ; user cancelled
+		return
+}
+
+; Convert to array if necessary
+If  (srcIssueKey.Length() = "") ; no array
+	srcIssueKeys := Jira_GetIssueKeys(srcIssueKey)
+Else 
+	srcIssueKeys := srcIssueKey
+
+
+sPrompt:= "Link Epic '" . EpicIssueKey . "'' to issues:"
+; Prompt for confirmation
+for index_in, inKey in srcIssueKeys 
+{
+	If (EpicIssueKey = "") {
+		EpicIssueKey := Jira_IssueKey2EpicKey(inKey)
+		If (EpicIssueKey="") {
+			; Error Handling
+			TrayTip, Error, No Epic selected!,,3
+			return
+		}
+		JiraRootUrl := Jira_IssueKey2RootUrl(inKey)
+		EpicLinkCfId := Jira_GetCfId(JiraRootUrl,"Epic Link")
+	}
+	sPrompt := 	sPrompt . inKey . ", "
+} ; end for
+sPrompt := RegExReplace(sPrompt,", $")
+
+
+MsgBox, 4, Link to Epic?, %sPrompt%
+IfMsgBox No ; Exit
+	return
+
+; Add Links
+for index_in, inKey in srcIssueKeys 
+{
+	suc := Jira_EditEpic(inKey,EpicIssueKey,EpicLinkCfId, JiraRootUrl)
+	If (suc)
+		sLog := sLog . "`nLink Issue '" . inKey . "' to Epic '" . EpicIssueKey "': ok."
+	Else
+		sLog := sLog . "`nLink Issue '" . inKey . "' to Epic '" . EpicIssueKey "' -> FAILED!"
+	
+} ; end for
+
+sLog := RegExReplace(sLog,"$\n") ; remove starting \n
+return sLog
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------

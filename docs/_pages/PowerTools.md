@@ -1,7 +1,7 @@
 ---
 permalink: /PowerTools
 title: "PowerTools"
-excerpt: "Suite of Tools implemented with AutoHotkey that empowers the use of Microsoft Office 365 tools like Microsoft Teams, SharePoint, OneDrive or HCL Connections enhance your productivity on Windows OS."
+excerpt: "Productivity Suite of Tools implemented with AutoHotkey that empowers e.g. the use of Microsoft Office 365 tools like Microsoft Teams, SharePoint, OneDrive, Atlassian tools like Jira, Confluence, R4J and HCL Connections."
 ---
 
 [This repository](https://github.com/tdalon/ahk) provides several tools bundled together under the term "PowerTools".
@@ -14,6 +14,7 @@ This includes:
 - [Teams Shortcuts](Teams-Shortcuts)
 - [Teamsy Launcher](Teamsy-Launcher)
 - [Teamsy](Teamsy)
+- [Atlasy](Atlasy)
 
 - [Chromy](Chromy)
 - [Mute Powertool](Mute-PowerTool)
@@ -47,4 +48,4 @@ Or by running the [PowerTools Bundler](PowerTools-Bundler), selecting which tool
 
 These tools are implemented in [this repository](https://github.com/tdalon/ahk) using AutoHotkey.
 
-You can run them either from the AHK source files if you have AutoHotkey installed or as compiled standalone .exe version (no need for AutoHotkey installation in this case.)
+You can run them either from the AHK source files if you have AutoHotkey installed or as compiled standalone .exe version. There is no need for AutoHotkey installation in the latter case.

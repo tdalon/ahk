@@ -12,7 +12,7 @@ IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
 If (FileExist(IcoFile)) 
 	Menu,Tray,Icon, %IcoFile%
 
-AppList = ConnectionsEnhancer,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts,TeamsyLauncher,Teamsy,Mute,Cursor Highlighter
+AppList = ConnectionsEnhancer,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts,TeamsyLauncher,Teamsy,Atlasy,Mute,Cursor Highlighter
 Config := PowerTools_GetConfig()
 If (Config = "Conti") 
     AppList = MO,%AppList%

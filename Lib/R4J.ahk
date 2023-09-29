@@ -1,3 +1,6 @@
+#Include <Jira>
+#Include <Atlasy>
+
 ; ---------------------------------------------------------------------------------
 
 R4J_GetIssueKey(){
@@ -9,7 +12,7 @@ If (sSelection = "") {
     If !Jira_IsWinActive()
         return
     sUrl := Browser_GetUrl()
-    return R4J_Url2IssueKey(sUrl)
+    return Jira_Url2IssueKey(sUrl)
 } Else { ; selection
     sPat := "([A-Z]{3,})-([\d]{1,})"
     If RegExMatch(sSelection,sPat,sMatch)
@@ -72,17 +75,30 @@ R4J_OpenIssues(IssueArray) {
 
 
 R4J_OpenIssue(sIssueKey) {
-; Open Issue in project R4J tree
-sJiraRootUrl := Jira_IssueKey2RootUrl(sIssueKey)
-sProjectKey := RegExReplace(sIssueKey,"\-.*")
-If InStr(sJiraRootUrl,".atlassian.net") { ; cloud version
-    sProjectId := Jira_ProjectKey2Id(sProjectKey)
-    sUrl := sJiraRootUrl . "/plugins/servlet/ac/com.easesolutions.jira.plugins.requirements/requirements-page-jira?project.id=" . sProjectId . "#!tree?issueKey=" . sIssueKey
-} Else
-    sUrl := sJiraRootUrl . "/plugins/servlet/com.easesolutions.jira.plugins.requirements/project?detail=" . sProjectKey . "&issueKey=" . sIssueKey
+    ; Open Issue in project R4J tree
+    sJiraRootUrl := Jira_IssueKey2RootUrl(sIssueKey)
+    sProjectKey := RegExReplace(sIssueKey,"\-.*")
+    If InStr(sJiraRootUrl,".atlassian.net") { ; cloud version
+        sProjectId := Jira_ProjectKey2Id(sProjectKey)
+        sUrl := sJiraRootUrl . "/plugins/servlet/ac/com.easesolutions.jira.plugins.requirements/requirements-page-jira?project.id=" . sProjectId . "#!tree?issueKey=" . sIssueKey
+    } Else
+        sUrl := sJiraRootUrl . "/plugins/servlet/com.easesolutions.jira.plugins.requirements/project?detail=" . sProjectKey . "&issueKey=" . sIssueKey
 
-Run, %sUrl% 
+    Atlasy_OpenUrl(sUrl)
 } ; eofun
+
+
+R4J_OpenProject(sProjectKey) {
+    ; Open project R4J tree
+    sJiraRootUrl := Jira_IssueKey2RootUrl(sProjectKey)
+    If InStr(sJiraRootUrl,".atlassian.net") { ; cloud version
+        sProjectId := Jira_ProjectKey2Id(sProjectKey)
+        sUrl := sJiraRootUrl . "/plugins/servlet/ac/com.easesolutions.jira.plugins.requirements/requirements-page-jira?project.id=" . sProjectId 
+    } Else
+        sUrl := sJiraRootUrl . "/plugins/servlet/com.easesolutions.jira.plugins.requirements/project?detail=" . sProjectKey . "#!tree"
+    Atlasy_OpenUrl(sUrl)
+} ; eofun
+
 
 ; -------------------------------------------------------------------------------------------------------------------
 R4J_IsUrl(sUrl){

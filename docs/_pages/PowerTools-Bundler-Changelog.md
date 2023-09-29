@@ -6,6 +6,8 @@ redirect_from:
   - /powertools-bundler-changelog
 ---
 
+* 2023-09-28
+  * Added Atlasy
 * 2021-03-19
   - Default configuration renamed from Public to Default and set as Default selected one.
 * 2021-02-01

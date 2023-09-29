@@ -6,7 +6,7 @@ GroupAdd, PlainEditor, ahk_exe Notepad.exe
 GroupAdd, PlainEditor, ahk_exe notepad++.exe
 GroupAdd, PlainEditor, ahk_exe atom.exe
 ; -------------------------------------------------------------------------------------------------------------------
-Clip_Paste(sText) {
+Clip_Paste(sText,restore := True) {
 ; Syntax: Clip_Paste(sText)
 WinClip.Paste(sText)
 } ; eofun
@@ -20,7 +20,7 @@ Clip_Wait()
 ; -------------------------------------------------------------------------------------------------------------------
 Clip_Restore(ClipBackup) {
 Clip_Wait() ; in order not to overwrite running clipboard action like pasting
-Clipboard:= ClipBackup
+Clipboard := ClipBackup
 } ;eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Clip_Wait(){
@@ -80,6 +80,7 @@ If RegExMatch(sHtml,"^http") {
 } else {
     WinClip.SetText(sText)
 }
+
 ;SetClipboardHTML(sHtml,HtmlHead,sText) ; does not work with WinClip.GetHtml
 ; WinClip.iSetHTML does not work (asked here https://www.autohotkey.com/boards/viewtopic.php?f=6&t=29314&p=393505#p393505)
 WinClip.SetHTML(sHtml)
@@ -187,7 +188,6 @@ while(Clipboard){
 }
 SendInput,^c    
 Clip_Wait()
-
 If (type = "text") {
     sSelection := clipboard
 } Else If (type ="html") {
@@ -288,54 +288,52 @@ SetClipboardHTML(sHtml,,sText)
 ; -------------------------------------------------------------------------------------------------------------------
 ; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=80706&sid=af626493fb4d8358c95469ef05c17563
 ; Drawback:  winclip.gethtml does not work if SetClipboardHTML before & not from fresh run -> revert to WinClip.SetHTML
-SetClipboardHTML(HtmlBody, HtmlHead:="", AltText:="") {       ; v0.67 by SKAN on D393/D42B
-Local  F, Html, pMem, Bytes, hMemHTM:=0, hMemTXT:=0, Res1:=1, Res2:=1   ; @ tiny.cc/t80706
-Static CF_UNICODETEXT:=13,   CFID:=DllCall("RegisterClipboardFormat", "Str","HTML Format")
+SetClipboardHTML(HtmlBody, HtmlHead := "", AltText := "")                ;  SetClipboardHTML() v0.72 by SKAN for ahk,ah2 on D393/D66T
+{                                                                        ;                                 @ autohotkey.com/r?t=80706
+    Static CF_UNICODETEXT  :=  13
+         , CF_HTML         :=  DllCall("User32\RegisterClipboardFormat", "str","HTML Format")
+         , Fix             :=  SubStr(A_AhkVersion, 1, 1) = 2 ? [,,1] : [,1]  ;           StrReplace() parameter fix for AHK V2 vs V1
 
-  If ! DllCall("OpenClipboard", "Ptr",A_ScriptHwnd)
-    Return 0
-  Else DllCall("EmptyClipboard")
+    Local  pMem := 0,    Res1  := 1,    Bytes := 0,    LF  := "`n"
+        ,  hMem := 0,    Res2  := 1,    Html  := ""
 
-  If (HtmlBody!="")
-  {
-      Html     := "Version:0.9`r`nStartHTML:00000000`r`nEndHTML:00000000`r`nStartFragment"
-               . ":00000000`r`nEndFragment:00000000`r`n<!DOCTYPE>`r`n<html>`r`n<head>`r`n"
-                         . HtmlHead . "`r`n</head>`r`n<body>`r`n<!--StartFragment -->`r`n"
-                              . HtmlBody . "`r`n<!--EndFragment -->`r`n</body>`r`n</html>"
+    If Not DllCall("User32\OpenClipboard", "ptr",A_ScriptHwnd)
+           Return 0
+    Else   DllCall("User32\EmptyClipboard")
 
-      Bytes    := StrPut(Html, "utf-8")
-      hMemHTM  := DllCall("GlobalAlloc", "Int",0x42, "Ptr",Bytes+4, "Ptr")
-      pMem     := DllCall("GlobalLock", "Ptr",hMemHTM, "Ptr")
-      StrPut(Html, pMem, Bytes, "utf-8")
+    If  HtmlBody != ""
+    {
+        Html    :=  "Version:0.9" LF "StartHTML:000000000" LF "EndHTML:000000000" LF "StartFragment:000000000"
+                 .  LF "EndFragment:000000000" LF "<!DOCTYPE>" LF "<html>" LF "<head>" LF HtmlHead LF "</head>" LF "<body>"
+                 .  LF "<!--StartFragment -->" HtmlBody "<!--EndFragment -->" LF "</body>" LF "</html>"
 
-      F := DllCall("Shlwapi.dll\StrStrA", "Ptr",pMem, "AStr","<html>", "Ptr") - pMem
-      StrPut(Format("{:08}", F), pMem+23, 8, "utf-8")
-      F := DllCall("Shlwapi.dll\StrStrA", "Ptr",pMem, "AStr","</html>", "Ptr") - pMem
-      StrPut(Format("{:08}", F), pMem+41, 8, "utf-8")
-      F := DllCall("Shlwapi.dll\StrStrA", "Ptr",pMem, "AStr","<!--StartFra", "Ptr") - pMem
-      StrPut(Format("{:08}", F), pMem+65, 8, "utf-8")
-      F := DllCall("Shlwapi.dll\StrStrA", "Ptr",pMem, "AStr","<!--EndFragm", "Ptr") - pMem
-      StrPut(Format("{:08}", F), pMem+87, 8, "utf-8")
+     ,  Html    :=  StrReplace(Html, "StartHTML:000000000",     Format("StartHTML:{:09}",     InStr(Html, "<html>"))          , Fix*)
+     ,  Html    :=  StrReplace(Html, "EndHTML:000000000",       Format("EndHTML:{:09}",       InStr(Html, "</html>"))         , Fix*)
+     ,  Html    :=  StrReplace(Html, "StartFragment:000000000", Format("StartFragment:{:09}", InStr(Html, "<!--StartFrag"))   , Fix*)
+     ,  Html    :=  StrReplace(Html, "EndFragment:000000000",   Format("EndFragment:{:09}",   InStr(Html, "<!--EndFragme"),,0), Fix*)
 
-      DllCall("GlobalUnlock", "Ptr",hMemHTM)
-      Res1  := DllCall("SetClipboardData", "Int",CFID, "Ptr",hMemHTM)
-  }
+     ,  Bytes   :=  StrPut(Html, "utf-8")
+     ,  hMem    :=  DllCall("Kernel32\GlobalAlloc", "int",0x42, "ptr",Bytes+4, "ptr")
+     ,  pMem    :=  DllCall("Kernel32\GlobalLock", "ptr",hMem, "ptr")
+     ,              StrPut(Html, pMem, Bytes, "utf-8")
+     ,              DllCall("Kernel32\GlobalUnlock", "ptr",hMem)
+     ,  Res1    :=  DllCall("User32\SetClipboardData", "int",CF_HTML, "ptr",hMem)
+    }
 
-  If (AltText!="")
-  {
-      Bytes    := StrPut(AltText, "utf-16")
-      hMemTXT  := DllCall("GlobalAlloc", "Int",0x42, "Ptr",(Bytes*2)+8, "Ptr")
-      pMem     := DllCall("GlobalLock", "Ptr",hMemTXT, "Ptr")
-      StrPut(AltText, pMem, Bytes, "utf-16")
-      DllCall("GlobalUnlock", "Ptr",hMemTXT)
-      Res2  := DllCall("SetClipboardData", "Int",CF_UNICODETEXT, "Ptr",hMemTXT)
-  }
+    If  AltText != ""
+    {
+        Bytes   :=  StrPut(AltText, "utf-16")
+     ,  hMem    :=  DllCall("Kernel32\GlobalAlloc", "int",0x42, "ptr",(Bytes*2)+8, "ptr")
+     ,  pMem    :=  DllCall("Kernel32\GlobalLock", "ptr",hMem, "ptr")
+     ,              StrPut(AltText, pMem, Bytes, "utf-16")
+     ,              DllCall("Kernel32\GlobalUnlock", "ptr",hMem)
+     ,  Res2    :=  DllCall("User32\SetClipboardData", "int",CF_UNICODETEXT, "ptr",hMem)
+    }
 
-  DllCall("CloseClipboard")
-  hMemHTM := hMemHTM ? DllCall("GlobalFree", "Ptr",hMemHTM) : 0
+    DllCall("User32\CloseClipboard")
 
-Return (Res1 & Res2)
-} ;eofun
+Return !! (Res1 And Res2)
+} ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------------------
 
