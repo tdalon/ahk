@@ -27,6 +27,7 @@ If (A_Args.Length() > 0)
 ExitApp
 
 
+/* 
 #f::
 ; overwrite feedback hub
 FocusAssist("+")
@@ -34,7 +35,8 @@ return
 
 #o::
 FocusAssist("-")
-return
+return 
+*/
 
 
 ;  ##################  FUNCTIONS ###########################
