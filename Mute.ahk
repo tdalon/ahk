@@ -241,7 +241,7 @@ If GetKeyState("Ctrl")  { ; exclude ctrl if use in the hotkey
 }
 
 RegRead, MuteHotkey, HKEY_CURRENT_USER\Software\PowerTools, MuteHotkey
-HK := HotkeyGUI(,MuteHotkey,,," Mute - Set Global Hotkey")
+HK := Hotkey_GUI(,MuteHotkey,,," Mute - Set Global Hotkey")
 
 If ErrorLevel ; Cancelled
   return

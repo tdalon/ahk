@@ -356,19 +356,20 @@ IntelliPaste() {
 sClipboard := Clipboard  
 sPat = ^<img src="data:image/.*base64,([^"]*)
 If RegExMatch(sClipboard,sPat,sMatch) {
-	If !pToken := Gdip_Startup()
-		{
-			MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-			return
-		}
-	ClipBackup := clipboardAll
-	b64 := sMatch1
-	pBitmap := Gdip_BitmapFromBase64(b64)
-	suc := Gdip_SetBitmapToClipboard(pBitmap)
-	Clip_Wait()
-	Send ^v
-	Clip_Restore(ClipBackup)
-	return
+
+    If !pToken := Gdip_Startup()
+        {
+            MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+            return
+        }
+    ClipBackup := clipboardAll
+    b64 := sMatch1
+    pBitmap := Gdip_BitmapFromBase64(b64)
+    suc := Gdip_SetBitmapToClipboard(pBitmap)
+    Clip_Wait()
+    Send ^v
+    Clip_Restore(ClipBackup)
+    return
 }
 
 If InStr(sClipboard,"`n") { ; MultiLine 
@@ -548,7 +549,7 @@ If GetKeyState("Ctrl")  { ; exclude ctrl if use in the hotkey
 }
 
 RegRead, IntelliPasteHotkey, HKEY_CURRENT_USER\Software\PowerTools, IntelliPasteHotkey
-HK := HotkeyGUI(,IntelliPasteHotkey,,,"IntelliPaste - Set Hotkey")
+HK := Hotkey_GUI(,IntelliPasteHotkey,,,"IntelliPaste - Set Hotkey")
 If ErrorLevel ; Cancelled
   return
 If (HK = IntelliPasteHotkey) ; no change

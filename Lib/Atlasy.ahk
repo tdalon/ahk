@@ -175,7 +175,6 @@ Atlasy_OpenUrl(sUrl) {
             }
         }
     }
-
     If (BrowserCmd = "")
         Run %sUrl%
     Else {
@@ -226,7 +225,7 @@ Atlasy_HotkeySet(HKid){
     HKid := StrReplace(HKid," ","")
     
     RegRead, prevHK, HKEY_CURRENT_USER\Software\PowerTools, AtlasyHotkey%HKid%
-    newHK := HotkeyGUI(,prevHK,,,"Atlasy " . HKid . " - Set Global Hotkey")
+    newHK := Hotkey_GUI(,prevHK,,,"Atlasy " . HKid . " - Set Global Hotkey")
     
     If ErrorLevel ; Cancelled
         return
@@ -262,4 +261,52 @@ Atlasy_HotkeyActivate(HKid,HK,showTrayTip := False) {
         TipText = Atlasy %HKid% Hotkey set to %HK%
         TrayTipAutoHide("Atlasy " . HKid . " Hotkey On",TipText,2000)
     }
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Atlasy_OpenIssueDoc() {
+; ^+v:: ; <--- Open Issue in R4J Document
+    If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+        PowerTools_OpenDoc("r4j_openissuedoc") 
+        return
+    }
+    If WinActive("ahk_exe EXCEL.EXE") {
+        sKey := Jira_Excel_GetIssueKeys()
+        If (sKey="")
+            return
+        R4J_OpenIssues(sKey)
+    } Else {
+        R4J_OpenIssueSelection()
+    }
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+Atlasy_OpenIssue() {
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+	PowerTools_OpenDoc("jira_openissue") 
+	return
+}
+If Browser_WinActive() { ; switch ServiceDesk Requester <-> Jira Agent
+	sUrl := Browser_GetUrl()
+	If Jira_IsUrl(sUrl) {
+		IssueKey := Jira_Url2IssueKey(sUrl)
+		If InStr(IssueKey,"ECOSYS-") {
+			If InStr(sUrl,"/portal/") {
+				sUrl := "https://instartconsult.atlassian.net/browse/" . IssueKey
+			} Else 
+				sUrl := "https://instartconsult.atlassian.net/servicedesk/customer/portal/15/" . IssueKey
+
+			Run, %sUrl%
+			return
+		}
+	}
+} Else If WinActive("ahk_exe EXCEL.EXE") {
+	sKey := Jira_Excel_GetIssueKeys()
+	If (sKey="")
+		return
+	Jira_OpenIssues(sKey)
+} Else {
+	Jira_OpenIssueSelection()
+}
 } ; eofun

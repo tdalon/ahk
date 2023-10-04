@@ -1983,7 +1983,7 @@ HKid := RegExReplace(HKid," Hotkey$","")
 HKid := StrReplace(HKid," ","")
 
 RegRead, prevHK, HKEY_CURRENT_USER\Software\PowerTools, TeamsHotkey%HKid%
-newHK := HotkeyGUI(,prevHK,,,"Teams " . HKid . " - Set Global Hotkey")
+newHK := Hotkey_GUI(,prevHK,,,"Teams " . HKid . " - Set Global Hotkey")
 
 If ErrorLevel ; Cancelled
     return
