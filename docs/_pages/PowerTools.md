@@ -7,23 +7,17 @@ excerpt: "Productivity Suite of Tools implemented with AutoHotkey that empowers 
 [This repository](https://github.com/tdalon/ahk) provides several tools bundled together under the term "PowerTools".
 
 This includes:
-- [Connections Enhancer](Connections-Enhancer)
 - [NWS PowerTool](NWS-PowerTool)
 - [Outlook Shortcuts](Outlook-Shortcuts)
 - [People Connector](People-Connector)
-- [Teams Shortcuts](Teams-Shortcuts)
-- [Teamsy Launcher](Teamsy-Launcher)
-- [Teamsy](Teamsy)
+- [Teams PowerTools](Teams-PowerTools)
+  - [Teams Shortcuts](Teams-Shortcuts)
+  - [Teamsy Launcher](Teamsy-Launcher)
+  - [Teamsy](Teamsy)
 - [Atlasy](Atlasy)
-
+- [Connections Enhancer](Connections-Enhancer)
 - [Chromy](Chromy)
 - [Mute Powertool](Mute-PowerTool)
-
-| [Teamsy](Teamsy)       | [Teamsy Launcher](Teamsy-Launcher)           | [Teams Shortcuts](Teams-Shortcuts)  |
-| ------------- |-------------| -----|
-| Run from third-party Application Launcher<br> e.g. [Launchy](http://launchy.net/) or [Executor](http://executor.dk/)      | Includes Launcher. No need for third-party Launcher. | Includes also Launcher functionality + [other features](Teams-Shortcuts#feature-highlights). |
-| Run from Command Line <br> e.g. StreamDeck integration.     | Use only if you don't use Teams Shortcuts PowerTool.      |  [Global Hotkeys](Teams-Global-Hotkeys) |
-| External Launcher is nice for scanning [Teams Favorites](Teams-Favorites). |       |    |
 
 ## [How to setup the PowerTools](PowerTools-Setup)
 

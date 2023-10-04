@@ -31,6 +31,7 @@ pages:
   - title: "People Connector"
     url: /People-Connector
   - title: "Teams PowerTools"
+    url: /Teams-PowerTools
     children:
     - title: "Teams Shortcuts"
       url: /Teams-Shortcuts
@@ -38,10 +39,12 @@ pages:
       url: /Teamsy
     - title: "Teamsy Launcher"
       url: /Teamsy-Launcher
-  - title: "Connections Enhancer"
-    url: /Connections-Enhancer
   - title: "Outlook Shortcuts"
     url: /Outlook-Shortcuts
+  - title: "Atlasy"
+    url: /Atlasy
+  - title: "Connections Enhancer"
+    url: /Connections-Enhancer
   - title: Extras
     children:
       - title: "Mute PowerTool"

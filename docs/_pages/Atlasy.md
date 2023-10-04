@@ -23,7 +23,7 @@ Short Feature highlights include:
  * ...
 
 
-## [Main Blog Post](https://tdalon.blogspot.com/2020/07/teamsy.html)
+## [Main Blog Post](https://tdalon.blogspot.com/2023/09/atlasy-new-powertool.html)
 
 <p style="text-align: center;"><iframe width="560" height="315" src="https://www.youtube.com/embed/zLFWKFfLHnU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></p>
 
@@ -35,7 +35,7 @@ Atlasy is available as AutoHotkey scripts but also as standalone compiled .exe a
 
 ## List of supported commands/ Keywords
 
-This is implemented in the main associated library [Lib/Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Teamsy.ahk).
+This is implemented in the main associated library [Lib/Atlasy.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Atlasy.ahk).
 
 In the source code you can find the full up to date syntax for keywords and command. (I hope the code is clear enough.)
 
@@ -84,7 +84,7 @@ r from Jira issue detailed view-> Open issue in R4J Tree
 
 ## Source Code
 
-The main ahk file is [Teamsy.ahk](https://github.com/tdalon/ahk/blob/main/Atlasy.ahk)
+The main ahk file is [Atlasy.ahk](https://github.com/tdalon/ahk/blob/main/Atlasy.ahk)
 
 Main associated libraries are:
   * [Lib/Jira.ahk](https://github.com/tdalon/ahk/blob/main/Lib/Jira.ahk)

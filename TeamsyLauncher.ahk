@@ -1,6 +1,6 @@
-; See documentation TODO
+; See documentation https://tdalon.github.io/ahk/Teamsy-Launcher
 
-LastCompiled = 20220314141310
+LastCompiled = 20230811075038
 
 
 #Include <Teamsy>
