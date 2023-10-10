@@ -1,3 +1,9 @@
+---
+permalink: /Teams-PowerTools
+title: "Teams PowerTools"
+excerpt: "Productivity Suite of Tools implemented with AutoHotkey that empowers e.g. the use of Microsoft Teams Client on Windows."
+---
+
 Different Tools are provided to support the usage of Microsoft Teams Client on Windows:
 
 
