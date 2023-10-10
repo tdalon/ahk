@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20230220092032
+LastCompiled = 20230811075037
 
 #Include <Teams>
 #Include <PowerTools>
@@ -72,7 +72,8 @@ Loop, Parse, HotkeyIDList, `,
 	; Activate Hotkey
 	If (HK != "") {
 		Teams_HotkeyActivate(HKid,HK, False)
-		MenuLabel = %A_LoopField% `t(%HK%)
+		HKRev := Hotkey_ParseRev(HK)
+		MenuLabel = %A_LoopField% `t(%HKRev%)
 	} Else
 		MenuLabel = %A_LoopField%
 
@@ -174,6 +175,7 @@ return
 
 ; -------------------------------------------------------------------------------------------------------------------
 ~!1:: ; <--- Personalize Mention
+; Alt+1
 PersonalizeMention:
 Teams_PersonalizeMention()
 return

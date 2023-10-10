@@ -1,4 +1,4 @@
-Different Tools are porvided to support the usage of Microsoft Teams Client on Windows:
+Different Tools are provided to support the usage of Microsoft Teams Client on Windows:
 
 
 | [Teamsy](Teamsy)       | [Teamsy Launcher](Teamsy-Launcher)           | [Teams Shortcuts](Teams-Shortcuts)  |

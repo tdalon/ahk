@@ -1,7 +1,6 @@
 ; PowerTools Lib
 
 #Include <AHK>
-#Include <Teams>
 
 AppList = ConnectionsEnhancer,MO,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts
 
@@ -69,6 +68,8 @@ Case "Chromy":
     sUrl = https://tdalon.github.io/ahk/Chromy
 Case "Edgy":
     sUrl = https://tdalon.github.io/ahk/Edgy
+Case "Atlasy":
+    sUrl = https://tdalon.github.io/ahk/Atlasy
 Case "all":
 Default:
     sUrl := "https://tdalon.github.io/ahk/PowerTools"	
@@ -188,6 +189,7 @@ PowerTools_OpenDoc(key:=""){
         PowerTools_ErrDlg("DocMap key not found in PowerTools.ini file [Doc] section!")
         return
     }
+
     JsonObj := Jxon_Load(DocMap)
     sUrl := JsonObj[key]
     If !(sUrl)
@@ -421,189 +423,179 @@ Switch Config
 
 ; ----------------------------------------------------------------------
 PowerTools_CursorHighlighter(){
-CHFile= %A_ScriptDir%\Cursor Highlighter
-If a_iscompiled
-	CHFile = %CHFile%.exe
-Else
-	CHFile = %CHFile%.ahk
+    CHFile= %A_ScriptDir%\Cursor Highlighter
+    If a_iscompiled
+        CHFile = %CHFile%.exe
+    Else
+        CHFile = %CHFile%.ahk
 
-If !FileExist(CHFile) { ; download if it doesn't exist
-    return
-}
-Run, %CHFile%
-}
+    If !FileExist(CHFile) { ; download if it doesn't exist
+        return
+    }
+    Run, %CHFile%
+} ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
 PowerTools_MenuTray(){
 ; SubMenuSettings := PowerTools_MenuTray()
-Menu, Tray, NoStandard
-Menu, Tray, Add, &Help, MenuCb_PTHelp
-Menu, Tray, Add, Tweet for support, MenuCb_PowerTools_Tweet
-Menu, Tray, Add, Check for update, MenuCb_PTCheckForUpdate
-Menu, Tray, Add, Changelog, MenuCb_PTChangelog
-Menu, Tray, Add, News, MenuCb_PTNews
+    Menu, Tray, NoStandard
+    Menu, Tray, Add, &Help, MenuCb_PTHelp
+    Menu, Tray, Add, Tweet for support, MenuCb_PowerTools_Tweet
+    Menu, Tray, Add, Check for update, MenuCb_PTCheckForUpdate
+    Menu, Tray, Add, Changelog, MenuCb_PTChangelog
+    Menu, Tray, Add, News, MenuCb_PTNews
 
 
-If !a_iscompiled {
-    IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
-	If (FileExist(IcoFile)) 
-		Menu,Tray,Icon, %IcoFile%
-}
+    If !a_iscompiled {
+        IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
+        If (FileExist(IcoFile)) 
+            Menu,Tray,Icon, %IcoFile%
+    }
 
-If (A_ScriptName = "Teamsy.exe") or (A_ScriptName = "Teamsy.ahk")
-    return
+    If (A_ScriptName = "Teamsy.exe") or (A_ScriptName = "Teamsy.ahk")
+        return
 
-; -------------------------------------------------------------------------------------------------------------------
-; SETTINGS
-Menu, SubMenuSettings, Add, Launch on Startup, MenuCb_ToggleSettingLaunchOnStartup
-SettingLaunchOnStartup := ToStartup(A_ScriptFullPath)
-If (SettingLaunchOnStartup) 
-  Menu,SubMenuSettings,Check, Launch on Startup
-Else 
-  Menu,SubMenuSettings,UnCheck, Launch on Startup
+    ; -------------------------------------------------------------------------------------------------------------------
+    ; SETTINGS
+    Menu, SubMenuSettings, Add, Launch on Startup, MenuCb_ToggleSettingLaunchOnStartup
+    SettingLaunchOnStartup := ToStartup(A_ScriptFullPath)
+    If (SettingLaunchOnStartup) 
+    Menu,SubMenuSettings,Check, Launch on Startup
+    Else 
+    Menu,SubMenuSettings,UnCheck, Launch on Startup
 
-Menu, Tray, Add, Settings, :SubMenuSettings
+    Menu, Tray, Add, Settings, :SubMenuSettings
 
-Menu,Tray,Add
-Menu,Tray,Standard
-Menu,Tray,Default,&Help
+    Menu,Tray,Add
+    Menu,Tray,Standard
+    Menu,Tray,Default,&Help
 
-return SubMenuSettings
-}
+    return SubMenuSettings
+} ; eofun
 
 ; ---------------------------------------------------------------------- STARTUP -------------------------------------------------
 MenuCb_ToggleSettingLaunchOnStartup(ItemName, ItemPos, MenuName){
-SettingLaunchOnStartup := !ToStartup(A_ScriptFullPath)
-If (SettingLaunchOnStartup) {
- 	Menu,%MenuName%,Check, %ItemName%	 
-	ToStartup(A_ScriptFullPath,True)
-}
-Else {
-    Menu,%MenuName%,UnCheck, %ItemName%	 
-	ToStartup(A_ScriptFullPath,False)
-}
+    SettingLaunchOnStartup := !ToStartup(A_ScriptFullPath)
+    If (SettingLaunchOnStartup) {
+        Menu,%MenuName%,Check, %ItemName%	 
+        ToStartup(A_ScriptFullPath,True)
+    }
+    Else {
+        Menu,%MenuName%,UnCheck, %ItemName%	 
+        ToStartup(A_ScriptFullPath,False)
+    }
 }
 
 MenuCb_PTHelp(ItemName, ItemPos, MenuName){
-ScriptName := RegExReplace(A_ScriptName,"\..*","")
-PowerTools_Help(ScriptName)
+    ScriptName := RegExReplace(A_ScriptName,"\..*","")
+    PowerTools_Help(ScriptName)
 }
 
 MenuCb_PTChangelog(ItemName, ItemPos, MenuName){
-ScriptName := RegExReplace(A_ScriptName,"\..*","") 
-PowerTools_Changelog(ScriptName)   
+    ScriptName := RegExReplace(A_ScriptName,"\..*","") 
+    PowerTools_Changelog(ScriptName)   
 }
 
 MenuCb_PTNews(ItemName, ItemPos, MenuName){
-ScriptName := RegExReplace(A_ScriptName,"\..*","") 
-PowerTools_News(ScriptName)   
+    ScriptName := RegExReplace(A_ScriptName,"\..*","") 
+    PowerTools_News(ScriptName)   
 }
 
 MenuCb_PowerTools_Tweet(ItemName, ItemPos, MenuName){
-ScriptName := RegExReplace(A_ScriptName,"\..*","")
-PowerTools_TweetMe(ScriptName)    
+    ScriptName := RegExReplace(A_ScriptName,"\..*","")
+    PowerTools_TweetMe(ScriptName)    
 }
 
 MenuCb_PTCheckForUpdate(ItemName, ItemPos, MenuName){
-PowerTools_CheckForUptate()    
+    PowerTools_CheckForUptate()    
 }
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_TweetPush(ScriptName){
+    sLogUrl := PowerTools_Changelog(ScriptName,False)
+    ;sToolUrl := PowerTools_Help(ScriptName,False)
 
-sLogUrl := PowerTools_Changelog(ScriptName,False)
-;sToolUrl := PowerTools_Help(ScriptName,False)
+    If (ScriptName ="NWS")
+        ScriptName = NWSPowerTool
 
-If (ScriptName ="NWS")
-    ScriptName = NWSPowerTool
+    sText = New version of #%ScriptName%. See changelog %sLogUrl%
 
-sText = New version of #%ScriptName%. See changelog %sLogUrl%
-
-sUrl:= uriEncode(sUrl)
-sText := uriEncode(sText)
-sTweetUrl = https://twitter.com/intent/tweet?text=%sText%  ;&hashtags=%ScriptName%&url=%sToolUrl%
-Run, %sTweetUrl%
-
+    sUrl:= uriEncode(sUrl)
+    sText := uriEncode(sText)
+    sTweetUrl = https://twitter.com/intent/tweet?text=%sText%  ;&hashtags=%ScriptName%&url=%sToolUrl%
+    Run, %sTweetUrl%
 } ;eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 
 PowerTools_TweetMe(ScriptName){
+    sLogUrl := PowerTools_Changelog(ScriptName,False)
+    ;sToolUrl := PowerTools_Help(ScriptName,False)
 
-sLogUrl := PowerTools_Changelog(ScriptName,False)
-;sToolUrl := PowerTools_Help(ScriptName,False)
+    If (ScriptName ="NWS")
+        ScriptName = NWSPowerTool
 
-If (ScriptName ="NWS")
-    ScriptName = NWSPowerTool
+    sText = @tdalon
 
-sText = @tdalon
-
-sText := uriEncode(sText)
-sTweetUrl = https://twitter.com/intent/tweet?text=%sText%&hashtags=%ScriptName%
-Run, %sTweetUrl%
-
+    sText := uriEncode(sText)
+    sTweetUrl = https://twitter.com/intent/tweet?text=%sText%&hashtags=%ScriptName%
+    Run, %sTweetUrl%
 } ;eofun
 
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_GetParam(Param) {
-ParamVal := PowerTools_RegRead(Param)
+    ParamVal := PowerTools_RegRead(Param)
+    If !(ParamVal="") 
+        return ParamVal
 
-If !(ParamVal="") 
-	return ParamVal
-If RegExMatch(Param,"^TeamsFindText(.*)",sMatch) 
-    return Teams_GetText(sMatch1,True) ; Default value
-
-Switch Param
-{
-    Case "TeamsMentionDelay":
-        return 1300
-    Case "TeamsCommandDelay":
-        return 800
-    Case "TeamsClickDelay":
-        return 500
-    Case "TeamsShareDelay":
-        return 1500
-}
+    Switch Param
+    {
+        Case "TeamsMentionDelay":
+            return 1300
+        Case "TeamsCommandDelay":
+            return 800
+        Case "TeamsClickDelay":
+            return 500
+        Case "TeamsShareDelay":
+            return 1500
+    }
 } ;eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_SetParam(Param) {
-sPrompt = Enter value for %Param%:
-Param := StrReplace(Param," ","")
-ParamVal := PowerTools_GetParam(Param)
-InputBox, Value, %Param%, %sPrompt%, , 200, 150, , , , ,%ParamVal%
-If ErrorLevel
-    return
-PowerTools_RegWrite(Param,ParamVal)
-return ParamVal
-
+    sPrompt = Enter value for %Param%:
+    Param := StrReplace(Param," ","")
+    ParamVal := PowerTools_GetParam(Param)
+    InputBox, Value, %Param%, %sPrompt%, , 200, 150, , , , ,%ParamVal%
+    If ErrorLevel
+        return
+    PowerTools_RegWrite(Param,ParamVal)
+    return ParamVal
 } ;eofun
 
 
 PowerTools_ErrDlg(Text,sUrl:=""){
+    If !sUrl {
+        MsgBox 0x10, %A_ScriptName%: Error, %Text% ; OK|Cancel
+        Return
+    }
+    SetTimer, ChangeButtonNames, 50 
 
-If !sUrl {
-    MsgBox 0x10, %A_ScriptName%: Error, %Text% ; OK|Cancel
-    Return
-}
-SetTimer, ChangeButtonNames, 50 
+    MsgBox 0x11, %A_ScriptName%: Error, %Text% ; OK|Cancel
 
-MsgBox 0x11, %A_ScriptName%: Error, %Text% ; OK|Cancel
+    IfMsgBox, Cancel ; Help
+        Run, %sUrl%
+    return
 
-IfMsgBox, Cancel ; Help
-    Run, %sUrl%
-return
+    ChangeButtonNames: 
+    SetTitleMatchMode, RegEx
+    IfWinNotExist, .*: Error$
+        return  ; Keep waiting.
+    SetTimer, ChangeButtonNames, Off 
+    WinActivate 
+    ControlSetText, Button1, &OK 
+    ControlSetText, Button2, &Help 
+    return
 
-ChangeButtonNames: 
-SetTitleMatchMode, RegEx
-IfWinNotExist, .*: Error$
-	return  ; Keep waiting.
-SetTimer, ChangeButtonNames, Off 
-WinActivate 
-ControlSetText, Button1, &OK 
-ControlSetText, Button2, &Help 
-return
-
-}
-
+} ; eofun
