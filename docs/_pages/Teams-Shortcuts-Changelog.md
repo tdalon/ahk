@@ -8,6 +8,16 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-10-20
+  * Support for Teams New Client
+    * Restart, Clear Cache
+    * Teams_GetMainWindow
+    * Teams_GetMeetingWindow
+    * Teams_GetLang
+    * Tested: Teams_Mute
+  * [Teams Backgrounds Import and Migrate](https://tdalon.blogspot.com/2023/10/teams-import-background.html) for Teams New Client
+* 2023-10-20
+  * Open Favorites .url Internet Shortcut without Browser Left-over window
 * 2023-09-19
   *  [Focus Assist Integration](https://tdalon.blogspot.com/2023/09/ahk-focus-assist.html)
 * 2023-08-10

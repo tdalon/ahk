@@ -38,11 +38,14 @@ Case "w": ; Web App
 Case "h","-h","help":
     Teamsy_Help(sInput)
     return
-Case "bgf","obg","backgrounds","cbg":
-    Teams_OpenBackgroundFolder()
+Case "bgf","bgo","backgrounds","cbg":
+    Teams_BackgroundOpenFolder()
     return
 Case "bg","bgs","background":
     Teams_MeetingShortcuts("bg")
+    return
+Case "bgi": ; import backgrounds
+    Teams_BackgroundImport()
     return
 Case "lob","lobby":
     Teams_MeetingShortcuts("lobby")
@@ -291,6 +294,8 @@ Case "f","fav","f+","of": ; favorites
     sUrl := "https://tdalon.blogspot.com/2023/01/teams-favorites.html"
 Case "s2t": ; Share To teams
     sUrl := "https://tdalon.blogspot.com/2023/01/share-to-teams.html"
+Case "bgi": ; Import Backgrounds
+    sUrl := "https://tdalon.blogspot.com/2023/10/teams-import-backgrounds.html"
 Case "cl": ; clear cache
     sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html" 
 Case "2": ; second instance

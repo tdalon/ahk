@@ -16,7 +16,7 @@ LastCompiled = 20230811075037
 SetWorkingDir %A_ScriptDir%
 
 SubMenuSettings := PowerTools_MenuTray()
-
+TeamsIsNew := Teams_IsNew()
 
 Menu, SubMenuSettings, Add, Notification at Startup, MenuCb_ToggleSettingNotificationAtStartup
 
@@ -105,8 +105,10 @@ Menu, Tray, Add, Share To Teams, Teams_ShareToTeamsCb
 Menu, Tray, Add, Open Favorites Folder, TeamsOpenFavs
 Menu, Tray, Add, Add to Favorites, TeamsFavsAdd
 
-Menu, SubMenuCustomBackgrounds, Add, Open Custom Backgrounds Folder, OpenCustomBackgrounds
-Menu, SubMenuCustomBackgrounds, Add, Open Backgrounds Library, OpenCustomBackgroundsLibrary
+Menu, SubMenuCustomBackgrounds, Add, Open Custom Backgrounds Folder, Teams_BackgroundOpenFolder
+Menu, SubMenuCustomBackgrounds, Add, Open Backgrounds Library, Teams_BackgroundOpenLibrary
+If TeamsIsNew 
+	Menu, SubMenuCustomBackgrounds, Add, Import Backgrounds, TeamsBackgroundImport
 
 Menu, Tray, Add, Custom Backgrounds, :SubMenuCustomBackgrounds
 Menu, Tray, Add,Start Second Instance, Teams_OpenSecondInstance
@@ -338,7 +340,11 @@ Teamsy("jo+")
 return
 
 ; ----------------------------------------------------------------------
+TeamsBackgroundImport:
+Teams_BackgroundImport()
+return 
 
+; ----------------------------------------------------------------------
 TeamsOpenChat:
 If GetKeyState("Ctrl") {
 	Teamsy_Help("oc")
@@ -393,36 +399,8 @@ SendInput, !{Esc} ; remove focus from menu
 Teams_Selection2Team()
 return
 
-; ----------------------------------------------------------------------
-OpenCustomBackgrounds:
-If GetKeyState("Ctrl") {
-	Teamsy_Help("cbg")
-	return
-}
-Teams_OpenBackgroundFolder()
-return
 
 ; ----------------------------------------------------------------------
-OpenCustomBackgroundsLibrary:
-If GetKeyState("Ctrl") {
-	Teamsy_Help("cbg")
-	return
-}
-sIniFile = %A_ScriptDir%\PowerTools.ini
-If !FileExist(sIniFile) {
-	TrayTipAutoHide("Error!","PowerTools.ini file is missing!",2000,3)
-	return
-}
-IniRead, CustomBackgroundsLibrary, %sIniFile%, Teams, TeamsCustomBackgroundsLibrary
-If (CustomBackgroundsLibrary != "ERROR")
-	Run, "%CustomBackgroundsLibrary%"
-Else {
-    Run, notepad.exe %sIniFile%
-	TrayTipAutoHide("Background Library!","Background Library location is configured in PowerTools.ini Teams->TeamsCustomBackgroundsLibrary parameter.")
-}
-return
-; ----------------------------------------------------------------------
-
 GetMe:
 If GetKeyState("Ctrl") {
 	Run, "https://tdalon.blogspot.com/2020/11/teams-shortcuts-smart-reply.html#getme"

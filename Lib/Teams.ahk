@@ -11,14 +11,160 @@ Teamsy("-g")
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
-Teams_OpenBackgroundFolder(){
-BackgroundDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
-If !FileExist(BackgroundDir) {
-    FileCreateDir, %BackgroundDir%
-}
-Run, %BackgroundDir%
+Teams_BackgroundOpenLibrary() {
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("cbg")
+        return
+    }
+    sIniFile = %A_ScriptDir%\PowerTools.ini
+    If !FileExist(sIniFile) {
+        TrayTipAutoHide("Error!","PowerTools.ini file is missing!",2000,3)
+        return
+    }
+    IniRead, CustomBackgroundsLibrary, %sIniFile%, Teams, TeamsCustomBackgroundsLibrary
+    If (CustomBackgroundsLibrary != "ERROR")
+        Run, "%CustomBackgroundsLibrary%"
+    Else {
+        Run, notepad.exe %sIniFile%
+        TrayTipAutoHide("Background Library!","Background Library location is configured in PowerTools.ini Teams->TeamsCustomBackgroundsLibrary parameter.")
+    }
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+Teams_BackgroundOpenFolder(){
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("cbg")
+        return
+    }
+
+    If Teams_IsNew() { ; Teams New
+    ; https://techcommunity.microsoft.com/t5/microsoft-teams-public-preview/backgrounds/m-p/3782690
+        EnvGet, LOCALAPPDATA, LOCALAPPDATA
+        BackgroundDir = %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Backgrounds\Uploads
+    } Else { ; Teams Classic
+        BackgroundDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
+        
+    }
+
+    If !FileExist(BackgroundDir)
+        FileCreateDir, %BackgroundDir%
+    Run, %BackgroundDir%
 
 } ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+Teams_BackgroundMigrateFolder() {
+    ; https://techcommunity.microsoft.com/t5/microsoft-teams-public-preview/backgrounds/m-p/3782690
+    If !Teams_IsNew() 
+        return
+
+    EnvGet, LOCALAPPDATA, LOCALAPPDATA
+    NewBackgroundDir = %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Backgrounds\Uploads
+    If !FileExist(NewBackgroundDir)
+        FileCreateDir, %NewBackgroundDir%
+    ClassicBackgroundDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
+
+    Loop Files %ClassicBackgroundDir%\*_thumb.jpeg
+    
+    Run, %NewBackgroundDir%
+    
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_BackgroundImport(srcDir:=""){
+    ; https://techcommunity.microsoft.com/t5/microsoft-teams-public-preview/backgrounds/m-p/3782690
+    
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("bgi")
+        return
+    }
+    If !Teams_IsNew() 
+        {
+            return
+        }
+        
+    If (srcDir = "") { ; prompt user to select directory
+        srcDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
+        SelectFolder(srcDir,"Select folder from which to import background images:") 
+        ;FileSelectFolder, srcDir , ,0 , Select folder from which to import background images:
+        If ErrorLevel
+            return
+    }
+
+    EnvGet, LOCALAPPDATA, LOCALAPPDATA
+    NewBackgroundDir = %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Backgrounds\Uploads
+    If !FileExist(NewBackgroundDir)
+        FileCreateDir, %NewBackgroundDir%
+
+    ; Generate array of MD5 checksums for background files
+    ArrayCount := 0
+    MD5Array := []
+    Loop, Files, %NewBackgroundDir%\*
+    {
+        If InStr(A_LoopFileName,"_thumb.")
+            Continue
+        ArrayCount += 1
+        MD5Array[ArrayCount] := HashFile(A_LoopFileFullPath,"MD5")
+    }
+        
+    If !pToken := Gdip_Startup()
+        {
+            MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+            return
+        }
+
+    BgCount := 0
+    BgCopiedCount :=0
+    Loop, Files, %srcDir%\*
+    {
+        ; Skip files ending with _thumb.
+        If InStr(A_LoopFileName,"_thumb.")
+            Continue
+        BgCount +=1
+        ; Check if file already exist
+        srcMD5 := HashFile(A_LoopFileFullPath,"MD5")
+        If HasVal(MD5Array,srcMD5) 
+            Continue
+        BgCopiedCount +=1    
+        ; Generate GUID
+        GUID := CreateGUID()
+        GUID := SubStr(GUID,2,-1)
+        StringLower, GUID, GUID
+
+        ; Create Thumbnails using Gdip 
+        pBitmap := Gdip_CreateBitmapFromFile(A_LoopFileFullPath)
+        pThumbnail := Gdip_GetImageThumbnail(pBitmap, 278, 159)
+
+        RegExMatch(A_LoopFileName,"\.([^\.]*$)",FileExt)
+        
+        FileCopy, %A_LoopFileFullPath%, %NewBackgroundDir%\%GUID%.%FileExt1%
+        ; Save Thumbnail
+        DestFile = %NewBackgroundDir%\%GUID%_thumb.%FileExt1%
+        Gdip_SaveBitmapToFile(pThumbnail, DestFile)
+    }
+
+    TrayTip Backgrounds imported! , %BgCopiedCount%/%BgCount% backgrounds were copied!
+    Run, %NewBackgroundDir%
+
+    Gdip_DisposeImage(pBitmap) 
+    Gdip_DisposeImage(pThumbnail) 
+    Gdip_Shutdown(pToken) 
+        
+} ; eofun
+
+
+
+CreateGUID()
+;https://www.autohotkey.com/boards/viewtopic.php?f=6&t=4732
+{
+    VarSetCapacity(pguid, 16, 0)
+    if !(DllCall("ole32.dll\CoCreateGuid", "ptr", &pguid)) {
+        size := VarSetCapacity(sguid, (38 << !!A_IsUnicode) + 1, 0)
+        if (DllCall("ole32.dll\StringFromGUID2", "ptr", &pguid, "ptr", &sguid, "int", size))
+            return StrGet(&sguid)
+    }
+    return ""
+}
 ; -------------------------------------------------------------------------------------------------------------------
 
 
@@ -164,7 +310,7 @@ If !(sFileName) {
         return
 }
 
-; open by default in app: does not work for chat link
+; open by default in app to avoid browser left-over window: does not work for chat link
 If Not InStr(sUrl,"?ctx=chat")
     sUrl:= StrReplace(sUrl,"https:","msteams:") 
 sFile := FavsDir . "\" . sFileName . ".url"
@@ -220,7 +366,8 @@ sPat := StrReplace(sInput," ","[^\s]*\s")
 Loop, Files, %FavDir%\*.url, R ; recurse in subdirectories
 {
     If RegExMatch(SubStr(A_LoopFileName, 1,-4),"i)" . sPat) { ; LoopFileName contains extension; ignore case
-        Run, %A_LoopFileFullPath%
+        ;Run, %A_LoopFileFullPath%
+        OpenFavUrl(A_LoopFileFullPath)
         return
     }
 } ; end loop
@@ -237,6 +384,20 @@ TrayTipAutoHide("Teamsy: OpenFav!",sMsg)
 
 } ; eofun
 
+OpenFavUrl(File) {
+    ; Opens Internet Shortcuts .url files and close left-over browser window
+    ; Assumes Edge Browser is installed. Window History won't be changed
+    TeamsExe := Teams_GetExeName()
+    ; Extract url from Shortcut
+    IniRead, sUrl, %File%, InternetShortcut, URL
+    Run, msedge.exe "%sUrl%" " --new-window"
+    WinWaitActive, ahk_exe %TeamsExe%
+    Send !{Tab}
+    WinWaitActive, ahk_exe msedge.exe
+    ;Browser_WinWaitActive()
+    Send ^w ; Close leftover browser window
+    WinActivate, ahk_exe %TeamsExe%
+} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_FavsAdd(){
@@ -343,9 +504,42 @@ Teams_Link2Fav(sUrl,FavsDir,"Group Chat -" . sName)
 } ; eofun
 ; ----------------------------------------------------------------------
 
+Teams_IsNew(){
+    static IsNew
+    If !(IsNew = "")
+        return IsNew
+    fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps\ms-teams.exe
+    IsNew := (FileExist(fExe) != "")
+    If !IsNew {
+        return IsNew
+    }
+    ; Possibility to overwrite in ini file
+    If FileExist("PowerTools.ini") {
+        IniRead, IniIsNew, PowerTools.ini,Teams,TeamsIsNew
+        If !(IniIsNew="ERROR")  
+            IsNew := IniIsNew
+    }
+    return IsNew
+} ;eofun
+
+; ----------------------------------------------------------------------
 Teams_GetExe(){
-fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
-return fExe
+    If Teams_IsNew()
+        ; New Teams in WindowsApp C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps
+        fExe := "ms-teams.exe"
+    Else { ; Classic Team Client
+        ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
+        fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe"
+    }
+    return fExe
+} ;eofun
+; ----------------------------------------------------------------------
+; ----------------------------------------------------------------------
+Teams_GetExeName(){
+    If Teams_IsNew()
+        return "ms-teams.exe"
+    Else
+        return "Teams.exe"
 } ;eofun
 ; ----------------------------------------------------------------------
 
@@ -754,7 +948,8 @@ If (People_IsMe(sAuthor))
     sAuthor = I 
 
 TeamsReplyWithMention := False
-If WinActive("ahk_exe Teams.exe") { ; SendMention
+TeamsExe := Teams_GetExeName()
+If WinActive("ahk_exe " . TeamsExe) { ; SendMention
     ; Mention Author
     If (sAuthor <> "I") {
         TeamsReplyWithMention := True
@@ -779,7 +974,7 @@ Else
 Clip_PasteHtml(sQuoteHtml,sQuoteBodyHtml,False)
 
 ; Escape Block quote in Teams: twice Shift+Enter
-If WinActive("ahk_exe Teams.exe") {
+If WinActive("ahk_exe " . TeamsExe) {
     ;SendInput {Delete} ; remove empty div to avoid breaking quote block in two
     SendInput +{Enter} 
     SendInput +{Enter}
@@ -1172,7 +1367,8 @@ If GetKeyState("Ctrl") {
 }
 EnvGet, A_UserProfile, userprofile
 wd = %A_UserProfile%\AppData\Local\Microsoft\Teams
-sCmd = Update.exe --processStart "Teams.exe"
+TeamsExe := Teams_GetExeName()
+sCmd = Update.exe --processStart "%TeamsExe%"
 
 EnvGet, A_LocAppData, localappdata
 up = %A_LocAppData%\Microsoft\Teams\CustomProfiles\Second
@@ -1356,7 +1552,9 @@ Teams_GetMainWindow(){
 ; See implementation explanations here: https://tdalon.blogspot.com/get-teams-window-ahk
 ; Syntax: hWnd := Teams_GetMainWindow()
 
-WinGet, WinCount, Count, ahk_exe Teams.exe
+TeamsExe := Teams_GetExeName()
+
+WinGet, WinCount, Count, ahk_exe %TeamsExe%
 
 If (WinCount = 0)
     GoTo, StartTeams
@@ -1364,23 +1562,20 @@ If (WinCount = 0)
  ; fall-back if wrong exe found: close Teams
 TeamsMainWinId := PowerTools_RegRead("TeamsMainWinId")
 
-If WinExist("ahk_id " . TeamsMainWinId) {
-    WinGet AhkExe, ProcessName, ahk_id %TeamsMainWinId% ; safe-check hWnd belongs to Teams.exe
-    If (AhkExe = "Teams.exe")
-        return TeamsMainWinId  
-}
+If WinExist("ahk_id " . TeamsMainWinId) 
+    return TeamsMainWinId  
 
 ; when virtuawin is running Teams main window can be on another virtual desktop = hidden
 Process, Exist, VirtuaWin.exe
 VirtuaWinIsRunning := ErrorLevel
 If (WinCount = 1) and Not (VirtuaWinIsRunning) {
-    TeamsMainWinId := WinExist("ahk_exe Teams.exe")
+    TeamsMainWinId := WinExist("ahk_exe " . TeamsExe)
     PowerTools_RegWrite("TeamsMainWinId",TeamsMainWinId)
     return TeamsMainWinId
 }
 
 ; Get main window via Acc Window Object Name
-WinGet, id, List,ahk_exe Teams.exe
+WinGet, id, List,ahk_exe %TeamsExe%
 Loop, %id%
 {
     hWnd := id%A_Index%
@@ -1393,19 +1588,16 @@ Loop, %id%
 }
 
 ; Fallback solution with minimize all window and run exe
-If WinActive("ahk_exe Teams.exe") {
-    GroupAdd, TeamsGroup, ahk_exe Teams.exe
+If WinActive("ahk_exe " . TeamsExe) {
+    GroupAdd, TeamsGroup, ahk_exe %TeamsExe%
     WinMinimize, ahk_group  TeamsGroup
 } 
 
 StartTeams: 
-fTeamsExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
-If !FileExist(fTeamsExe) {
-    return
-}
+fTeamsExe := Teams_GetExe()
  
 Run, "%fTeamsExe%""
-WinWaitActive, ahk_exe Teams.exe
+WinWaitActive, ahk_exe %TeamsExe%
 TeamsMainWinId := WinExist("A")
 PowerTools_RegWrite("TeamsMainWinId",TeamsMainWinId)
 
@@ -1480,7 +1672,9 @@ Teams_GetMeetingWindow(Maximize:=false, Activate:=false){
 ;   https://tdalon.blogspot.com/2022/07/ahk-get-teams-meeting-win.html
 
 UIA := UIA_Interface()
-WinGet, Win, List, ahk_exe Teams.exe
+TeamsExe := Teams_GetExeName()
+
+WinGet, Win, List, ahk_exe %TeamsExe%
 Loop %Win% {
     WinId := Win%A_Index%
     TeamsEl := UIA.ElementFromHandle(WinId)
@@ -1532,11 +1726,12 @@ TrayTip, Could not find Meeting Window! , No active Teams meeting window found!,
 
 Teams_FindMeetingWindow(Activate:= false) {
 ; TeamsEl := Teams_FindMeetingWindow(Activate:= false)
-; Loop through Teams.exe Window to find unminimized Meeting Window
+; Loop through Teams Window to find unminimized Meeting Window
 ; Does not return Minimized Window
 ; returns empty if not found and display a traytip message
 UIA := UIA_Interface()
-WinGet, Win, List, ahk_exe Teams.exe
+TeamsExe := Teams_GetExeName()
+WinGet, Win, List, ahk_exe %TeamsExe%
 Loop %Win% {
     WinId := Win%A_Index%
     TeamsEl := UIA.ElementFromHandle(WinId)
@@ -1755,30 +1950,47 @@ Run, %sUrl%
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ClearCache(){
-If GetKeyState("Ctrl") {
-    Teamsy_Help("cl")
-	return
-}
-Process, Exist, Teams.exe
-If (ErrorLevel) {
-    sCmd = taskkill /f /im "Teams.exe"
-    Run %sCmd%,,Hide 
-}
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("cl")
+        return
+    }
 
-While WinExist("ahk_exe Teams.exe")
-    Sleep 500
+    IsNew := Teams_IsNew()
+    If IsNew
+        TeamsExe := "ms-teams.exe"
+    Else
+        TeamsExe := "Teams.exe"
 
-TeamsDir = %A_AppData%\Microsoft\Teams
-FileRemoveDir, %TeamsDir%\application cache\cache, 1
-FileRemoveDir, %TeamsDir%\blob_storage, 1
-FileRemoveDir, %TeamsDir%\databases, 1
-FileRemoveDir, %TeamsDir%\cache, 1
-FileRemoveDir, %TeamsDir%\gpucache, 1
-FileRemoveDir, %TeamsDir%\Indexeddb, 1
-FileRemoveDir, %TeamsDir%\Local Storage, 1
-FileRemoveDir, %TeamsDir%\tmp, 1
+    Process, Exist, %TeamsExe%
+    If (ErrorLevel) {
+        sCmd = taskkill /f /im "%TeamsExe%"
+        Run %sCmd%,,Hide 
+    }
 
-Teams_GetMainWindow()
+    While WinExist("ahk_exe " . TeamsExe)
+        Sleep 500
+
+    ; Delete Folders and Files in Cache Directory
+    If IsNew {
+        TeamsCacheDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams" ; AppData env variable points to Roaming
+        
+    } Else { ; Teams Classic ; https://learn.microsoft.com/en-us/microsoftteams/troubleshoot/teams-administration/clear-teams-cache
+        TeamsCacheDir = %A_AppData%\Microsoft\Teams
+        /* 
+        FileRemoveDir, %TeamsDir%\application cache\cache, 1
+        FileRemoveDir, %TeamsDir%\blob_storage, 1
+        FileRemoveDir, %TeamsDir%\databases, 1
+        FileRemoveDir, %TeamsDir%\cache, 1
+        FileRemoveDir, %TeamsDir%\gpucache, 1
+        FileRemoveDir, %TeamsDir%\Indexeddb, 1
+        FileRemoveDir, %TeamsDir%\Local Storage, 1
+        FileRemoveDir, %TeamsDir%\tmp, 1 
+        */
+    }
+
+    FileRecycle, %TeamsCacheDir%\*
+
+    Teams_GetMainWindow()
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
@@ -1793,12 +2005,14 @@ If GetKeyState("Ctrl") {
 MsgBox, 0x114,Teams Clean Restart, Are you sure you want to delete all Teams Client local application data?
 IfMsgBox No
    return
-Process, Exist, Teams.exe
+
+TeamsExe := Teams_GetExeName()
+Process, Exist, %TeamsExe%
 If (ErrorLevel) {
-    sCmd = taskkill /f /im "Teams.exe"
+    sCmd = taskkill /f /im "%TeamsExe%"
     Run %sCmd%,,Hide 
 }
-While WinExist("ahk_exe Teams.exe")
+While WinExist("ahk_exe " . TeamsExe)
     Sleep 500
 
 TeamsDir = %A_AppData%\Microsoft\Teams
@@ -1810,12 +2024,14 @@ Teams_GetMainWindow()
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Restart(){
 ; Warning all appdata will be deleted
-Process, Exist, Teams.exe
+
+TeamsExe := Teams_GetExeName()
+Process, Exist, %TeamsExe%
 If (ErrorLevel) {
-    sCmd = taskkill /f /im "Teams.exe"
+    sCmd = taskkill /f /im "%TeamsExe%"
     Run %sCmd%,,Hide 
 }
-While WinExist("ahk_exe Teams.exe")
+While WinExist("ahk_exe " . TeamsExe)
     Sleep 500
 
 Teams_GetMainWindow()
@@ -1823,7 +2039,8 @@ Teams_GetMainWindow()
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Quit() {
-sCmd = taskkill /f /im "Teams.exe"
+TeamsExe := Teams_GetExeName()
+sCmd = taskkill /f /im "%TeamsExe%"
 Run %sCmd%,,Hide
 } ; eofun 
 
@@ -1867,7 +2084,7 @@ If El {
 }
 El :=  TeamsEl.FindFirstByNameAndType(UnmuteName, "button",,2)
 If (State = 1) {
-    Tooltip("Teams Mic is alreay off.")
+    Tooltip("Teams Mic is already off.")
     return
 } Else {
     Tooltip("Teams Unmute Mic...")
@@ -2104,8 +2321,8 @@ If (SVVExe = "") {
     return
 }
     
-;TeamsExe := Teams_GetExe()
-sCmd = "%SVVExe%" %sCmd% "Teams.exe"
+TeamsExe := Teams_GetExeName()
+sCmd = "%SVVExe%" %sCmd% "%TeamsExe%"
 Run, %sCmd%
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
@@ -2211,8 +2428,8 @@ If (ErrorLevel = 0)
 
 Teams_IsWinActive(){
 ; Check if Active window is Teams client or a Browser/App window with a Teams url opened
-
-If WinActive("ahk_exe Teams.exe")
+TeamsExe := Teams_GetExeName()
+If WinActive("ahk_exe " . TeamsExe)
     return True
 SetTitleMatchMode, RegEx
 If WinActive("\| Microsoft Teams$")
@@ -2533,7 +2750,8 @@ If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
 	;Send +{F10} ; Shift+F10 - Open Context Menu
 	SendInput {Tab}
 	Send j ; Join accelerator
-	WinWaitActive, ahk_exe Teams.exe,,5
+    TeamsExe := Teams_GetExeName()
+	WinWaitActive, ahk_exe %TeamsExe%,,5
 	If ErrorLevel
 		Return
 }
@@ -2605,18 +2823,41 @@ Teams_GetLang() {
 ; return desktop client language
 ; sLang := Teams_GetLang()
 
-; Read value of currentWebLanguage property in %AppData%\Microsoft\Teams\desktop-config.json
+; For Classic Teams:
+;   Read value in %A_AppData%\Microsoft\Teams\desktop-config.json -> currentWebLanguage
+; For New Teams: 
+; EnvGet, LOCALAPPDATA, LOCALAPPDATA
+; %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\app_settings.json -> language
 ; e.g. "en-US"
 static Lang
 If !(Lang = "")
     return Lang
-JsonFile := A_AppData . "\Microsoft\Teams\desktop-config.json"
-FileRead, Json, %JsonFile%
-If ErrorLevel {
-    TrayTip, Error, Reading file %JsonFile%!,,3
-    return
+
+If Teams_IsNew() {
+    EnvGet, LOCALAPPDATA, LOCALAPPDATA
+    JsonFile := LOCALAPPDATA . "\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\app_settings.json"
+    FileRead, Json, %JsonFile%
+    If ErrorLevel {
+        TrayTip, Error, Reading file %JsonFile%!,,3
+        return
+    }
+    oJson := Jxon_Load(Json)
+    Lang := oJson["language"]
+    If (Lang="")
+        {
+
+        }
+    return Lang
+} Else {
+    JsonFile := A_AppData . "\Microsoft\Teams\desktop-config.json"
+    FileRead, Json, %JsonFile%
+    If ErrorLevel {
+        TrayTip, Error, Reading file %JsonFile%!,,3
+        return
+    }
+    oJson := Jxon_Load(Json)
+    Lang := oJson["currentWebLanguage"]
+    return Lang
 }
-oJson := Jxon_Load(Json)
-Lang := oJson["currentWebLanguage"]
-return Lang
+
 } ; eofun

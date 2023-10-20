@@ -319,10 +319,13 @@ Confluence_SearchSpace(sSpace,sQuery) {
 		return
 	}
 
-	If (sQuery="") {
-		sUrl := sRootUrl . "/display/" . sSpace
+	If (sQuery="") { ; Open Space Root
+		If InStr(sRootUrl,".atlassian.net")
+			sUrl := sRootUrl . "/spaces/" . sSpace
+		Else
+			sUrl := sRootUrl . "/display/" . sSpace
 	} Else {
-		sCQL := Query2CQL(sSpace,sQuery)
+		sCQL := Query2CQL(sQuery,sSpace)
 		sUrl := sRootUrl . "/dosearchsite.action?cql=" . sCQL
 	}
 
@@ -399,7 +402,6 @@ Confluence_Search(sUrl){
 			sSpace := sSpace1
 			sDefSearch := "#" . sSpace2
 		} Else {
-
 			sOldSpace := sSpace
 			If RegExMatch(sUrl,ReRootUrl . "/display/([^/]*)",sSpace)
 				sSpace := sSpace1
@@ -420,7 +422,6 @@ Confluence_Search(sUrl){
 				sDefSearch = 
 			
 	}
-
 	sDefSearch := Trim(sDefSearch)
 	InputBox, sSearch , Confluence Search, Enter search string (use # for labels):,,640,125,,,,,%sDefSearch% 
 	if ErrorLevel
@@ -450,7 +451,9 @@ Confluence_Search(sUrl){
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-Query2CQL(sSpace,sSearch) {
+;.atlassian.net/wiki/search?spaces=ES&type=page&labels=meeting-notes%2Ctoto&text=test
+
+Query2CQL(sSearch,sSpace) {
 
 	sQuote = "
 
