@@ -1971,7 +1971,7 @@ Teams_ClearCache(){
         Sleep 500
 
     ; Delete Folders and Files in Cache Directory
-    If IsNew {
+    If IsNew { ; https://microsoft365pro.co.uk/2023/07/31/teams-real-simple-with-pictures-clear-cache-in-teams-2-1-client/ @Microsoft365Pro
         TeamsCacheDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams" ; AppData env variable points to Roaming
         
     } Else { ; Teams Classic ; https://learn.microsoft.com/en-us/microsoftteams/troubleshoot/teams-administration/clear-teams-cache
@@ -2743,26 +2743,24 @@ TrayTip TeamsShortcuts: Meeting Action, Button for '%id%'' clicked!,,0x1
 
 
 Teams_Join(){
-; Join a Teams Meeting from Outlook Reminder Window
-If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
-; Keys are blocked by the UI: c,d,a,s. Alt does not work
-	WinActivate
-	;Send +{F10} ; Shift+F10 - Open Context Menu
-	SendInput {Tab}
-	Send j ; Join accelerator
-    TeamsExe := Teams_GetExeName()
-	WinWaitActive, ahk_exe %TeamsExe%,,5
-	If ErrorLevel
-		Return
-}
-UIA := UIA_Interface()
-If !WinId
-    WinId := WinActive("A")
-TeamsEl := UIA.ElementFromHandle(WinId) 
-JoinBtn :=  TeamsEl.FindFirstBy("AutomationId=prejoin-join-button")  
-
-
-}
+    ; Join a Teams Meeting from Outlook Reminder Window
+    If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
+    ; Keys are blocked by the UI: c,d,a,s. Alt does not work
+        WinActivate
+        ;Send +{F10} ; Shift+F10 - Open Context Menu
+        SendInput {Tab}
+        Send j ; Join accelerator
+        TeamsExe := Teams_GetExeName()
+        WinWaitActive, ahk_exe %TeamsExe%,,5
+        If ErrorLevel
+            Return
+    }
+    UIA := UIA_Interface()
+    If !WinId
+        WinId := WinActive("A")
+    TeamsEl := UIA.ElementFromHandle(WinId) 
+    JoinBtn :=  TeamsEl.FindFirstBy("AutomationId=prejoin-join-button")  
+} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 
@@ -2797,25 +2795,25 @@ If (restore) { ; Restore previous window and mouse position
 
 If (ok)
     Tooltip("Teams Meeting Action: " . id,1000) 
-}
+} ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ClearFlash(){
-; Will activates Teams Main window and restore back to the previous window and cursor position
-WinGet hcurwin
-;MouseGetPos , MouseX, MouseY
-MouseX := A_CaretX
-MouseY := A_CaretY
-; Activate Teams Main Window
-hteamswin := Teams_GetMainWindow()
-WinGet, MinMax , MinMax, ahk_id %hteamswin%
-WinActivate, ahk_id %hteamswin%
-; Restore minimize status
-If (MinMax= -1)
+    ; Will activates Teams Main window and restore back to the previous window and cursor position
+    WinGet hcurwin
+    ;MouseGetPos , MouseX, MouseY
+    MouseX := A_CaretX
+    MouseY := A_CaretY
+    ; Activate Teams Main Window
+    hteamswin := Teams_GetMainWindow()
+    WinGet, MinMax , MinMax, ahk_id %hteamswin%
+    WinActivate, ahk_id %hteamswin%
+    ; Restore minimize status
+    If (MinMax= -1)
     WinMinimize, ahk_id %hteamswin% 
-; Reactivate previous window
-WinActivate ahk_id %hcurwin%
-; Restore cursor
-Click, %MouseX%, %MouseY%
+    ; Reactivate previous window
+    WinActivate ahk_id %hcurwin%
+    ; Restore cursor
+    Click, %MouseX%, %MouseY%
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
@@ -2861,3 +2859,56 @@ If Teams_IsNew() {
 }
 
 } ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+
+Teams_SetStatusMessage() {
+    If GetKeyState("Ctrl")  { ; exclude ctrl if use in the hotkey
+        Teamsy_Help("st")
+        return
+    }
+    WinId := Teams_GetMainWindow()
+    If !WinId ; empty
+        return
+    UIA := UIA_Interface()
+    TeamsEl := UIA.ElementFromHandle(WinId)
+    El := TeamsEl.FindFirstBy("AutomationId=idna-me-control-set-status-message-trigger")
+    If !El { ; menu not opened 
+        ; Click on avatar
+        MeCtrl :=  TeamsEl.FindFirstBy("AutomationId=idna-me-control-avatar-trigger")
+        MeCtrl.Click()
+        El:= TeamsEl.WaitElementExist("AutomationId=idna-me-control-set-status-message-trigger")
+    }
+    
+    El.Click()
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Teams_SwitchTenant(sTenant) {
+    If GetKeyState("Ctrl")  { ; exclude ctrl if use in the hotkey
+        Teamsy_Help("sw")
+        return
+    }
+    WinId := Teams_GetMainWindow()
+    If !WinId ; empty
+        return
+    UIA := UIA_Interface()
+    TeamsEl := UIA.ElementFromHandle(WinId)
+
+    If !TeamsEl.FindFirstBy("AutomationId=idna-me-control-set-status-message-trigger") { ; menu not opened 
+        ; Click on avatar
+        MeCtrl :=  TeamsEl.FindFirstBy("AutomationId=idna-me-control-avatar-trigger")
+        MeCtrl.Click()
+        El:= TeamsEl.WaitElementExistByNameAndType("Switch to " . sTenant,"MenuItem",,1,False,1000)
+    } Else { ; menu already opened
+        El:= TeamsEl.FindFirstByNameAndType("Switch to " . sTenant,"MenuItem",,1,False)
+    }
+    
+    If (El="") {
+        TrayTipAutoHide("Switch Tenant","Tenant name starting with '" . sTenant . "' not found!")
+    } Else
+        El.Click()
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------

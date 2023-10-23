@@ -209,6 +209,9 @@ Case "vi-":
 Case "f","fav":
     Teams_FavsOpen(sInput)
     return
+Case "sw": ; switch tenant
+    Teams_SwitchTenant(sInput)
+    return
 Case "of": ; open favorites folder
     Teams_FavsOpenDir()
     return
@@ -226,6 +229,9 @@ Case "s2t": ; Share To teams
     return
 Case "2c","oc": ; Selection To Chat, Open Chat
     Teams_OpenChat()
+    return
+Case "st","status": ; Set Status Message
+    Teams_SetStatusMessage()()
     return
 Case "t2xl":
     Teams_Members2Excel()
@@ -310,6 +316,10 @@ Case "e2m": ; Emails to Mentions
     sUrl:= "https://tdalon.blogspot.com/2020/11/teams-shortcuts-send-mentions.html"
 Case "jo": ; Emails to Mentions
     sUrl:= "https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html"
+Case "sw": ; switch tenant
+    sUrl := "https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html"
+Case "st": ; set status message
+    sUrl := "https://tdalon.blogspot.com/2023/10/teams-set-status-message.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 
