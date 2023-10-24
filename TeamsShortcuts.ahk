@@ -463,7 +463,8 @@ Teams_MeetingShare()
 Return
 
 Teams_ActivateMeetingWindowCb:
-Teams_GetMeetingWindow(true, true)
+WinId := Teams_GetMeetingWindow()
+WinActivate, ahk_id %WinId%
 Return
 
 Teams_ShareToTeamsCb:

@@ -99,6 +99,9 @@ rh  |  Raise your Hand (Meeting Reaction)
 le  |  Leave Meeting
 jo | [Join Meeting](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html)
 jo+ | [Join Meeting (Advanced)](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html)
+sw | [Switch Tenant](https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html)
+st | [Set Status Message](https://tdalon.blogspot.com/2023/10/teams-set-status-message.html)
+sb(-|+) | [Hide/Show Sharing Control Toolbar]()
 
 <hr>
 

@@ -9,6 +9,9 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
 * 2023-10-23
+  * Improved [Meeting Share]()
+    * Hide Sharing Control Bar
+  * Change Launcher Help: takes input keyword
   * [Set status message](https://tdalon.blogspot.com/2023/10/teams-set-status-message.html)
   * [Switch tenant](https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html)
 * 2023-09-19

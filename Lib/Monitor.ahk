@@ -105,9 +105,10 @@ If (doCheck){
 
 MonitorIndex := Monitor_GetMonitorIndex(WinId)
 SysGet, MonitorPrimaryIndex, MonitorPrimary
+;MsgBox %MonitorIndex% %MonitorPrimaryIndex%
 If (MonitorIndex = MonitorPrimaryIndex) {
     WinActivate, ahk_id %WinId% ; requires activate to move
-    SendInput #+{Right}; Win+Shift+Right Arrow 
+    SendInput #+{Right} ; Win+Shift+Right Arrow 
 }
 
 } ; eofun

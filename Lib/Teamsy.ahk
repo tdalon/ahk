@@ -78,8 +78,8 @@ Case "ca","cal","calendar":
     SendInput ^4; open calendar
     return
 Case "m","me","meet": ; activate meeting window
-    Teams_GetMeetingWindow(true,true)
-    ;Teams_NewMeeting()
+    WinId := Teams_GetMeetingWindow()
+    WinActivate, ahk_id %WinId%
     return
 Case "le","leave": ; leave meeting
     Teams_Leave()
@@ -245,6 +245,15 @@ Case "jo","join": ; join current meeting
 Case "jo+": ; join meeting with autoJoin and openChat
     Outlook_JoinTeamsMeeting("",true,true)
     return
+Case "sb": ; hide sharing bar
+    Teams_SharingControlBar()
+    return
+Case "sb+": ; hide sharing bar
+    Teams_SharingControlBar("+")
+    return
+Case "sb-": ; hide sharing bar
+    Teams_SharingControlBar("-")
+    return
 } ; End Switch
 
 Teams_SendCommand(sKeyword,sInput,true)
@@ -278,7 +287,8 @@ TeamsyInputBox(){
     return
     ;---------------------- 
     TeamsyHelp:
-    Teamsy_Help()
+    Gui, Submit
+    Teamsy_Help(TeamsyEdit)
 
     GuiTeamsyGuiEscape:
 	GuiTeamsyGuiClose:
@@ -320,6 +330,8 @@ Case "sw": ; switch tenant
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html"
 Case "st": ; set status message
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-set-status-message.html"
+Case "sh": ; share screen
+    sUrl := "https://tdalon.blogspot.com/2023/10/teams-share-screen.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 
