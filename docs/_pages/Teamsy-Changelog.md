@@ -9,8 +9,8 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
 * 2023-10-23
-  * Improved [Meeting Share]()
-    * Hide Sharing Control Bar
+  * Improved [Meeting Share](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html)
+    * [Hide Sharing Control Bar](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html). Added Keywords 'sb', 'sb+', 'sb-'
   * Change Launcher Help: takes input keyword
   * [Set status message](https://tdalon.blogspot.com/2023/10/teams-set-status-message.html)
   * [Switch tenant](https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html)
@@ -27,11 +27,11 @@ See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other releva
   - Fix Get Meeting Window if AutomationId not available. Fallback FindByName "Calling controls"
   - New Keyword "e2m" Emails to Mentions
   - New keyword "cbg": Open Custom Backgrounds Folder
-  - Add ["Add Members"](https://tdalon.blogspot.com/2020/03/emails-to-team.html) Menu (feature moved from PeopleConnector). New Launcher Keyword "t2xl"
+  - Add ["Add Members"](https://tdalon.blogspot.com/2020/03/emails-to-team.html) Menu (feature moved from PeopleConnector). New Launcher Keyword 't2xl'
 * 2023-01-25
   - Bug fix meeting reactions if Reactions menus is opened
 * 2023-01-23
-  - New feature: [Open Chat](https://tdalon.blogspot.com/2023/01/teams-open-chat.html); Keyword "oc","2c"
+  - New feature: [Open Chat](https://tdalon.blogspot.com/2023/01/teams-open-chat.html); Keyword 'oc','2c'
 * 2023-01-20
   - Fix Command Bar: clear existing content.
   - CommandBar: @ + input
@@ -45,7 +45,7 @@ See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other releva
 * 2022-09-06
   - Updated Shortcut for Toggle Fullscreen based on F11 hotkey. Keyword 'fs' from Launcher. New function: Teams_MeetingToggleFullscreen
 * 2022-03-14
-  - Added keyword 'lo'|'lobby' to Admit Lobby
+  - Added keyword 'lo','lobby' to Admit Lobby
 * 2022-03-11
 	- Remove [hard dependency](https://tdalon.blogspot.com/2022/03/ahk-conditional-include.html) to Connections Lib
 * 2022-01-12
@@ -68,15 +68,15 @@ See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other releva
 * 2021-03-12
   - [Meeting Live Reactions](https://tdalon.blogspot.com/2021/03/teams-meeting-reactions-shortcuts.html): Like, Laugh, Applause, Heart
 * 2021-03-08
-  - New Keyword for [add contact to favorites](https://tdalon.blogspot.com/2021/03/teams-people-favorites.html): p2f|e2f
+  - New Keyword for [add contact to favorites](https://tdalon.blogspot.com/2021/03/teams-people-favorites.html): 'p2f', 'e2f'
 * 2021-03-05
-  - New keywords for [favorites](https://tdalon.blogspot.com/2021/03/teams-shortcuts-favorites.html). of|fav: open favorites folder. 2f|2fav: add link to favorites
+  - New keywords for [favorites](https://tdalon.blogspot.com/2021/03/teams-shortcuts-favorites.html). 'of','fav': open favorites folder. '2f','2fav': add link to favorites
 * 2021-03-04
   - Teamsy Launcher: added timeout and make inputbox modal/ always on top
   - New keywords 'wn' for whatsnew, 'nc' for new conversation
 * 2021-03-01
   - [Teamsy Launcher](Teamsy-Launcher)
-  - Added bg|background keyword to open background folder
+  - Added 'bg','background' keywords to open background folder
 * 2021-02-24
   - fix: Restart, ClearCache, CleanRestart: replace WinActive by WinExist and Process, Exist
 * 2021-02-23
@@ -110,7 +110,7 @@ See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other releva
 * 2021-01-08
 	- Bug fix: Update SmartReply (due to change in UI Ctrl+A behavior.)
 * 2021-01-05
-	- Fix: Teams_GetMeetingWindow, Teams_GetMainWindow regexp escape |
+	- Fix: Teams_GetMeetingWindow, Teams_GetMainWindow regexp escape pipe
 * 2020-12-04
   - Fixed Teams_GetMainWindow: collision of previous WinId. Added check for Window name as static variable
 * 2020-11-17

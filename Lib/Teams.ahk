@@ -170,7 +170,7 @@ CreateGUID()
 
 Teams_Emails2ChatDeepLink(sEmailList, askOpen:= true){
 ; Copy Chat Link to Clipboard and ask to open
-sLink := "https://teams.microsoft.com/l/chat/0/0?users=" . StrReplace(sEmailList, ";",",") ; msteams:
+sLink := "https://teams.microsoft.com/l/chat/0/0?users=" . StrReplace(sEmailList, ";",",") 
 If InStr(sEmailList,";") { ; Group Chat
     InputBox, sTopicName, Enter Group Chat Name,,,,100
     if (ErrorLevel=1) { ; no TopicName defined
@@ -200,7 +200,7 @@ If askOpen {
 Teams_Emails2Chat(sEmailList,sTopicName :=""){
 ; Open Teams 1-1 Chat or Group Chat from list of Emails
 ; See https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/build-and-test/deep-link-teams
-sLink := "msteams:/l/chat/0/0?users=" . StrReplace(sEmailList, ";",",") ; msteams:
+sLink := "https://teams.microsoft.com/l/chat/0/0?users=" . StrReplace(sEmailList, ";",",") 
 If InStr(sEmailList,";") { ; Group Chat
     InputBox, sTopicName , To Chat, Enter Group Chat Name, , , , , , , ,%sTopicName%
     if (ErrorLevel=0) { ;  TopicName defined
@@ -261,11 +261,9 @@ Teams_Emails2Chat(sEmailList)
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Emails2Meeting(sEmailList){
 ; Create and Open Teams Meeting from list of Emails
-sLink := "https://teams.microsoft.com/l/meeting/new?attendees=" . StrReplace(sEmailList, ";",",") ; msteams:
+sLink := "https://teams.microsoft.com/l/meeting/new?attendees=" . StrReplace(sEmailList, ";",",") 
 TeamsExe = Teams_GetExe()
-If FileExist(TeamsExe)
-    sLink := StrReplace(sLink,"https://teams.microsoft.com","msteams:")
-Run, %sLink% 
+Teams_OpenUrl(sLink) 
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -310,9 +308,6 @@ If !(sFileName) {
         return
 }
 
-; open by default in app to avoid browser left-over window: does not work for chat link
-If Not InStr(sUrl,"?ctx=chat")
-    sUrl:= StrReplace(sUrl,"https:","msteams:") 
 sFile := FavsDir . "\" . sFileName . ".url"
 
 ;FileDelete %sFile%
@@ -387,16 +382,30 @@ TrayTipAutoHide("Teamsy: OpenFav!",sMsg)
 OpenFavUrl(File) {
     ; Opens Internet Shortcuts .url files and close left-over browser window
     ; Assumes Edge Browser is installed. Window History won't be changed
-    TeamsExe := Teams_GetExeName()
+    
     ; Extract url from Shortcut
     IniRead, sUrl, %File%, InternetShortcut, URL
+    Teams_OpenUrl(sUrl)
+    
+} ; eofun
+
+Teams_OpenUrl(sUrl) {
+; Open Teams Url without Leftover
+    TeamsExe := Teams_GetExeName()
+    EdgeWinId := WinActive("ahk_exe msedge.exe") 
     Run, msedge.exe "%sUrl%" " --new-window"
-    WinWaitActive, ahk_exe %TeamsExe%
-    Send !{Tab}
-    WinWaitActive, ahk_exe msedge.exe
-    ;Browser_WinWaitActive()
-    Send ^w ; Close leftover browser window
-    WinActivate, ahk_exe %TeamsExe%
+    If EdgeWinId   
+        WinWaitNotActive, ahk_id %EdgeWinId%
+    Else
+        WinWaitActive, ahk_exe msedge.exe
+    NewEdgeWinId := WinExist("ahk_exe msedge.exe")
+    WinWaitActive, ahk_exe %TeamsExe%,,2
+    If !ErrorLevel {    
+        If WinExist("ahk_id " . NewEdgeWinId) {
+            WinActivate
+            Send ^w ; Close leftover browser window
+        }
+    }
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -544,8 +553,27 @@ Teams_GetExeName(){
 ; ----------------------------------------------------------------------
 
 Teams_SharingControlBar(mode:="-") {
+    ; Teams_SharingControlBar(mode:="-")
+    ; mode is '+' pr '-'. Empty will toggle
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("sb")
+        return
+    }
     TeamsExe := Teams_GetExeName()
-    wTitle = Sharing control bar ahk_exe %TeamsExe%
+
+    Lang := Teams_GetLang()
+    Name := Teams_GetLangName("SharingControlBar",Lang)
+    If (Name="") {
+        If !InStr(Lang,"en-") {
+            Text := "Language " . Lang . " for '" . Name . "' not implemented!"
+            sUrl := Teamsy_Help("lang",false)
+            PowerTools_ErrDlg(Text,sUrl:="")
+        }
+        Name := "Sharing control bar"
+    }
+
+
+    wTitle = %Name% ahk_exe %TeamsExe% 
     Switch mode {
         Case "-":
             WinHide, %wTitle%
@@ -1571,9 +1599,10 @@ Teams_GetMainWindow(){
 ; Syntax: hWnd := Teams_GetMainWindow()
 
 
-static TeamsMainWinId
+TeamsMainWinId := PowerTools_RegRead("TeamsMainWinId") ; use registry vs. static to make it persistent to tool restart
 If WinExist("ahk_id " . TeamsMainWinId) 
-    return TeamsMainWinId 
+    return TeamsMainWinId
+
 TeamsExe := Teams_GetExeName()
 
 WinGet, WinCount, Count, ahk_exe %TeamsExe%
@@ -1586,6 +1615,7 @@ Process, Exist, VirtuaWin.exe
 VirtuaWinIsRunning := ErrorLevel
 If (WinCount = 1) and Not (VirtuaWinIsRunning) {
     TeamsMainWinId := WinExist("ahk_exe " . TeamsExe)
+    RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, TeamsMainWinId, %TeamsMainWinId%
     return TeamsMainWinId
 }
 
@@ -1599,7 +1629,8 @@ If !Teams_IsNew() {
         sName := oAcc.accName(0)
         If RegExMatch(sName,".* \| Microsoft Teams, Main Window$") { ; works also for other lang - does not work with Teams New
             TeamsMainWinId := hWnd
-            return hWnd
+            RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, TeamsMainWinId, %TeamsMainWinId%
+            return TeamsMainWinId
         }
     }
 } ; Teams Classic
@@ -1615,15 +1646,16 @@ If WinActive("ahk_exe " . TeamsExe) {
 
 StartTeams: 
 fTeamsExe := Teams_GetExe()
- 
+MsgBox %fTeamsExe%
 Run, "%fTeamsExe%""
-WinWaitActive, ahk_exe %TeamsExe%
+WinWaitActive, ahk_exe %TeamsExe%,,5
 TeamsMainWinId := WinExist("A")
 
 ; restore previous active window
 WinActivate, ahk_id %curWinId%
+RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, TeamsMainWinId, %TeamsMainWinId%
+return TeamsMainWinId
 
-return 
 
 } ; eofun
 
@@ -1719,16 +1751,17 @@ Teams_IsMinMeetingWindow(TeamsEl) {
 ; Return true if the window is a minimized meeting window
 ; Check for button "Navigate back"
     Lang := Teams_GetLang()
-    Switch Lang 
-    {
-    Case "de-de":
-        NavigateName := "Navigieren Sie zurück zum Anruffenster."
-    Case "en-US":
-        NavigateName := "Navigate back to call window."
-    Default:
-        NavigateName := "Navigate back to call window."
+    Name := Teams_GetLangName("NavigateBack",Lang)
+    If (Name="") {
+        If !InStr(Lang,"en-") {
+            Text := "Language " . Lang . " '" . Name . "' not implemented!"
+            sUrl := Teamsy_Help("lang",false)
+            PowerTools_ErrDlg(Text,sUrl:="")
+        }
+        Name := "Navigate back to call window."
     }
-    El := TeamsEl.FindFirstByNameAndType(NavigateName, "button") ; 
+        
+    El := TeamsEl.FindFirstByNameAndType(Name, "button") ; 
     
     If El 
         return true
@@ -1744,24 +1777,22 @@ Teams_IsMeetingWindow(TeamsEl,ExOnHold:=true){
 ; If Meeting Reactions Submenus are opened AutomationId are not visible.
 
 If (ExOnHold) {
+
     Lang := Teams_GetLang()
-    Switch Lang 
-    {
-    Case "de-de":
-        ;CallingControlsName := "Aufrufen von Steuerelementen"
-        ResumeName := "Fortsetzen"
-    Case "en-US":
-        ;CallingControlsName := "Calling controls"
-        ResumeName := "Resume"
-    Default:
-        ;CallingControlsName := "Calling controls"
-        ResumeName := "Resume"
+    Name := Teams_GetLangName("Resume",Lang)
+    If (Name="") {
+        If !InStr(Lang,"en-") {
+            Text := "Language " . Lang . " not implemented!"
+            sUrl := Teamsy_Help("lang",false)
+            PowerTools_ErrDlg(Text,sUrl:="")
+        }
+        Name := "Resume"
     }
 }
-;   MsgBox % TeamsEl.DumpAll() ; DBG
+
 If TeamsEl.FindFirstBy("AutomationId=microphone-button") {
    If (ExOnHold) { ; exclude On Hold meeting windows
-        If TeamsEl.FindFirstByName(ResumeName) ; Exclude On-hold meetings with Resume button 
+        If TeamsEl.FindFirstByName(Name) ; Exclude On-hold meetings with Resume button 
             return false
     }
     return true
@@ -1867,6 +1898,10 @@ Teams_MeetingShare(ShareMode := 2){
     ; ShareMode = 1 : share
     ; ShareMode = 2: toggle share
 
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("sh")
+        return
+    }
     WinId := Teams_GetMeetingWindow()
     If !WinId ; empty
         return
@@ -1881,7 +1916,18 @@ Teams_MeetingShare(ShareMode := 2){
         return
     }
 
-    IsSharing := !RegExMatch(ShareEl.Name,"^Share content")
+    Lang := Teams_GetLang()
+    Name := Teams_GetLangName("Share",Lang)
+    If (Name="") {
+        If !InStr(Lang,"en-") {
+            Text := "Language " . Lang . " for 'Share' not implemented!"
+            sUrl := Teamsy_Help("lang",false)
+            PowerTools_ErrDlg(Text,sUrl:="")
+        }
+        Name := "Share"
+    }
+    
+    IsSharing := !RegExMatch(ShareEl.Name,"^" . Name) 
 
     If (ShareMode = 1) and (IsSharing) ; already sharing
         Return
@@ -1892,12 +1938,24 @@ Teams_MeetingShare(ShareMode := 2){
     ;SendInput ^+e ; ctrl+shift+e - toggle share
 
     ShareEl.Click() ; does not require Window to be active
+    
 
-    If (ShareMode=0) or ((ShareMode=2) and IsSharing) ; unshare->done
+    If (ShareMode=0) or ((ShareMode=2) and IsSharing) { ; unshare->done
+        FocusAssist("-") ; deactivate focusassist 
         return 
+    }
 
     ; Include sound
-    El :=  TeamsEl.WaitElementExistByName("Include computer sound",,,,3000) ; TODO lang specific
+    Name := Teams_GetLangName("ComputerAudio",Lang)
+    If (Name="") {
+        If !InStr(Lang,"en-") {
+            Text := "Language " . Lang . " for 'ComputerAudio' not defined!"
+            sUrl := Teamsy_Help("lang",false)
+            PowerTools_ErrDlg(Text,sUrl:="")
+        }
+        Name := "Include computer sound"
+    }
+    El :=  TeamsEl.WaitElementExistByName("Include computer sound",,,,1000) ; TODO lang specific
     El.Click()
 
 
@@ -1911,15 +1969,8 @@ Teams_MeetingShare(ShareMode := 2){
     Teams_SharingControlBar("-")
 
     ; Move Meeting Window to secondary screen
-    ; WinShiftRight Arrow
     SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
     If (MonitorCount > 1) {
-        ; Maximize Meeting Window by clicking on "Navigate back to call window" button
-        El := TeamsEl.FindFirstByNameAndType("Navigate back to call window.", "button") ; TODO lang specific
-        If El {
-            El.Click()
-            TeamsEl.WaitElementExist("AutomationId=reaction-menu-button",,,,5000)
-        }
         ; Move to secondary monitor
         Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
         Sleep 500 ; Wait for move to Maximize
@@ -2025,7 +2076,6 @@ Teams_GetMainWindow()
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_Restart(){
-; Warning all appdata will be deleted
 
 TeamsExe := Teams_GetExeName()
 Process, Exist, %TeamsExe%
@@ -2060,17 +2110,19 @@ UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
 Lang := Teams_GetLang()
-Switch Lang 
-{
-Case "de-de":
-    MuteName := "Stummschalten"
-    UnmuteName := "Stummschaltung"
-Case "en-US":
+MuteName := Teams_GetLangName("Mute",Lang)
+If (MuteName="") {
+    If !InStr(Lang,"en-") {
+        Text := "Language " . Lang . " not implemented!"
+        sUrl := Teamsy_Help("lang",false)
+        PowerTools_ErrDlg(Text,sUrl:="")
+    }
     MuteName := "Mute"
     UnmuteName := "Unmute"
-Default:
-    MuteName := "Mute"
-    UnmuteName := "Unmute"
+}
+
+If !(UnmuteName ="") {
+    UnmuteName := Teams_GetLangName("Unmute",Lang)
 }
 
 El:=TeamsEl.FindFirstBy("AutomationId=microphone-button")
@@ -2148,6 +2200,8 @@ Teams_Leave() {
 WinId := Teams_GetMeetingWindow(true)
 If !WinId ; empty
     return
+
+WinActivate ahk_id %WinId%
 SendInput ^+h ; Ctrl+Shift+H
 
 ; Reset FocusAssistant
@@ -2737,11 +2791,10 @@ Teams_GetLang() {
 ; sLang := Teams_GetLang()
 
 ; For Classic Teams:
-;   Read value in %A_AppData%\Microsoft\Teams\desktop-config.json -> currentWebLanguage
+;   Read value in %AppData%\Microsoft\Teams\desktop-config.json -> currentWebLanguage
 ; For New Teams: 
-; EnvGet, LOCALAPPDATA, LOCALAPPDATA
-; %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\app_settings.json -> language
-; e.g. "en-US"
+;           %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\app_settings.json -> language
+; e.g. "en-us"
 static Lang
 If !(Lang = "")
     return Lang
@@ -2776,6 +2829,41 @@ If Teams_IsNew() {
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
+Teams_GetLangName(Prop,Lang:="") {
+    If (Lang="")
+        Lang:=Teams_GetLang()
+
+    If !FileExist("PowerTools.ini") {
+        ;PowerTools_ErrDlg("No PowerTools.ini file found!")
+        return
+    }
+
+    IniRead, TeamsLangNames, PowerTools.ini,Teams,TeamsLangNames
+    If (TeamsLangNames="ERROR") { ; Section [Jira] Key JiraAuth not found
+        PowerTools_ErrDlg("TeamsLangNames key not found in PowerTools.ini file [Teams] section!")
+        return
+    }
+
+    JsonObj := Jxon_Load(TeamsLangNames)
+    For i, langName in JsonObj 
+    {
+        lang_i := langName["lang"]
+        If InStr(Lang,lang_i) {
+            Name := langName[Prop]
+            If (Name="") { ; Section [Jira] Key JiraAuth not found
+                PowerTools_ErrDlg("Name is not defined in PowerTools.ini file [Teams] section, TeamsLangNames key for lang '" . Lang . "'!")
+                return
+            }
+            return Name 
+        }
+    }
+    ; Lang could not be found take first entry as default value
+    return Name := JsonObj[1][Prop]
+
+}
+; -------------------------------------------------------------------------------------------------------------------
+
+
 
 
 Teams_SetStatusMessage() {

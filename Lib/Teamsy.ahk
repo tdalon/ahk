@@ -68,7 +68,7 @@ Case "fi","find":
     sKeyword = find
 Case "free","a","av":
     sKeyword = available
-Case "s","save":
+Case "s":
     sKeyword = saved
 Case "d":
     sKeyword = dnd
@@ -140,6 +140,12 @@ Case "sh-","unsh":
     return
 Case "fa":  
     FocusAssist(sInput)
+    return
+Case "fa+":  
+    FocusAssist("+")
+    return
+Case "fa-":  
+    FocusAssist("-")
     return
 Case "mu","mute":  
     Switch sInput
@@ -245,13 +251,13 @@ Case "jo","join": ; join current meeting
 Case "jo+": ; join meeting with autoJoin and openChat
     Outlook_JoinTeamsMeeting("",true,true)
     return
-Case "sb": ; hide sharing bar
+Case "sb": ; toggle show/hide sharing control bar
     Teams_SharingControlBar()
     return
-Case "sb+": ; hide sharing bar
+Case "sb+": ; show sharing control bar
     Teams_SharingControlBar("+")
     return
-Case "sb-": ; hide sharing bar
+Case "sb-": ; hide sharing control bar
     Teams_SharingControlBar("-")
     return
 } ; End Switch
@@ -299,11 +305,16 @@ TeamsyInputBox(){
     return
 }
 
-Teamsy_Help(sKeyword:=""){
+Teamsy_Help(sKeyword:="",doOpen:=true){
+; sUrl := Teamsy_Help(sKeyword:="",doOpen:=true)
 Switch sKeyword 
 {
 Case "":
     sUrl := "https://tdalon.github.io/ahk/Teamsy"
+Case "lang":
+    sUrl := "https://tdalon.blogspot.com/2023/10/teams-powertools-lang.html"
+Case "getlang":
+    sUrl := "https://tdalon.blogspot.com/2023/08/teams-get-client-lang.html"
 Case "2c","oc":
     sUrl := "https://tdalon.blogspot.com/2023/01/teams-open-chat.html"
 Case "f","fav","f+","of": ; favorites
@@ -330,6 +341,8 @@ Case "sw": ; switch tenant
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html"
 Case "st": ; set status message
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-set-status-message.html"
+Case "sh","sb":
+    sUrl:="https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html"
 Case "sh": ; share screen
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-share-screen.html"
 /* 
@@ -339,5 +352,8 @@ Case "ts2xl": ; Export Teams to Excel ; TODO
 Default:
     sUrl := "https://tdalon.github.io/ahk/Teamsy"
 } ; end switch
-Run, "%sUrl%"
+
+If (doOpen)
+    Run, "%sUrl%"
+return sUrl
 }

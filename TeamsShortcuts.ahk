@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20230811075037
+LastCompiled = 20231026100900
 
 #Include <Teams>
 #Include <PowerTools>
@@ -111,13 +111,13 @@ If TeamsIsNew
 	Menu, SubMenuCustomBackgrounds, Add, Import Backgrounds, TeamsBackgroundImport
 
 Menu, Tray, Add, Custom Backgrounds, :SubMenuCustomBackgrounds
-Menu, Tray, Add,Start Second Instance, Teams_OpenSecondInstance
-Menu, Tray, Add,Clear Cache, Teams_ClearCache
-Menu, Tray, Add,Open Web App, Teams_OpenWebApp
+Menu, Tray, Add, Start Second Instance, Teams_OpenSecondInstance
+Menu, Tray, Add, Clear Cache, Teams_ClearCache
+Menu, Tray, Add, Open Web App, Teams_OpenWebApp
 Menu, Tray, Add
-Menu, Tray, Add,Export Team Members, Members2Excel
-Menu, Tray, Add,Add Users to Team, Users2Team
-Menu, Tray, Add,Refresh Teams List, Teams_ExportTeams
+Menu, Tray, Add, Export Team Members, Members2Excel
+Menu, Tray, Add, Add Users to Team, Users2Team
+Menu, Tray, Add, Refresh Teams List, Teams_ExportTeams
 Menu, Tray, Add
 
 ; SubMenu Meeting
@@ -135,8 +135,8 @@ Menu, SubMenuMeeting, Add, Cursor Highlighter, PowerTools_CursorHighlighter
 ;Menu, SubMenuMeeting, Add, VLC, :SubMenuVLC
 
 Menu, Tray, Add, Meeting, :SubMenuMeeting
-Menu, Tray,Add
-Menu, Tray,Standard
+Menu, Tray, Add
+Menu, Tray, Standard
 
 ; Tooltip
 If !a_iscompiled 
@@ -158,9 +158,6 @@ Menu, TeamsShortcutsMenu, add, &New Expanded Conversation (Alt+N), NewConversati
 Menu, TeamsShortcutsMenu, add, Create E&mail with link to current conversation (Win+M), ShareByMail
 Menu, TeamsShortcutsMenu, add, Send Mentions (Win+Q), SendMentions
 Menu, TeamsShortcutsMenu, add, Personalize &Mention (Alt+1), PersonalizeMention
-Menu, TeamsShortcutsMenu, add, View &Unread (Win+U), ViewUnread
-Menu, TeamsShortcutsMenu, add, View &Saved (Win+S), ViewSaved
-Menu, TeamsShortcutsMenu, add, &Pop-out Chat (Win+P), Pop
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; Reset Main WinId at startup because of some possible hwnd collision
@@ -189,48 +186,6 @@ NewConversation:
 Teams_NewConversation()
 return
 
-; -------------------------------------------------------------------------------------------------------------------
-; View Unread
-; Win+U
-~#u:: ; <--- View Unread
-ViewUnread:
-If GetKeyState("Ctrl") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/teams_shortcuts_ahk" 
-	return
-}
-Send ^e ; Select Search bar
-SendInput /unread 
-Sleep 500
-Send {Enter}
-return	
-; -------------------------------------------------------------------------------------------------------------------
-; View Saved
-; Win+S
-~#s:: ; <--- View Saved
-ViewSaved:
-If GetKeyState("Ctrl") {
-	Teamsy_Help("cmd")
-	return
-}
-Send ^e ; Select Search bar
-SendInput /saved 
-Sleep 500
-Send {Enter}
-return
-; -------------------------------------------------------------------------------------------------------------------
-; Pop-out chat
-; Win+P
-~#p:: ; <--- Pop-out chat
-Pop:
-If GetKeyState("Ctrl") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/teams_shortcuts_ahk" 
-	return
-}
-Send ^e ; Select Search bar
-SendInput /pop  
-Sleep 500
-Send {Enter}
-return
 ; -------------------------------------------------------------------------------------------------------------------
 ; Alt+e
 ~!e:: ; <--- Edit

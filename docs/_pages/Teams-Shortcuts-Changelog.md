@@ -8,8 +8,13 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-10-26
+  * [Improved Language Dependency Handling](https://tdalon.blogspot.com/2023/10/teams-powertools-lang.html)
+  * [Opening Teams Links without Left-over browser window](https://tdalon.blogspot.com/2023/10/teams-open-link-leftover.html)
+* 2023-10-24
+  * Removed Teams Hotkeys for Unread and Saved (depreciated in New Client + accessible from Launcher 'u' and 's' keywords)
 * 2023-10-20
-  * Support for Teams New Client
+  * Support for Teams New Client/ Refactoring
     * Restart, Clear Cache
     * Teams_GetMainWindow
     * Teams_GetMeetingWindow

@@ -2,7 +2,7 @@
 ; You need to compile it to run from the command line
 ; You can compile it via running the Ahk2Exe command e.g. D:\Programs\AutoHotkey\Compiler\Ahk2Exe.exe /in "Teamsy.ahk" /icon "icons\Teams.ico"
 ; You can also compile it from the PowerTools Bundler
-LastCompiled = 20230811075038
+LastCompiled = 20231026100901
 #Include <PowerTools>
 #Include <Teamsy>
 
