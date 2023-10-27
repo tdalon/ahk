@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20231026100900
+LastCompiled = 20231026154345
 
 #Include <Teams>
 #Include <PowerTools>
@@ -161,7 +161,8 @@ Menu, TeamsShortcutsMenu, add, Personalize &Mention (Alt+1), PersonalizeMention
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; Reset Main WinId at startup because of some possible hwnd collision
-PowerTools_RegWrite("TeamsMainWinId","")
+;PowerTools_RegWrite("TeamsMainWinId","")
+
 
 return
 
@@ -392,20 +393,36 @@ WinClip.Paste()
 return
 
 ; ######################################################################
-NotifyTrayClick_208:   ; Middle click (Button up)
-Teams_MuteCb:
+NotifyTrayClick_207:   ; Middle click (Button down)
+;Teams_MuteCb:
 SendInput, !{Esc} ; for call from system tray - get active window
-Teams_Mute()
+If Teams_GetMeetingWindow(true,false)
+	Teams_PushToTalk()
 Return 
 
 NotifyTrayClick_202:   ; Left click (Button up)
+; Show Tray Menu
 Menu_Show(MenuGetHandle("Tray"), False, Menu_TrayParams()*)
 Return
 
 NotifyTrayClick_205:   ; Right click (Button up)
-Teams_VideoCb:
+; Activate Main or Meeting Window
 SendInput, !{Esc} ; for call from system tray - get active window
-Teams_Video()
+hMeetWin := Teams_GetMeetingWindow(false,false)
+If (hMeetWin) 
+		WinActivate, ahk_id %hMeetWin%
+Else
+	Teams_ActivateMainWindow()
+Return 
+
+NotifyTrayClick_206:   ; Right double click 
+; If Meeting active, Toggle video
+SendInput, !{Esc} ; for call from system tray - get active window
+hMeetWin := Teams_GetMeetingWindow(false,false)
+If (hMeetWin) 
+		Teams_Video()
+Else
+	Teams_ActivateMainWindow()
 Return 
 
 Teams_RaiseHandCb:
@@ -516,3 +533,4 @@ If GetKeyState("Ctrl") {
 }
 PowerTools_SetParam("Teams " . MenuName)
 } ; eofun
+

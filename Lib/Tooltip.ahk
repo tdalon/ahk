@@ -1,5 +1,5 @@
 ; wrapper for ToolTip command
-ToolTip(Message, TimeToDisplay = 500, SleepWhileDisplayed := False)
+ToolTip(Message, TimeToDisplay := 1000, SleepWhileDisplayed := False)
 {
 	; display message
 	ToolTip,%Message%

@@ -1710,7 +1710,7 @@ SendInput +{enter}
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_GetMeetingWindow(Minimize:=false){
+Teams_GetMeetingWindow(Minimize:=false,showTrayTip:=true){
 ; Syntax: 
 ;      hWnd := Teams_GetMeetingWindow(Minimize:=true) 
 ;   If window is not found, hwnd is empty
@@ -1738,7 +1738,8 @@ Loop %Win% {
     }
 } ; End Loop
 
-TrayTip, Could not find Meeting Window! , No active Teams meeting window found!,,0x2
+If (showTrayTip)
+    TrayTip, Could not find Meeting Window! , No active Teams meeting window found!,,0x2
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -2097,7 +2098,7 @@ Run %sCmd%,,Hide
 } ; eofun 
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_Mute(State := 2){
+Teams_Mute(State := 2,showInfo:=true,restoreWin:=true){
 ; State: 
 ;    0: mute off, unmute
 ;    1: mute on
@@ -2106,6 +2107,17 @@ Teams_Mute(State := 2){
 WinId := Teams_GetMeetingWindow() 
 If !WinId ; empty
     return
+
+If (restoreWin)
+    WinGet, curWinId, ID, A
+
+If (showInfo) {
+    displayTime := 2000
+    Tray_Icon_On := "HBITMAP:*" . Create_Mic_On_ico()
+    Tray_Icon_Off := "HBITMAP:*" . Create_Mic_Off_ico()
+}
+    
+
 UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
@@ -2129,26 +2141,40 @@ El:=TeamsEl.FindFirstBy("AutomationId=microphone-button")
 
 If RegExMatch(El.Name,"^" . MuteName) {
     If (State = 0) {
-        Tooltip("Teams Mic is alreay on.")
+        If (showInfo)
+            Tooltip("Teams Mic is already on.")
         return
     } Else {
-        Tooltip("Teams Mute Mic...")
+        If (showInfo) {
+            Tooltip("Teams Mute Mic...",displayTime)
+            SysTrayIcon(Tray_Icon_Off,displayTime)
+        }
         El.Click()
+        If (restoreWin) 
+            WinActivate, ahk_id %curWinId%
         return
     }
 }
 
 If RegExMatch(El.Name,"^" . UnmuteName) {
     If (State = 1) {
-        Tooltip("Teams Mic is already off.")
+        If (showTooltip)
+            Tooltip("Teams Mic is already off.")
         return
     } Else {
-        Tooltip("Teams Unmute Mic...")
+        If (showInfo) {
+            Tooltip("Teams Unmute Mic...",displayTime)
+            SysTrayIcon(Tray_Icon_On,displayTime)
+        }
+            
         El.Click()
+        If (restoreWin) 
+            WinActivate, ahk_id %curWinId%
         return
     }
 }
 
+    
 } ; eofun
 
 
@@ -2209,36 +2235,35 @@ FocusAssist(-)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_PushToTalk(){
+Teams_PushToTalk(KeyName:="MButton"){
 
-WinId := Teams_GetMeetingWindow() 
-
-If !WinId ; empty
-    return
-
-KeyName := A_PriorKey
-If (KeyName = "m") or (KeyName = "^") or (KeyName = "!") {
-    MsgBox Error: hotkey conflict with native Ctrl+Shift+M. Choose another combination.
-    return
-}
-
-WinGet, curWinId, ID, A
-WinActivate, ahk_id %WinId%
-IsMuted := Teams_IsMuted(WindId)
-
-ToolTip  Teams PushToTalk on... 
-If (IsMuted)
-    SendInput ^+m ;  ctrl+shift+m
+Cnt := 0
+MinCnt := 1
 
 while (GetKeyState(KeyName , "P"))
 {
-sleep, 100
+    sleep, 100
+    Cnt += 1
+    If (Cnt=MinCnt) {
+        Teams_Mute(0,false)
+        ToolTip("Teams PushToTalk on...",2000) 
+        Tray_Icon_On := "HBITMAP:*" . Create_Mic_On_ico()
+        ;Tray_Icon_Off := "HBITMAP:*" . Create_Mic_Off_ico()
+        Menu, Tray, Icon, %Tray_Icon_On%
+        
+    }
 }
-WinActivate, ahk_id %WinId%
-SendInput ^+m ;  ctrl+shift+m
-WinActivate, ahk_id %curWinId%
 
-Tooltip("Teams PushToTalk off...",2000)  
+If (Cnt>MinCnt) {
+    Teams_Mute(1,false)
+    Tooltip("Teams PushToTalk off...",2000)
+    IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
+    If (FileExist(IcoFile)) 
+	    Menu,Tray,Icon, %IcoFile%
+} Else
+    Teams_Mute() 
+
+  
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------------------
@@ -2331,6 +2356,9 @@ Teams_Video(State := 2){
 WinId := Teams_GetMeetingWindow() 
 If !WinId ; empty
     return
+
+WinGet, curWinId, ID, A
+
 UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
@@ -2338,11 +2366,12 @@ TeamsEl := UIA.ElementFromHandle(WinId)
 El :=  TeamsEl.FindFirstByName("Turn camera on",,1) ; menu item on meeting window; button on Call in progress
 If El {
     If (State = 0) {
-        Tooltip("Teams Camera is alreay off.")
+        Tooltip("Teams Camera is already off.")
         return
     } Else {
         Tooltip("Teams Camera On...")
         El.Click()
+        WinActivate, ahk_id %curWinId%
         return
     }
 }
@@ -2350,11 +2379,12 @@ If El {
 El :=  TeamsEl.FindFirstByName("Turn camera off",,1)
 If El {
     If (State = 1) {
-        Tooltip("Teams Camera is alreay on.")
+        Tooltip("Teams Camera is already on.")
         return
     } Else {
         Tooltip("Teams Camera off...")
         El.Click()
+        WinActivate, ahk_id %curWinId%
         return
     }
 }
@@ -2481,9 +2511,6 @@ If ReactionEl {
     WinActivate, ahk_id %WinId% ; window must be active for click 
     Goto, React
 }
-    
-
-
 
 ReactionsEl :=  TeamsEl.FindFirstBy("AutomationId=reaction-menu-button")  
 If ReactionsEl
@@ -2915,3 +2942,75 @@ Teams_SwitchTenant(sTenant) {
         El.Click()
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
+
+
+
+; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_Mic_on_ico(NewHandle := False) {
+	Static hBitmap := 0
+	If (NewHandle)
+	   hBitmap := 0
+	If (hBitmap)
+	   Return hBitmap
+	VarSetCapacity(B64, 884 << !!A_IsUnicode)
+	B64 := "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAnFBMVEUAAAAAxgAA0gwA0w0A0g0A0w0A0w0A3wAA0w0A1Q4A1g4A1AsAzgwA0w0A0wkAzAkA2Q0AqgAA0w0A0w0A0w0A1Q0A0w0A/wAA0w4A0w0A0w8A0g0A1A4A0w0A0g4A1w0A0w0A0w0A1w0A1A0A2A0A0w0A0w0A1Q4A0QkA0g0A0w0A0w0A2AoA0A0A0g8A1A0A0w0A0w0A0w0AAACNi8PxAAAAMnRSTlMACY/mjp2cCPokJS8V/B0eFAPvOtM87gKWxTTlNcaUE96zJk0ntN0SHLfMtRomIp/49wBmOSwAAAABYktHRACIBR1IAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAB3RJTUUH5QEdDQIQMhdn1gAAAIBJREFUGNNjYAABRiZmZhZGBgRgNQICNgSfnQMkwIFQwmkEBpxwAS6IABfxAtwwAW4In4eXDyLAzysAFhAUEhYB8UVExcQhSiQkpaSNjKRlZOWgZsgrKCopK6uoqqnDTNXQ5NDS4tDWQfKMrqIiFxKXQUdPX18PSQGPAcgWQ7ClALhDEXOeykbUAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIxLTAxLTI5VDEzOjAyOjE2KzAwOjAwTlt0UgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMS0wMS0yOVQxMzowMjoxNiswMDowMD8GzO4AAAAZdEVYdFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC"
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	VarSetCapacity(Dec, DecLen, 0)
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+	; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+	hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+	pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+	DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+	DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+	DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+	hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+	VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+	DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+	DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+	DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+	DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+	DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+	DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+	DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+	Return hBitmap
+} ; eofun
+	
+; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_Mic_off_ico(NewHandle := False) {
+	Static hBitmap := 0
+	If (NewHandle)
+	   hBitmap := 0
+	If (hBitmap)
+	   Return hBitmap
+	VarSetCapacity(B64, 920 << !!A_IsUnicode)
+	B64 := "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAolBMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAAAAACyecVlAAAANHRSTlMAA4Pm5YJ0c07jSMf5+jna9VBiGlbrT+GkeMxc4LOmq0r4Rv78o1k4dpue/XI9tkAUM7ET+6bC8AAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQflAR0NAQrkWM1vAAAAkUlEQVQY01XP2RaCIBCA4dGMLCXArcXMFttXbN7/2YLgHGiu+L8zFwOAniAcRMMA3BBUM4J4PLGQaEjilE4tMA08pQJ8QNcGvP6B11nOdBd5ZqGsmGrCqtLCbE6pWOCyXlloUDeG69b0ZkvFbt8djp0566TuOV/q4nq724VIwKPh/PlyZ7yl7HspP/+fRST6/QXOExB226vKAgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMS0wMS0yOVQxMzowMToxMCswMDowMMa8+msAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjEtMDEtMjlUMTM6MDE6MTArMDA6MDC34ULXAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAABJRU5ErkJggg=="
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	VarSetCapacity(Dec, DecLen, 0)
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+	; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+	hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+	pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+	DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+	DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+	DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+	hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+	VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+	DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+	DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+	DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+	DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+	DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+	DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+	DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+	Return hBitmap
+} ;eofun

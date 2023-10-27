@@ -8,6 +8,15 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-10-27
+  * Updated SysTray Icon actions
+  * Teams_Mute 
+    * display mic Status in systray icon
+    * Teams_Mute restore window
+* 2023-10-26
+  * PushToTalk by MButton Long Click on System Tray icon
+  * RButton on SysTray Icon activate Teams main window if not in a meeting
+  * double Right click open meeting window
 * 2023-10-26
   * [Improved Language Dependency Handling](https://tdalon.blogspot.com/2023/10/teams-powertools-lang.html)
   * [Opening Teams Links without Left-over browser window](https://tdalon.blogspot.com/2023/10/teams-open-link-leftover.html)
