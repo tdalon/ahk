@@ -2087,7 +2087,86 @@ SendInput {enter}
 
 } ; eofun
 
+; -------------------------------------------------------------------------------------------------------------------
+Teams_MeetingRecord(Mode := 2){
+    ; Mode = 0 : stop
+    ; Mode = 1 : start
+    ; Mode = 2: toggle
 
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("rec")
+        return
+    }
+    WinId := Teams_GetMeetingWindow()
+    If !WinId ; empty
+        return
+
+    UIA := UIA_Interface()
+    TeamsEl := UIA.ElementFromHandle(WinId)
+
+
+    WinGet, curWinId, ID, A
+    WinActivate, ahk_id %WinId%
+
+
+    ; Click on More 
+    El :=  TeamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn")  
+     
+
+    ;MsgBox % ShareEl.DumpAll() ; DBG
+    If !El {
+        TrayTip TeamsShortcuts: ERROR, More button not found!,,0x2
+        return
+    }
+    El.Click()
+   
+
+    El := TeamsEl.WaitElementExist("AutomationId=RecordingMenuControl-id",,,,1000)
+    If !El {
+        TrayTip TeamsShortcuts: ERROR, Record control not found!,,0x2
+        return
+    }
+
+    Send +{SPACE} ; Shift+Space will expand the first menu
+
+    
+    El := TeamsEl.WaitElementExist("AutomationId=recording-button",,,,1000)
+    If !El {
+        TrayTip TeamsShortcuts: ERROR, Record button not found!,,0x2
+        return
+    }
+
+    Lang := Teams_GetLang()
+    StartName := Teams_GetLangName("RecordStart",Lang)
+    If (StartName="") {
+        If !InStr(Lang,"en-") {
+            Text := "Language " . Lang . " for 'Record' not implemented!"
+            sUrl := Teamsy_Help("lang",false)
+            PowerTools_ErrDlg(Text,sUrl:="")
+        }
+        StartName := "Start"
+    }
+    
+    IsRecording := !RegExMatch(El.Name,"^" . StartName) 
+
+    If (Mode = 1) and (IsRecording) ; already recording
+        Return
+
+    If (Mode = 0) and !(IsRecording) ; already not recording
+        Return
+
+    If (IsRecording)  { ; Stop recording
+        SendInput {Enter}
+        El := TeamsEl.WaitElementExistByNameAndType("Cancel","button",,,,1000)
+        SendInput {Tab}{Enter}
+
+    } Else { ; Start recording
+        SendInput {Enter}
+    }
+    
+
+   
+} ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_MeetingShare(ShareMode := 2){
     ; ShareMode = 0 : unshare

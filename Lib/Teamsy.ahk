@@ -148,6 +148,15 @@ Case "sh+":
 Case "sh-","unsh":  
     Teams_MeetingShare(0)
     return
+Case "rec":
+    Teams_MeetingRecord()
+    return
+Case "rec+":
+    Teams_MeetingRecord(1)
+    return
+Case "rec-":
+    Teams_MeetingRecord(1)
+    return
 Case "fa":  
     FocusAssist(sInput)
     return
@@ -363,6 +372,8 @@ Case "rh":
     sUrl := "https://tdalon.blogspot.com/2021/02/teams-raise-hand.html"
 Case "mu":
     sUrl := "https://tdalon.blogspot.com/2021/04/teams-shortcuts-mute-on-off.html"
+Case "rec":
+    sUrl :="https://tdalon.blogspot.com/2023/11/teams-shortcuts-record.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 
