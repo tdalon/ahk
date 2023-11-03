@@ -361,6 +361,8 @@ Case "ptt":
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-shortcuts-ptt.html"
 Case "rh":
     sUrl := "https://tdalon.blogspot.com/2021/02/teams-raise-hand.html"
+Case "mu":
+    sUrl := "https://tdalon.blogspot.com/2021/04/teams-shortcuts-mute-on-off.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 

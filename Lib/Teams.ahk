@@ -2374,8 +2374,6 @@ If RegExMatch(El.Name,"^" . UnmuteName) {
         return
     }
 }
-
-    
 } ; eofun
 
 
