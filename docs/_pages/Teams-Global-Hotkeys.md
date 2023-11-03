@@ -19,7 +19,4 @@ The corresponding Settings are under the Teams section and start with TeamsHotke
 
 # [Screencast](https://youtu.be/Bc5Sd4ltikU)
 
-<div align="center"><iframe width="560" height="315" src="https://youtu.be/Bc5Sd4ltikU" frameborder="0"></iframe></div>
-
-
-<div align="center"><iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=PLUSZfg60tAwLhlYPKTdbSo8biyrZM794o" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><br><a href="https://www.youtube.com/playlist?list=PLUSZfg60tAwLhlYPKTdbSo8biyrZM794o">Direct Link to YouTube playlist</a></div>
+<div align="center"><iframe width="560" height="315" src="https://www.youtube.com/embed/Bc5Sd4ltikU" frameborder="0"></iframe><br><a href="https://youtu.be/Bc5Sd4ltikU">Direct Link to YouTube video</a></div>
