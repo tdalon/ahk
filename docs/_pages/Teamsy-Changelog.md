@@ -8,6 +8,11 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-11-03
+  * [Set meeting background](https://tdalon.blogspot.com/2023/11/teams-set-background.html)
+* 2023-11-02
+  * Teams Meeting Reactions will change Tray icon to display corresponding reaction for a few seconds
+  * Teams Raise Hand supports on/off and displays shortly icon in Tray
 * 2023-10-23
   * Improved [Meeting Share](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html)
     * [Hide Sharing Control Bar](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html). Added Keywords 'sb', 'sb+', 'sb-'

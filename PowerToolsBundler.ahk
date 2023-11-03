@@ -141,7 +141,7 @@ Loop {
 
 ; Update PowerTools.ini - only once
 IniFile =  %A_ScriptDir%\PowerTools.ini
-sUrl = https://github.com/tdalon/ahk/raw/main/PowerTools.ini
+sUrl = https://github.com/tdalon/ahk/raw/main/PowerTools/PowerTools.ini
 If Not FileExist(IniFile) {
     UrlDownloadToFile, %sUrl%, %IniFile%
 } Else {

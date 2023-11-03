@@ -1,5 +1,5 @@
 ; wrapper for ToolTip command
-SysTrayIcon(IcoFile, TimeToDisplay := 1000)
+TrayIcon(IcoFile, TimeToDisplay := 1000)
 {
 	; display IcoFile
 	Menu,Tray,Icon, %IcoFile%

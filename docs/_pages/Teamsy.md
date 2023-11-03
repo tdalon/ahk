@@ -75,33 +75,40 @@ This is implemented in the main associated library [Lib/Teamsy.ahk](https://gith
 
 In the source code you can find the full up to date syntax for keywords and command. (I hope the code is clear enough.)
 
-### Examples
-
 The list below might not be exhaustive. Look at the code for the full up to date implementation.
+
+### Meeting Shortcuts
 
 Keywords  |  Action
 --|--
-mu   |  Toggle mute
-mu+  |  Mute microphone
-mu-   | Unmute microphone  
-vi  |  Toggle video
-vi+  |  Camera on
-vi-  |  Camera off
-sh  |  Toggle share
-sh+  |  Share
-sh-  |  Unshare
+mu(+-)   |  Toggle mute/unmute microphone
+vi(+-)  |  Toggle video on/off
+sh(+-)  |  Toggle share/ unshare
 lo  |  Love (Meeting Reaction)  
 li  |  Like (Meeting Reaction)    
 ap  |  Applause (Meeting Reaction)
 lol  |  Laugh (Meeting Reaction)
 su  |  Surprised (Meeting Reaction)   
-rh  |  Raise your Hand (Meeting Reaction)
+rh(+-)  |  [Raise your Hand](https://tdalon.blogspot.com/2021/02/teams-raise-hand.html)
 le  |  Leave Meeting
+sb(+-) | [Hide/Show Sharing Control bar](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html)
+bg | [Set Background](https://tdalon.blogspot.com/2023/11/teams-set-background.html)
+
+### Others
+
+
+
+Keywords  |  Action
+--|--
+lo  |  Love (Conversation Reaction)  
+li  |  Like (Conversation Reaction)    
+ap  |  Applause (Conversation Reaction)
+lol  |  Laugh (Conversation Reaction)
+su  |  Surprised (Conversation Reaction)   
 jo | [Join Meeting](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html)
 jo+ | [Join Meeting (Advanced)](https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html)
 sw | [Switch Tenant](https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html)
 st | [Set Status Message](https://tdalon.blogspot.com/2023/10/teams-set-status-message.html)
-sb(-|+) | [Hide/Show Sharing Control Toolbar]()
 
 <hr>
 
@@ -110,6 +117,8 @@ sb(-|+) | [Hide/Show Sharing Control Toolbar]()
 You can download the portable standalone compiled .exe here: [Download Teamsy.exe](https://github.com/tdalon/ahk/raw/main/PowerTools/Teamsy.exe)
 
 The source code is available here: https://github.com/tdalon/ahk
+
+It is recommended to also download the PowerTools.ini file.
 
 ## Feature Highlights
 

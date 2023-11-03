@@ -105,10 +105,13 @@ Menu, Tray, Add, Share To Teams, Teams_ShareToTeamsCb
 Menu, Tray, Add, Open Favorites Folder, TeamsOpenFavs
 Menu, Tray, Add, Add to Favorites, TeamsFavsAdd
 
-Menu, SubMenuCustomBackgrounds, Add, Open Custom Backgrounds Folder, Teams_BackgroundOpenFolder
+Menu, SubMenuCustomBackgrounds, Add, Open Custom Backgrounds Folder, Teams_BackgroundGetFolder
 Menu, SubMenuCustomBackgrounds, Add, Open Backgrounds Library, Teams_BackgroundOpenLibrary
-If TeamsIsNew 
-	Menu, SubMenuCustomBackgrounds, Add, Import Backgrounds, TeamsBackgroundImport
+If (TeamsIsNew) {
+	Menu, SubMenuCustomBackgrounds, Add, Set Background Name, BackgroundSetName
+	Menu, SubMenuCustomBackgrounds, Add, Import Backgrounds, BackgroundImport
+}
+	
 
 Menu, Tray, Add, Custom Backgrounds, :SubMenuCustomBackgrounds
 Menu, Tray, Add, Start Second Instance, Teams_OpenSecondInstance
@@ -296,7 +299,7 @@ Teamsy("jo+")
 return
 
 ; ----------------------------------------------------------------------
-TeamsBackgroundImport:
+BackgroundImport:
 Teams_BackgroundImport()
 return 
 
@@ -343,6 +346,10 @@ If (RegExMatch(TeamLink,sPat,sId)) {
 	Teams_Members2Excel(sGroupId)
 } Else
 	Teams_Members2Excel()
+return
+
+BackgroundSetName:
+Teams_BackgroundFile2Name("","w")
 return
 
 ; ----------------------------------------------------------------------
@@ -398,6 +405,8 @@ NotifyTrayClick_207:   ; Middle click (Button down)
 SendInput, !{Esc} ; for call from system tray - get active window
 If Teams_GetMeetingWindow(true,false)
 	Teams_PushToTalk()
+Else
+	Teams_ActivateMainWindow()
 Return 
 
 NotifyTrayClick_202:   ; Left click (Button up)
@@ -410,9 +419,7 @@ NotifyTrayClick_205:   ; Right click (Button up)
 SendInput, !{Esc} ; for call from system tray - get active window
 hMeetWin := Teams_GetMeetingWindow(false,false)
 If (hMeetWin) 
-		WinActivate, ahk_id %hMeetWin%
-Else
-	Teams_ActivateMainWindow()
+	Teams_Video()
 Return 
 
 NotifyTrayClick_206:   ; Right double click 
@@ -420,9 +427,7 @@ NotifyTrayClick_206:   ; Right double click
 SendInput, !{Esc} ; for call from system tray - get active window
 hMeetWin := Teams_GetMeetingWindow(false,false)
 If (hMeetWin) 
-		Teams_Video()
-Else
-	Teams_ActivateMainWindow()
+	WinActivate, ahk_id %hMeetWin%
 Return 
 
 Teams_RaiseHandCb:

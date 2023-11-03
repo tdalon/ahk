@@ -39,6 +39,15 @@ In the menu you can also see which hotkeys directly run the features e.g. Alt+R 
 
 You can access some settings and features via the Teams Shortcuts System Tray Icon Menu.
 
+### System Tray Icon Actions
+
+When you click on the System Tray icon, some actions will be run.
+
+Left-Click will open the Tool menu. Double Left Click will open the Help page.
+Middle-mouse Click: if a meeting is active, short press will toggle mute. Long press will activate push-to-talk functionality
+Right-mouse Click: if a Teams Meeting is active it will toggle the camera on/off.
+Right Double Mouse Click: will open active the Teams Active Meeting Window
+
 ## Feature Highlights
 
 ### Integrated Teams launcher

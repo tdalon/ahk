@@ -325,7 +325,7 @@ sleep, 200 ;(wait in ms) give time for the menu to popup
 
 If WinActive("ahk_exe onenote.exe")
 	SendInput i ; Copy Link
-Else If WinActive("ahk_exe Teams.exe") ; ByPass SafeLink
+Else If WinActive("ahk_exe " . Teams_GetExeName()) ; ByPass SafeLink https://tdalon.blogspot.com/2023/01/teams-bypass-safelink.html
 	SendInput {Up} {Enter}
 Else If WinActive("ahk_exe chrome.exe") 
 	SendInput e ; Send the underlined key https://superuser.com/questions/1721702/how-to-show-the-underlines-for-navigation-key-hotkey-in-context-menu-when-ri that copies the link from the right click menu. see https://productforums.google.com/forum/#!topic/chrome/CPi4EmhqHPE
@@ -498,7 +498,7 @@ return
 ^+m:: ; <--- [Browser] Share by eMail active url
 EmailShareActiveUrl:
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	Run, "https://connectionsroot/blogs/tdalon/entry/share_link_by_email"
+	Run, "https://tdalon.blogspot.com/2023/10/share-url-by-email.html"
 	return
 }
 sLink := Browser_GetUrl()
@@ -506,6 +506,22 @@ If ErrorLevel {
 	MsgBox 0x1010, Error, No url could be copied!
 	return
 }
+
+AppList = Jira,Confluence,Connections
+Loop, Parse, AppList, `,
+{
+	If FileExist("Lib/" . A_LoopField . ".ahk") {
+		FunStr := A_LoopField . "_IsUrl"
+		If %FunStr%(sLink) {
+			FunStr := A_LoopField . "_CleanLink"
+			link := %FunStr%(sUrl)
+			sLink := link[1]
+			linktext := link[2]
+			Goto, WriteEmail
+		}
+	}
+}
+
 sLink := IntelliPaste_CleanUrl(sLink)
 WinGetActiveTitle, linktext
 ; Remove trailing - containing program e.g. - Google Chrome
@@ -513,14 +529,7 @@ StringGetPos,pos,linktext,%A_space%-,R
 if (pos != -1)
 	linktext := SubStr(linktext,1,pos)
 
-If FileExist("Lib/Connections.ahk") {
-	FunStr := "Connections_IsUrl"
-	If %FunStr%(sLink) {
-		FunStr := "Connections_Link2Text"
-		linktext := %FunStr%(sUrl)
-	}
-}
-
+WriteEmail:
 sHTMLBody = Hello<br>I thought you might be interested in this post: <a href="%sLink%">%linktext%</a>.<br>
 ; Create Email using ComObj
 Try
@@ -528,14 +537,10 @@ Try
 Catch
 	MailItem := ComObjCreate("Outlook.Application").CreateItem(0)
 ;MailItem.BodyFormat := 2 ; olFormatHTML
-
 MailItem.Subject := linktext
 MailItem.HTMLBody := sHTMLBody
-;****************************** 
-;~ MailItem.Attachments.Add(NewFile)
 MailItem.Display ;Make email visible
-;~ mailItem.Close(0) ;Creates draft version in default folder
-;MailItem.Send() ;Sends the email
+
 
 return
 
@@ -714,15 +719,6 @@ SendInput, !{Esc}
 WinSet, Style, ^0xC00000, A ; toggle title bar
 return
 
-#If FileExist("Lib/Conti.ahk") and (Config = "Conti")
-
-SysTrayCreateTicket:
-SendInput, !{Esc}
-FunStr = Conti_CreateTicket
-%FunStr%()
-return
-
-
 
 
 
@@ -775,6 +771,13 @@ OpenLink(sUrl) {
 ; Based on PowerTools.ini files [Browsers] and [BrowserRules] definition
 
 ;sUrl := IntelliPaste_CleanUrl(sUrl)
+
+
+If InStr(sUrl,"teams.microsoft.com") { ; remove browser leftover window
+	Teams_OpenUrl(sUrl)
+	Return
+}
+	
 
 If !FileExist("PowerTools.ini") {
 	PowerTools_ErrDlg("OpenLink: No PowerTools.ini file found!")

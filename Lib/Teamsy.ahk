@@ -39,9 +39,13 @@ Case "h","-h","help":
     Teamsy_Help(sInput)
     return
 Case "bgf","bgo","backgrounds","cbg":
-    Teams_BackgroundOpenFolder()
+    Teams_BackgroundGetFolder()
     return
-Case "bg","bgs","background":
+
+Case "bg":
+    Teams_MeetingBackgroundSet(sInput)
+    return
+Case "bgs": ; open background settings via Ctrl+Shift+P depreciated
     Teams_MeetingShortcuts("bg")
     return
 Case "bgi": ; import backgrounds
@@ -86,6 +90,12 @@ Case "le","leave": ; leave meeting
     return
 Case "raise","hand","ha","rh","ra":  
     Teams_RaiseHand()
+    return
+Case "rh+":  
+    Teams_RaiseHand(1)
+    return
+Case "rh-","lh":  
+    Teams_RaiseHand(0)
     return
 Case "li","like":
     If Teams_IsMainWindowActive()
@@ -329,6 +339,8 @@ Case "2": ; second instance
     sUrl := "https://tdalon.blogspot.com/2020/12/open-multiple-microsoft-teams-instances.html"
 Case "e2t":
     sUrl := "https://tdalon.blogspot.com/2020/03/emails-to-team.html"
+Case "bg":
+    sUrl := "https://tdalon.blogspot.com/2023/11/teams-set-background.html"
 Case "obg","cbg":
     sUrl := "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html"
 Case "t2xl": ; Export Team Members to Excel 
@@ -345,6 +357,10 @@ Case "sh","sb":
     sUrl:="https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html"
 Case "sh": ; share screen
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-share-screen.html"
+Case "ptt":
+    sUrl := "https://tdalon.blogspot.com/2023/10/teams-shortcuts-ptt.html"
+Case "rh":
+    sUrl := "https://tdalon.blogspot.com/2021/02/teams-raise-hand.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 

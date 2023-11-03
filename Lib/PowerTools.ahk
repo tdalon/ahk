@@ -119,7 +119,7 @@ If !A_IsCompiled {
     sFile = %A_ScriptDir%\docs\_pages\%sFileName%.md
     If FileExist(sFile) {
         ;Run, Open "%sFile%" ; does not open Atom
-        Run notepad++.exe "%sFile%"
+        Run, Open "%sFile%"
         Return
     }
 } Else {
@@ -460,9 +460,9 @@ PowerTools_MenuTray(){
     Menu, SubMenuSettings, Add, Launch on Startup, MenuCb_ToggleSettingLaunchOnStartup
     SettingLaunchOnStartup := ToStartup(A_ScriptFullPath)
     If (SettingLaunchOnStartup) 
-    Menu,SubMenuSettings,Check, Launch on Startup
+        Menu,SubMenuSettings,Check, Launch on Startup
     Else 
-    Menu,SubMenuSettings,UnCheck, Launch on Startup
+        Menu,SubMenuSettings,UnCheck, Launch on Startup
 
     Menu, Tray, Add, Settings, :SubMenuSettings
 

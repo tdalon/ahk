@@ -7,7 +7,7 @@ excerpt: "The Mute PowerTool is a small utility implemented in AutoHotkey that a
 ## Short Description
 
 The Mute PowerTool is a small utility implemented in AutoHotkey that allows to mute your microphone within the press of a hotkey or via command line.
-It is a wrapper to [https://rlatour.com/setvol/](SetVol) utility by Rob Latour added key feature like tray icon, hotkey, menu to select the device.
+It is a wrapper to [https://rlatour.com/setvol/]([SetVol](https://rlatour.com/setvol/)) utility by Rob Latour added key feature like tray icon, hotkey, menu to select the device.
 It is available as freeware portable executable as well. (No need to install AutoHotkey if you trust the source but still you could compile it yourself from the github directory.)
 
 It might be useless if such a feature becomes implemented in the PowerToys and then it will stay as a fun project.
@@ -28,6 +28,9 @@ See separate page here [PowerTools Setup](PowerTools-Setup).
 # Feature Overview
 
 Pending: Screencast Demo of it.
+
+Long Middle Mouse Click on the System Tray will trigger a Push-To-talk
+Short MClick will 
 
 [Blog posts tagged with #mute-powertool](https://tdalon.blogspot.com/search/label/mute-powertool)
 

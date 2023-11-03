@@ -7,9 +7,14 @@ If (G_SetVolExe = "") {
 }
 
 SubMenuSettings := PowerTools_MenuTray()
+
+
 ;Menu, Tray, NoStandard  
 
 Devices := PowerTools_RegRead("MuteDevices")
+If (Devices ="") {
+    Devices := Mute_GetDevices()
+}
 Loop, parse,  Devices, `;
 {
     Menu, SubMenuDevices, Add, %A_LoopField%, MenuCb_Device
@@ -28,8 +33,9 @@ If Not InStr(Device . ";",Devices) {
     PowerTools_RegWrite("MuteDevice",Device)
 }
 Menu,SubMenuDevices,Check, %Device%
-Tray_Icon_On := "HBITMAP:*" . Create_Mic_On_ico()
-Tray_Icon_Off := "HBITMAP:*" . Create_Mic_Off_ico()
+TrayIcon_Mic_On := "HBITMAP:*" . Create_Mic_On_ico()
+TrayIcon_Mic_Off := "HBITMAP:*" . Create_Mic_Off_ico()
+
 
 GoSub RefreshIcon
 
@@ -79,12 +85,16 @@ return
 
 
 ; ######################################################################
-NotifyTrayClick_208:   ; Middle click (Button up)
-Mute("","on")
-Menu_Show(MenuGetHandle("TrayMuteOn"), False, Menu_TrayParams()*)
+NotifyTrayClick_207:   ; Middle click (Button down)
+; Push-To-Talk
+;SendInput, !{Esc} ; for call from system tray - get active window
+Mute_PushToTalk()
+;Menu_Show(MenuGetHandle("TrayMuteOn"), False, Menu_TrayParams()*)
 Return 
 
+
 NotifyTrayClick_202:   ; Left click (Button up)
+; Toggle Mute
 Mute()
 Menu_Show(MenuGetHandle("TrayToggleMute"), False, Menu_TrayParams()*)
 Return
@@ -97,12 +107,15 @@ return
 Mute(Device:="",sCmd:=""){
 ; Mute(Device,sCmd)
 ; Mute(App,sCmd)
+; sCmd can be:
+;     'mute','mu','on'
+;     'unmute', 'un', 'off'
+;      'toggle','to','switch','sw'
 
 If InStr(Device,".exe"){
     Mute_App(Device,sCmd)
     return
 }
-
 
 If (Device="")
     Device := PowerTools_RegRead("MuteDevice")
@@ -166,6 +179,7 @@ If (SVExe = "") {
     SVExe := Mute_SetSetVolExe()
     return SVExe
 }
+return SVExe
 } ; eofun
 ; ----------------------------------------------------------------------
 
@@ -206,10 +220,11 @@ sFile = %OutDir%\devices.txt
 sCmd = "%G_SetVolExe%" device > "%sFile%"
 Run, %ComSpec% /c "%sCmd%",,Hide
 FileRead, DevicesTxt, %sFile%
-DevicesTxt := RegExReplace(DevicesTxt,"s).*Recording","")
+DevicesTxt := RegExReplace(DevicesTxt,"s).*Recording:","")
+
 Loop, parse, DevicesTxt, `n, `r
 {
-    If RegExMatch(A_LoopField,"^    (.*)",sMatch)
+    If RegExMatch(A_LoopField,"^\s{4}(.*)",sMatch)
         sDevices := sDevices . ";" . sMatch1
 }
 sDevices := SubStr(sDevices,2) ; remove starting ;
@@ -275,7 +290,29 @@ TrayTipAutoHide("Mute Hotkey On",TipText,2000)
 } ; eofun
 ; ----------------------------------------------------------------------
 
+Mute_PushToTalk(KeyName:="MButton"){
 
+    Cnt := 0
+    MinCnt := 5
+    
+    while (GetKeyState(KeyName , "P"))
+    {
+        sleep, 100
+        Cnt += 1
+        If (Cnt=MinCnt) {
+            Mute(,"off")
+            ToolTip("Push-To-Talk on...",2000) 
+        }
+    }
+    
+    If (Cnt>MinCnt) {
+        Mute(,"on")
+        Tooltip("Push-To-Talk off...",2000)
+    } Else
+        Mute() 
+    
+      
+    } ; eofun
 
 ; ----------------------------------------------------------------------
 ; https://www.autohotkey.com/boards/viewtopic.php?t=81157

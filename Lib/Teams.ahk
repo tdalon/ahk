@@ -32,7 +32,8 @@ Teams_BackgroundOpenLibrary() {
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-Teams_BackgroundOpenFolder(){
+Teams_BackgroundGetFolder(doOpen := true){
+; BackgroundDir := Teams_BackgroundGetFolder(doOpen := true)
     If GetKeyState("Ctrl") {
         Teamsy_Help("cbg")
         return
@@ -44,35 +45,22 @@ Teams_BackgroundOpenFolder(){
         BackgroundDir = %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Backgrounds\Uploads
     } Else { ; Teams Classic
         BackgroundDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
-        
     }
 
     If !FileExist(BackgroundDir)
         FileCreateDir, %BackgroundDir%
-    Run, %BackgroundDir%
+    If (doOpen)
+        Run, %BackgroundDir%
+    return BackgroundDir
 
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_BackgroundMigrateFolder() {
-    ; https://techcommunity.microsoft.com/t5/microsoft-teams-public-preview/backgrounds/m-p/3782690
-    If !Teams_IsNew() 
-        return
 
-    EnvGet, LOCALAPPDATA, LOCALAPPDATA
-    NewBackgroundDir = %LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\Backgrounds\Uploads
-    If !FileExist(NewBackgroundDir)
-        FileCreateDir, %NewBackgroundDir%
-    ClassicBackgroundDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
-
-    Loop Files %ClassicBackgroundDir%\*_thumb.jpeg
-    
-    Run, %NewBackgroundDir%
-    
-} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_BackgroundImport(srcDir:=""){
     ; https://techcommunity.microsoft.com/t5/microsoft-teams-public-preview/backgrounds/m-p/3782690
+    ; Default will migrate Classic Client location to New Teams Background location
     
     If GetKeyState("Ctrl") {
         Teamsy_Help("bgi")
@@ -131,27 +119,236 @@ Teams_BackgroundImport(srcDir:=""){
         GUID := SubStr(GUID,2,-1)
         StringLower, GUID, GUID
 
-        ; Create Thumbnails using Gdip 
-        pBitmap := Gdip_CreateBitmapFromFile(A_LoopFileFullPath)
-        pThumbnail := Gdip_GetImageThumbnail(pBitmap, 278, 159)
-
         RegExMatch(A_LoopFileName,"\.([^\.]*$)",FileExt)
-        
         FileCopy, %A_LoopFileFullPath%, %NewBackgroundDir%\%GUID%.%FileExt1%
-        ; Save Thumbnail
-        DestFile = %NewBackgroundDir%\%GUID%_thumb.%FileExt1%
-        Gdip_SaveBitmapToFile(pThumbnail, DestFile)
+
+        ; Save Thumbnail 
+        destThumbFile = %NewBackgroundDir%\%GUID%_thumb.%FileExt1%
+        srcThumbFile := RegExReplace(A_LoopFileFullPath,"\.*$") . "_thumb." . FileExt1
+        If FileExist(srcThmbFile) {
+            FileCopy, %srcThumbFile%, %destThumbFile%
+        } Else {
+            ; Create Thumbnails using Gdip 
+            pBitmap := Gdip_CreateBitmapFromFile(A_LoopFileFullPath)
+            pThumbnail := Gdip_GetImageThumbnail(pBitmap, 278, 159)
+            Gdip_SaveBitmapToFile(pThumbnail, destThumbFile)
+        }
     }
 
     TrayTip Backgrounds imported! , %BgCopiedCount%/%BgCount% backgrounds were copied!
     Run, %NewBackgroundDir%
 
-    Gdip_DisposeImage(pBitmap) 
-    Gdip_DisposeImage(pThumbnail) 
+    If !(pBitmapt = "") {
+        Gdip_DisposeImage(pBitmap) 
+        Gdip_DisposeImage(pThumbnail) 
+    }
     Gdip_Shutdown(pToken) 
+
+
+    ; Merge/save BackgroundNames in PowerTools.ini
+    
+
+
         
 } ; eofun
+; -------------------------------------------------------------------------------------------------------------------
 
+
+Teams_BackgroundName2File(Name:=""){
+    ; Name := Teams_BackgroundFile2Name(File:="",mode:="r")
+    ; If no File input, user will be prompted to select an image file
+    ; If mode is "w" (write) user can change the name value if already existing
+
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("bg")
+        return
+    }
+
+    ; Get Background File
+    If (Name = "") {
+        BackgroundDir := Teams_BackgroundGetFolder(false)
+        FileSelectFile, File, 1, %BackgroundDir%,Select a background image
+        If ErrorLevel
+            return
+        Px := PathX(File)
+        File := Px.File
+        File := StrReplace(File, "_thumb.",".") ; in case thumbnail was selected
+    } Else If (Name ="no") {
+        File := "No background effect" ; TODO lang
+        return File
+    } Else {
+        If !FileExist("PowerTools.ini") {
+            PowerTools_ErrDlg("No PowerTools.ini file found!")
+            return
+        }
+    
+        IniRead, TeamsBackgroundNames, PowerTools.ini,Teams,TeamsBackgroundNames
+        If (TeamsBackgroundNames="ERROR") { 
+            PowerTools_ErrDlg("TeamsBackgroundNames key not found in PowerTools.ini file [Teams] section!")
+            return
+        }
+      
+        JsonObj := Jxon_Load(TeamsBackgroundNames)
+        For i, bg in JsonObj 
+        {
+            name_i := bg["name"]
+            If RegExMatch(name_i,"^" . StrReplace(Name,"*",".*")) {
+                File := bg["file"]
+                break
+            }
+        }
+    }
+
+    return File
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Teams_MeetingBackgroundSet(File:="") {
+
+    WinId := Teams_GetMeetingWindow() 
+    If !WinId ; empty
+        return
+
+    If (File = "") or !InStr(File,".") ; no file name with extension bug Background simple name
+        File := Teams_BackgroundName2File(File)
+
+    If (File = "")
+        return
+
+    WinGet, curWinId, ID, A
+    WinActivate, ahk_id %WinId%
+
+    UIA := UIA_Interface()  
+    TeamsEl := UIA.ElementFromHandle(WinId)
+
+    ; Check if rail pane already opened - if yes close it
+    El :=  TeamsEl.FindFirstBy("AutomationId=rail-header-close-button")  
+    El.Click()
+    
+    TeamsEl.WaitElementNotExist("AutomationId=rail-header-close-button")
+    El.Click()
+    
+
+    ; Click on More -> Video Effects
+    El :=  TeamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn")  
+    El.Click() 
+    El :=  TeamsEl.WaitElementExist("AutomationId=video-effects-and-avatar-button",,,,1000)  
+    El.Click() 
+
+    Name := "Show all background effects"
+    El :=  TeamsEl.WaitElementExistByName(Name,,1,false,1000)  ; TODO Lang ; 1 match mode start with
+    If !El {
+        ;error notification
+        PowerTools_ErrDlg("UIA Element 'Show all backgrounds' not found!")
+        WinActivate, ahk_id %curWinId%
+        return
+    }
+    El.Click()
+
+    ;AutomationId=video-effects-and-avatar-button, Name: Hide or Show
+    
+    El :=  TeamsEl.WaitElementExistByNameAndType(File,"Checkbox",,2,,1000) ; TODO Lang  ; matchmode contains
+
+    ;Type: Checkbox, Name <FileName> background effect
+    If !El {
+        ;error notification
+        PowerTools_ErrDlg("UIA Element not found!")
+        WinActivate, ahk_id %curWinId%
+        return
+    }
+
+    El.Click()
+    ; Button Name=Apply
+    El :=  TeamsEl.FindFirstByNameAndType("Apply","Button",,3) ; TODO Lang ; matchmode exact
+    If El
+        El.Click()
+
+    ; Close video effects
+    El :=  TeamsEl.FindFirstBy("AutomationId=rail-header-close-button")  
+    El.Click()
+
+    WinActivate, ahk_id %curWinId%
+
+} ; eofun
+
+Teams_BackgroundFile2Name(File:="",mode:="r"){
+    ; Name := Teams_BackgroundFile2Name(File:="",mode:="r")
+    ; If no File input, user will be prompted to select an image file
+    ; If mode is "w" (write) user can change the name value if already existing
+
+    If GetKeyState("Ctrl") {
+        Teamsy_Help("bgs")
+        return
+    }
+
+    If (File = "") { ; Select File 
+        BackgroundDir := Teams_BackgroundGetFolder(false)
+        FileSelectFile, File, 1, %BackgroundDir%,Select a background image
+        If ErrorLevel
+            return
+        Px := PathX(File)
+        File := Px.File
+        File := StrReplace(File, "_thumb.",".") ; in case thumbnail was selected
+    }
+
+
+    If !FileExist("PowerTools.ini") {
+        ;PowerTools_ErrDlg("No PowerTools.ini file found!")
+        return
+    }
+
+    IniRead, TeamsBackgroundNames, PowerTools.ini,Teams,TeamsBackgroundNames
+    ;If (TeamsBackgroundNames="ERROR") { 
+    ;    PowerTools_ErrDlg("TeamsBackgroundNames key not found in PowerTools.ini file [Teams] section!")
+    ;    return
+    ;}
+
+    If (TeamsBackgroundNames="ERROR") or (TeamsBackgroundNames="[]") or (TeamsBackgroundNames="")
+        Goto InputName
+
+    JsonObj := Jxon_Load(TeamsBackgroundNames)
+    For i, bg in JsonObj 
+    {
+        file_i := bg["file"]
+        
+        If (File = file_i) {
+            Name := bg["name"]
+            break
+        }
+    }
+    If !(Name = "") and (mode = "r")
+        return Name
+
+    ; Input name
+    InputName:
+    ;InputBox, OutputVar , Title, Prompt, Hide, Width, Height, X, Y, Locale, Timeout, Default
+    InputBox, NewName , Background Name, Enter name:,,200,125,,,,,%Name%
+    If ErrorLevel
+        return
+    If (NewName = Name) ; no changes
+        return Name
+    Name := NewName
+    If (TeamsBackgroundNames="ERROR") or (TeamsBackgroundNames="[]") or (TeamsBackgroundNames="") 
+        NewTeamsBackgroundNames = [{"file":"%File%","name":"%Name%"}]
+    Else {
+        sPat = "file":"%File%","name":"([^"]*)"
+        If RegExMatch(TeamsBackgroundNames,sPat,sMatch) { ; replace
+            sNeedle = "file":"%File%","name":"%sMatch1%"
+            sRep = "file":"%File%","name":"%Name%"
+            NewTeamsBackgroundNames := StrReplace(TeamsBackgroundNames,sNeedle,sRep)
+        } Else { ; append
+            NewTeamsBackgroundNames := SubStr(TeamsBackgroundNames,1,-1) 
+            NewTeamsBackgroundNames = %NewTeamsBackgroundNames%,{"file":"%File%","name":"%Name%"}]
+        }
+    }
+    
+    ; Save to Ini file
+    IniWrite, %NewTeamsBackgroundNames%, PowerTools.ini,Teams,TeamsBackgroundNames
+    return Name
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
 
 
 CreateGUID()
@@ -1646,8 +1843,7 @@ If WinActive("ahk_exe " . TeamsExe) {
 
 StartTeams: 
 fTeamsExe := Teams_GetExe()
-MsgBox %fTeamsExe%
-Run, "%fTeamsExe%""
+Run, "%fTeamsExe%"
 WinWaitActive, ahk_exe %TeamsExe%,,5
 TeamsMainWinId := WinExist("A")
 
@@ -1778,7 +1974,6 @@ Teams_IsMeetingWindow(TeamsEl,ExOnHold:=true){
 ; If Meeting Reactions Submenus are opened AutomationId are not visible.
 
 If (ExOnHold) {
-
     Lang := Teams_GetLang()
     Name := Teams_GetLangName("Resume",Lang)
     If (Name="") {
@@ -2026,10 +2221,13 @@ Teams_ClearCache(){
 
     ; Delete Folders and Files in Cache Directory
     If IsNew { ; https://microsoft365pro.co.uk/2023/07/31/teams-real-simple-with-pictures-clear-cache-in-teams-2-1-client/ @Microsoft365Pro
-        TeamsCacheDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams" ; AppData env variable points to Roaming
-        
+        TeamsDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams" ; AppData env variable points to Roaming
+        /* 
+        FileRemoveDir, %TeamsDir%\EBWebView, 1
+        FileRemoveDir, %TeamsDir%\Logs, 1 
+        */
     } Else { ; Teams Classic ; https://learn.microsoft.com/en-us/microsoftteams/troubleshoot/teams-administration/clear-teams-cache
-        TeamsCacheDir = %A_AppData%\Microsoft\Teams
+        TeamsDir = %A_AppData%\Microsoft\Teams
         /* 
         FileRemoveDir, %TeamsDir%\application cache\cache, 1
         FileRemoveDir, %TeamsDir%\blob_storage, 1
@@ -2042,7 +2240,9 @@ Teams_ClearCache(){
         */
     }
 
-    FileRecycle, %TeamsCacheDir%\*
+    ; TODO do not clear Backgrounds\Uploads
+
+    FileRecycle, %TeamsDir%\*
 
     Teams_GetMainWindow()
 } ; eofun
@@ -2133,7 +2333,7 @@ If (MuteName="") {
     UnmuteName := "Unmute"
 }
 
-If !(UnmuteName ="") {
+If (UnmuteName ="") {
     UnmuteName := Teams_GetLangName("Unmute",Lang)
 }
 
@@ -2147,9 +2347,10 @@ If RegExMatch(El.Name,"^" . MuteName) {
     } Else {
         If (showInfo) {
             Tooltip("Teams Mute Mic...",displayTime)
-            SysTrayIcon(Tray_Icon_Off,displayTime)
+            TrayIcon_Mic_Off := "HBITMAP:*" . Create_Mic_Off_ico()
+            TrayIcon(TrayIcon_Mic_Off,displayTime)
         }
-        El.Click()
+        El.Click() ; activates the window
         If (restoreWin) 
             WinActivate, ahk_id %curWinId%
         return
@@ -2164,9 +2365,9 @@ If RegExMatch(El.Name,"^" . UnmuteName) {
     } Else {
         If (showInfo) {
             Tooltip("Teams Unmute Mic...",displayTime)
-            SysTrayIcon(Tray_Icon_On,displayTime)
-        }
-            
+            TrayIcon_Mic_On := "HBITMAP:*" . Create_Mic_On_ico()
+            TrayIcon(TrayIcon_Mic_On,displayTime)
+        }            
         El.Click()
         If (restoreWin) 
             WinActivate, ahk_id %curWinId%
@@ -2197,7 +2398,7 @@ Switch sKeyword
         SendInput ^+p ;  ctrl+shift+p 
         return ; need human action to change setting; do not restore window
     Case "lobby": ; Admit people from lobby notification
-        Tooltip("Teams Admit from Lobby...") ; toggle background blur
+        Tooltip("Teams Admit from Lobby...") 
         SendInput ^+y ;  ctrl+shift+y
         return ; need human action to change setting; do not restore window
     Case "share-accept":
@@ -2211,7 +2412,7 @@ Switch sKeyword
         SendInput ^+e ;  Start screen share session Ctrl+Shift+E
     Case "share-toolbar":
         Tooltip("Teams Start Share...") 
-        SendInput ^+e{Space} ; Go to sharing toolbar Ctrl+Shift+Spacebar
+        SendInput ^+{Space} ; Go to sharing toolbar Ctrl+Shift+Spacebar
 }
 
 
@@ -2238,7 +2439,7 @@ FocusAssist(-)
 Teams_PushToTalk(KeyName:="MButton"){
 
 Cnt := 0
-MinCnt := 1
+MinCnt := 2
 
 while (GetKeyState(KeyName , "P"))
 {
@@ -2262,7 +2463,6 @@ If (Cnt>MinCnt) {
 	    Menu,Tray,Icon, %IcoFile%
 } Else
     Teams_Mute() 
-
   
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
@@ -2436,18 +2636,97 @@ return SVVExe
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_RaiseHand() {
+Teams_RaiseHand2() {
 ; Toggle Raise Hand on/off ; Default Hotkey Ctrl+Shift+K
 
 WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
-
 WinGet, curWinId, ID, A
 WinActivate, ahk_id %WinId%
 Tooltip("Teams Toggle Raise Hand...") 
 SendInput ^+k ; toggle video Ctl+Shift+k
 WinActivate, ahk_id %curWinId%
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_RaiseHand(State := 2,showInfo:=true,restoreWin:=true){
+; State: 
+;    0: lower hand
+;    1: raise hand
+;    2*: (Default): Toggle raise hand
+
+WinId := Teams_GetMeetingWindow() 
+If !WinId ; empty
+    return
+
+If (restoreWin)
+    WinGet, curWinId, ID, A
+
+If (showInfo) {
+    displayTime := 2000
+}
+    
+UIA := UIA_Interface()
+TeamsEl := UIA.ElementFromHandle(WinId)
+
+Lang := Teams_GetLang()
+RaiseHandName := Teams_GetLangName("RaiseHand",Lang)
+If (RaiseHandName="") {
+    If !InStr(Lang,"en-") {
+        Text := "Language " . Lang . " not implemented!"
+        sUrl := Teamsy_Help("lang",false)
+        PowerTools_ErrDlg(Text,sUrl:="")
+    }
+    RaiseHandName := "Raise"
+    LowerHandName := "Lower"
+}
+
+If (LowerHandName ="") {
+    LowerHandName := Teams_GetLangName("LowerHand",Lang)
+}
+
+El:=TeamsEl.FindFirstBy("AutomationId=raisehands-button")
+;MsgBox % El.DumpAll()
+
+If RegExMatch(El.FullDescription,"^" . LowerHandName) {
+    If (State = 1) {
+        If (showInfo)
+            Tooltip("Hand is already raised.")
+        return
+    } Else {
+        If (showInfo) {
+            Tooltip("Lower hand...",displayTime)
+            TrayIcon:= "HBITMAP:*" . Create_LowerHand_ico()
+            TrayIcon(TrayIcon,displayTime)
+        }
+        El.Click()
+        If (restoreWin) 
+            WinActivate, ahk_id %curWinId%
+        return
+    }
+}
+
+If RegExMatch(El.FullDescription,"^" . RaiseHandName) {
+    If (State = 0) {
+        If (showTooltip)
+            Tooltip("Hand is already lowered.")
+        return
+    } Else {
+        If (showInfo) {
+            Tooltip("Raise hand...",displayTime)
+            TrayIcon := "HBITMAP:*" . Create_RaiseHand_ico()
+            TrayIcon(TrayIcon,displayTime)
+        }
+            
+        El.Click()
+        If (restoreWin) 
+            WinActivate, ahk_id %curWinId%
+        return
+    }
+}
+
+    
 } ; eofun
 
 
@@ -2471,42 +2750,29 @@ Teams_MeetingReaction(Reaction) {
 ; See documentation https://tdalon.blogspot.com/2022/07/ahk-teams-meeting-reactions-uia.html
 
 
-
-;WinGetTitle, T, ahk_id %curWinId%
-;MsgBox % T
 WinId := Teams_GetMeetingWindow() 
 If !WinId ; empty
     return
-
-
 
 UIA := UIA_Interface()  
 TeamsEl := UIA.ElementFromHandle(WinId)
 
 ; Language specific implementation
 Lang := Teams_GetLang()
-Switch Lang 
-{
-Case "de-de":
-    Switch Reaction
-    {
-        Case "Like":
-            Reaction := "Gefällt mir"
-        Case "Applause":
-            Reaction :="Applaus"
-        Case "Love":
-            Reaction := "Liebe"
-        Case "Laugh":
-            Reaction :="Lachen"
-        Case "Surprised":
-            Reaction :="Überrascht"
+Name := Teams_GetLangName(Reaction,Lang)
+If (Name="") {
+    If !InStr(Lang,"en-") {
+        Text := "Language " . Lang . " not implemented!"
+        sUrl := Teamsy_Help("lang",false)
+        PowerTools_ErrDlg(Text,sUrl:="")
     }
+    Name := Reaction
 }
 
 WinGet, curWinId, ID, A
 
 ; Shortcut if Reactions toolbar already available-> directly click and exit
-ReactionEl := TeamsEl.FindFirstByName(Reaction)
+ReactionEl := TeamsEl.FindFirstByName(Name)
 If ReactionEl {
     WinActivate, ahk_id %WinId% ; window must be active for click 
     Goto, React
@@ -2518,7 +2784,7 @@ If ReactionsEl
 Else
     WinActivate, ahk_id %WinId% ; window must be active for click to open menus
 
-ReactionEl:=TeamsEl.WaitElementExistByName(Reaction,,,,2000) ; timeout=2s
+ReactionEl:=TeamsEl.WaitElementExistByName(Name,,,,2000) ; timeout=2s
 
 If !ReactionEl {
     TrayTip TeamsShortcuts: ERROR, Meeting Reaction button for '%Reaction%'' not found!,,0x2
@@ -2535,6 +2801,8 @@ ReactionEl.Click()
 ; Restore previous window 
 WinActivate, ahk_id %curWinId%
 Tooltip("Teams Meeting Reaction: " . Reaction,1000)
+IcoFile := "HBITMAP:*" . Create_mr_%Reaction%_ico()
+TrayIcon(IcoFile,2000)
      
 } ; eofun
 
@@ -2877,8 +3145,8 @@ Teams_GetLangName(Prop,Lang:="") {
         lang_i := langName["lang"]
         If InStr(Lang,lang_i) {
             Name := langName[Prop]
-            If (Name="") { ; Section [Jira] Key JiraAuth not found
-                PowerTools_ErrDlg("Name is not defined in PowerTools.ini file [Teams] section, TeamsLangNames key for lang '" . Lang . "'!")
+            If (Name="") { 
+                PowerTools_ErrDlg("Property '" . Prop . "'' is not defined in PowerTools.ini file [Teams] section, TeamsLangNames key for lang '" . Lang . "'!")
                 return
             }
             return Name 
@@ -2948,7 +3216,7 @@ Teams_SwitchTenant(sTenant) {
 ; ##################################################################################
 ; # This #Include file was generated by Image2Include.ahk, you must not change it! #
 ; ##################################################################################
-Create_Mic_on_ico(NewHandle := False) {
+Create_Mic_On_ico(NewHandle := False) {
 	Static hBitmap := 0
 	If (NewHandle)
 	   hBitmap := 0
@@ -2983,7 +3251,7 @@ Create_Mic_on_ico(NewHandle := False) {
 ; ##################################################################################
 ; # This #Include file was generated by Image2Include.ahk, you must not change it! #
 ; ##################################################################################
-Create_Mic_off_ico(NewHandle := False) {
+Create_Mic_Off_ico(NewHandle := False) {
 	Static hBitmap := 0
 	If (NewHandle)
 	   hBitmap := 0
@@ -3014,3 +3282,255 @@ Create_Mic_off_ico(NewHandle := False) {
 	DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
 	Return hBitmap
 } ;eofun
+
+
+
+
+; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_mr_Laugh_ico(NewHandle := False) {
+    Static hBitmap := 0
+    If (NewHandle)
+       hBitmap := 0
+    If (hBitmap)
+       Return hBitmap
+    VarSetCapacity(B64, 2800 << !!A_IsUnicode)
+    B64 := "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"
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    VarSetCapacity(Dec, DecLen, 0)
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    ; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+    ; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+    hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+    pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+    DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+    DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+    DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+    hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+    VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+    DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+    DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+    DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+    DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+    DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+    DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+    Return hBitmap
+    }
+
+
+    ; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_mr_Like_ico(NewHandle := False) {
+    Static hBitmap := 0
+    If (NewHandle)
+       hBitmap := 0
+    If (hBitmap)
+       Return hBitmap
+    VarSetCapacity(B64, 2044 << !!A_IsUnicode)
+    B64 := "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAABYlAAAWJQFJUiTwAAAFrUlEQVRYhcWXW4heVxXHf2vvc/vu8yWTyUwy6kwSDSXaqKnGyxBrSiVofCoMiA9e0KItIlGh9fIgbR4KQvDFp74UtRD0rYIafNDQQtFawWKMtVapSZO2mcx833y3852z914+ZMxDzTiXot1wXjZnrfXjvy57b1FV3sxl3oixyHz2RgFkOwp8Z1Hef+IOFptTzJqMi7/6HY+fOqN/2xaBqm7p+/yHOfjcI/xcz3NB/8QfdMATf/81j377S+zdqi9V3XoKbm9z9F1zdFmhSoceV7k+fyf5PSe4azsCbAlAROKZJvMMaFMwZEROn4iciaLkwP8cAI6Q1pgCZgg4PIKnQk5NStL/A8CzwSgOwaGAIgQggMj2OmqrRoohYBAEubmjGLONetoGwGeTySZthBiLogSUCE9FhXI7ANFWfv7WJx77yIFZ9hORYllFCHhqBCqZpffTRaksHEKuAEdm4GsPo2cu6ei/+dz0IHpoUe7+9FEe3L+XPcSA5RoJOTUmnMV2rjKKLb1ak0BGsCnlqzn9i3/hN8fv5ceqWmxLAZGdzbOnlj/3hbv4zJ4ZKigGQ5fAgBzRFfxglXhymilmaFFlQJUuGeV0G53+AEfPBa4BP9sywH3H5eD57/LNY4c5REoGWCIcijAm02VsZ4k6FiWnYJkVxnRwrOIoKRFmqU61WdgywMnbZd+Dn+SRhcO8lYgaMWDwgOKJKamXOfFoTNvGFOMlOqmSEtiFMkWBIcUSU0jO5fXi3BJARJKzX+T+hduYDGPqJgEMDqFE8XgKPIVVYnGU3R51IqJdFSomI2AIgEdw4TorL73A04fXAbhlGz7wMe740NvZPy6YMAaDoAQKYEBgQGAIjKylZzzXopR+ay+F2cEyTV6jwRXqXKLCi7KDf77zGMfPfF3esmkFbtvNwkyT1CkJAAG/BjAi4HEoBc6PSDzY9g5Ws4SEwJDACpYuMSMycolg391kH3yNe4DvbwiwV6T6o68wNyxopBGGQMCtjV9DSYljhGGAGXZolI5mVpLTpcDTpU7OGENKlYwGMQmCyQJBRERf1/f/AbDvHUxXMiacJ0kVcCjlWk4hUBAYIPSJihw7HmFMwFd6LGVV+tLA0KBGSkKVjJSIHv3Vl3nh9cHhFjWQCnXniDQg6m4COHI8Y2CMUCA6BjylG1EsdWit9GnnQ6Z9n92ssIMOTZbJGBIuP8O1Lz/M2U3VQBko1aG+JDhHoMSjeCyBG4oYHKD4SMnjCJ/sJGvsZiZpoqZCn4QBGTkVRkzQb80z+N5pDgBXNwYY8apzDEJJ4Qu8E3zk8Fg8wNrxqyIgHm8jpNUmbzQZ0KJDjRWq9KhQkFGSEDX2YPf8mY8DT24I8PRlOpeWuPLu3cyMR7SSgIsiHGbt+qEIDrQE71AdMSw6lE4YRTmrNIEaLTIsGSkJKUKpq1zfVApUNZz+qPx+2OMgKePCE+IIH0UEBEUAB5RAidMu/e6YWF6h02pSxk2sVDFkWCpgM4b9v9J7/jnOvXczAACPP8uTB5ucPLaPlUFJ3SZoxYC1gEFxqC9u6BFl2NBmdgRNq4zjgmCVICU+cpRFl+UfnuMn953TX25KAYCLq3r9/v3y2F7hq3PTsBpjQ4pNIzSyBPVoeWMoq8lI69PEE3WqSUIpGV1TpUeNUhqob8PCFP1bxVkXAOAHL+pTp2aldXKOT71njkpepeISrI0wAsE7dFyi+YB+tc+VOMZFlmUMJRkRKRViKjalSD3N9eJseCG5V+TQwj5Ozk9yaG4X0WQL0ZjIKyYfIb1lMBn51Dy16gSBCQwNEmpEtBi/9DzD00/wwKPn9R/bAvj3OiFTB+6Mrs3t3MU8KTNVQxaBdSV2tcuolqF73kYjqWOiCFWDdkpe/u0r/OKhC3ph2wqsayiLCUwL9ASeCfA+c4S5m5O1pCZ/1G8MNvTzZj/P/wVOLMbER7e9LQAAAABJRU5ErkJggg=="
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    VarSetCapacity(Dec, DecLen, 0)
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    ; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+    ; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+    hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+    pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+    DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+    DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+    DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+    hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+    VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+    DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+    DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+    DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+    DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+    DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+    DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+    Return hBitmap
+    }
+
+    ; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_mr_Love_ico(NewHandle := False) {
+    Static hBitmap := 0
+    If (NewHandle)
+       hBitmap := 0
+    If (hBitmap)
+       Return hBitmap
+    VarSetCapacity(B64, 2148 << !!A_IsUnicode)
+    B64 := "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"
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    VarSetCapacity(Dec, DecLen, 0)
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    ; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+    ; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+    hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+    pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+    DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+    DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+    DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+    hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+    VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+    DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+    DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+    DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+    DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+    DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+    DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+    Return hBitmap
+    }
+
+
+    ; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_mr_Surprised_ico(NewHandle := False) {
+    Static hBitmap := 0
+    If (NewHandle)
+       hBitmap := 0
+    If (hBitmap)
+       Return hBitmap
+    VarSetCapacity(B64, 2896 << !!A_IsUnicode)
+    B64 := "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"
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    VarSetCapacity(Dec, DecLen, 0)
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    ; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+    ; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+    hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+    pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+    DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+    DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+    DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+    hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+    VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+    DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+    DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+    DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+    DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+    DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+    DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+    Return hBitmap
+    }
+
+    ; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_mr_Applause_ico(NewHandle := False) {
+    Static hBitmap := 0
+    If (NewHandle)
+       hBitmap := 0
+    If (hBitmap)
+       Return hBitmap
+    VarSetCapacity(B64, 2440 << !!A_IsUnicode)
+    B64 := "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"
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    VarSetCapacity(Dec, DecLen, 0)
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    ; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+    ; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+    hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+    pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+    DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+    DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+    DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+    hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+    VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+    DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+    DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+    DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+    DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+    DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+    DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+    Return hBitmap
+    }
+
+
+; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_RaiseHand_ico(NewHandle := False) {
+    Static hBitmap := 0
+    If (NewHandle)
+       hBitmap := 0
+    If (hBitmap)
+       Return hBitmap
+    VarSetCapacity(B64, 2104 << !!A_IsUnicode)
+    B64 := "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"
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    VarSetCapacity(Dec, DecLen, 0)
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    ; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+    ; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+    hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+    pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+    DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+    DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+    DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+    hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+    VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+    DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+    DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+    DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+    DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+    DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+    DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+    Return hBitmap
+    }
+
+
+; ##################################################################################
+; # This #Include file was generated by Image2Include.ahk, you must not change it! #
+; ##################################################################################
+Create_LowerHand_ico(NewHandle := False) {
+    Static hBitmap := 0
+    If (NewHandle)
+       hBitmap := 0
+    If (hBitmap)
+       Return hBitmap
+    VarSetCapacity(B64, 752 << !!A_IsUnicode)
+    B64 := "iVBORw0KGgoAAAANSUhEUgAAABkAAAAaCAYAAABCfffNAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAASdEVYdFNvZnR3YXJlAEdyZWVuc2hvdF5VCAUAAAGpSURBVEhL7ZU9rwFBFIbvb0OIApWvpUKERK1TicYfECJUSoVSFHQqiQjiKxp6GoXGe3POHWN9zazkXrfxJJvZc3azj3dndnzhDXwkL/E/ktPphHg8jvV6LToXSqUSPB4PyuWy6FjjYZLlcoloNCpF1WoVdrudD+rZbDY4nU7UajW+ruPp65rNZjAMgx/a7XZ5dDgcfI0k9ENcLhfXOpRzQpJgMCgTURKCJOZRh1JCDxkMBvD5fCyq1+uybx51aCXnMRAIyER/JqFEfr+fRa1WS/atYElCy5YYDod3iQqFArxeL1KpFMbjMfdvsSQxMxqNEAqFZKJer8f9TqeDWCzG57e8LCEmkwnC4bBMtNvtkMlkkMvluL5FKXG73Tgej6K6ZjqdIhKJsIi+o0ajwbvFI5QSir/ZbER1T7vd5vk4J3qGUkJ7VLPZFNU1+/2e56ZSqcid4RlKCW0diURCVNfk83kUi0U+n8/n8tU9Qikh0uk0+v2+qH6gpUzfzOFwEJ37TdWMVrLdbpFMJnmlnQ/6K1gsFuKOC6vVCtlsVlQXtJLf4CN5iTdIgG9QfYFVYky38QAAAABJRU5ErkJggg=="
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    VarSetCapacity(Dec, DecLen, 0)
+    If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+       Return False
+    ; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+    ; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+    hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+    pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+    DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+    DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+    DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+    hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+    VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+    DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+    DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+    DllCall("Gdiplus.dll\GdipCreateHBITMAPFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+    DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+    DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+    DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+    DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+    Return hBitmap
+    }
