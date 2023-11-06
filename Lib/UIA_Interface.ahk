@@ -1556,7 +1556,7 @@ class UIA_Element extends UIA_Base {
 			
 		matchMode:
 			If using Name PropertyId as a criteria, this follows the SetTitleMatchMode scheme: 
-				1=name must must start with the specified name
+				1=name must start with the specified name
 				2=can contain anywhere
 				3=exact match
 				RegEx=using regular expression. In this case the Name can't be empty.

@@ -756,20 +756,15 @@ Teams_SharingControlBar(mode:="-") {
         Teamsy_Help("sb")
         return
     }
-    TeamsExe := Teams_GetExeName()
+    
 
     Lang := Teams_GetLang()
-    Name := Teams_GetLangName("SharingControlBar",Lang)
-    If (Name="") {
-        If !InStr(Lang,"en-") {
-            Text := "Language " . Lang . " for '" . Name . "' not implemented!"
-            sUrl := Teamsy_Help("lang",false)
-            PowerTools_ErrDlg(Text,sUrl:="")
-        }
-        Name := "Sharing control bar"
-    }
-
-
+    Prop := "SharingControlBar"
+    Name := Teams_GetLangName(Prop,"Sharing control bar",Lang)
+    If (Name="") 
+        return
+    
+    TeamsExe := Teams_GetExeName()
     wTitle = %Name% ahk_exe %TeamsExe% 
     Switch mode {
         Case "-":
@@ -1947,16 +1942,12 @@ If (showTrayTip)
 Teams_IsMinMeetingWindow(TeamsEl) {
 ; Return true if the window is a minimized meeting window
 ; Check for button "Navigate back"
-    Lang := Teams_GetLang()
-    Name := Teams_GetLangName("NavigateBack",Lang)
-    If (Name="") {
-        If !InStr(Lang,"en-") {
-            Text := "Language " . Lang . " '" . Name . "' not implemented!"
-            sUrl := Teamsy_Help("lang",false)
-            PowerTools_ErrDlg(Text,sUrl:="")
-        }
-        Name := "Navigate back to call window."
-    }
+    Name := Teams_GetLangName("NavigateBack","Navigate back to call window.")
+    If InStr(Lang,"en-") or (Lang="")
+        Name := 
+    If (Name="") 
+        return 
+
         
     El := TeamsEl.FindFirstByNameAndType(Name, "button") ; 
     
@@ -1974,16 +1965,9 @@ Teams_IsMeetingWindow(TeamsEl,ExOnHold:=true){
 ; If Meeting Reactions Submenus are opened AutomationId are not visible.
 
 If (ExOnHold) {
-    Lang := Teams_GetLang()
-    Name := Teams_GetLangName("Resume",Lang)
-    If (Name="") {
-        If !InStr(Lang,"en-") {
-            Text := "Language " . Lang . " not implemented!"
-            sUrl := Teamsy_Help("lang",false)
-            PowerTools_ErrDlg(Text,sUrl:="")
-        }
-        Name := "Resume"
-    }
+     Name := Teams_GetLangName("Resume","Resume")
+    If (Name="") 
+        return
 }
 
 If TeamsEl.FindFirstBy("AutomationId=microphone-button") {
@@ -2136,18 +2120,11 @@ Teams_MeetingRecord(Mode := 2){
         return
     }
 
-    Lang := Teams_GetLang()
-    StartName := Teams_GetLangName("RecordStart",Lang)
-    If (StartName="") {
-        If !InStr(Lang,"en-") {
-            Text := "Language " . Lang . " for 'Record' not implemented!"
-            sUrl := Teamsy_Help("lang",false)
-            PowerTools_ErrDlg(Text,sUrl:="")
-        }
-        StartName := "Start"
-    }
+    Name := Teams_GetLangName("RecordStart","Start")
+    If (Name="") 
+        return
     
-    IsRecording := !RegExMatch(El.Name,"^" . StartName) 
+    IsRecording := !RegExMatch(El.Name,"^" . Name) 
 
     If (Mode = 1) and (IsRecording) ; already recording
         Return
@@ -2157,7 +2134,7 @@ Teams_MeetingRecord(Mode := 2){
 
     If (IsRecording)  { ; Stop recording
         SendInput {Enter}
-        El := TeamsEl.WaitElementExistByNameAndType("Cancel","button",,,,1000)
+        El := TeamsEl.WaitElementExistByNameAndType("Cancel","button",,,,1000) ; TODO Lang specific
         SendInput {Tab}{Enter}
 
     } Else { ; Start recording
@@ -2192,15 +2169,11 @@ Teams_MeetingShare(ShareMode := 2){
     }
 
     Lang := Teams_GetLang()
-    Name := Teams_GetLangName("Share",Lang)
-    If (Name="") {
-        If !InStr(Lang,"en-") {
-            Text := "Language " . Lang . " for 'Share' not implemented!"
-            sUrl := Teamsy_Help("lang",false)
-            PowerTools_ErrDlg(Text,sUrl:="")
-        }
-        Name := "Share"
-    }
+   
+        
+    Name := Teams_GetLangName("Share","Share",Lang)
+    If (Name="") 
+        return
     
     IsSharing := !RegExMatch(ShareEl.Name,"^" . Name) 
 
@@ -2221,27 +2194,23 @@ Teams_MeetingShare(ShareMode := 2){
     }
 
     ; Include sound
-    Name := Teams_GetLangName("ComputerAudio",Lang)
-    If (Name="") {
-        If !InStr(Lang,"en-") {
-            Text := "Language " . Lang . " for 'ComputerAudio' not defined!"
-            sUrl := Teamsy_Help("lang",false)
-            PowerTools_ErrDlg(Text,sUrl:="")
-        }
-        Name := "Include computer sound"
+    Name := Teams_GetLangName("ComputerAudio","Include computer sound",Lang)
+    If !(Name="") {
+        El :=  TeamsEl.WaitElementExistByName(Name,,,,1000) 
+        El.Click()
     }
-    El :=  TeamsEl.WaitElementExistByName("Include computer sound",,,,1000) ; TODO lang specific
-    El.Click()
 
 
     SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
 
     
     ; Hide Sharing Control Bar
-
-    wTitle = Sharing control bar ahk_exe %TeamsExe%
-    WinWait, %wTitle%,,2
-    Teams_SharingControlBar("-")
+    Name := Teams_GetLangName("SharingControlBar","Sharing control bar",Lang)
+    If !(Name="") {
+        wTitle =  %Name% ahk_exe %TeamsExe%
+        WinWait, %wTitle%,,2
+        Teams_SharingControlBar("-")
+    }
 
     ; Move Meeting Window to secondary screen
     SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
@@ -2401,20 +2370,16 @@ UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
 Lang := Teams_GetLang()
-MuteName := Teams_GetLangName("Mute",Lang)
-If (MuteName="") {
-    If !InStr(Lang,"en-") {
-        Text := "Language " . Lang . " not implemented!"
-        sUrl := Teamsy_Help("lang",false)
-        PowerTools_ErrDlg(Text,sUrl:="")
-    }
-    MuteName := "Mute"
-    UnmuteName := "Unmute"
-}
 
-If (UnmuteName ="") {
-    UnmuteName := Teams_GetLangName("Unmute",Lang)
-}
+
+MuteName := Teams_GetLangName("Mute","Mute",Lang)
+  
+If (MuteName="") 
+    return
+
+UnmuteName := Teams_GetLangName("Unmute","Unmute",Lang)
+If (UnmuteName ="")
+    return
 
 El:=TeamsEl.FindFirstBy("AutomationId=microphone-button")
 
@@ -2490,6 +2455,9 @@ Switch sKeyword
     Case "share-toolbar":
         Tooltip("Teams Start Share...") 
         SendInput ^+{Space} ; Go to sharing toolbar Ctrl+Shift+Spacebar
+    Case "leave":
+        Tooltip("Leave meeting...") 
+        SendInput ^+h ; Ctrl+Shift+H
 }
 
 
@@ -2510,6 +2478,55 @@ SendInput ^+h ; Ctrl+Shift+H
 
 ; Reset FocusAssistant
 FocusAssist(-)
+} ; eofun
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_MeetingLeave(mode:="?") {
+; mode : "e" : end meeting "?" ask if you want to end
+    WinId := Teams_GetMeetingWindow(true)
+    If !WinId ; empty
+        return
+    
+    WinGet, curWinId, ID, A
+    WinActivate ahk_id %WinId%
+    
+    UIA := UIA_Interface()  
+    TeamsEl := UIA.ElementFromHandle(WinId)
+
+    El :=  TeamsEl.FindFirstBy("AutomationId=menu722")  ; Name More options menu722
+    If El
+        El.Click() ; Click element without moving the mouse - will activate window
+        EndEl:=TeamsEl.WaitElementExistByName("End meeting",,,,2000)
+        If (EndEl) and (mode="e")
+            GoTo EndMeeting
+        Else If (mode="?") {
+            MsgBox, 0x24, End Meeting?,Do you want to End the meeting?
+            IfMsgBox Yes
+                GoTo EndMeeting
+            Else
+                GoTo LeaveMeeting
+        }
+    Else ; leave
+        GoTo LeaveMeeting
+
+
+    EndMeeting:
+    EndEl.Click()
+    EndEl:=TeamsEl.WaitElementExistByNameAndType("End","Button",,3,,2000) ; exact match
+    EndEl.Click()
+    GoTo Finish
+    LeaveMeeting:
+        ; SendInput ^+h ; Ctrl+Shift+H
+
+    TeamsEl.FindFirstBy("AutomationId=splitButton-723__primaryActionButton").Click()
+    
+    Finish:
+    ; Restore pevious window
+    WinActivate, ahk_id %curWinId%
+    
+    ; Reset FocusAssistant
+    FocusAssist(-)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -2748,15 +2765,16 @@ UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
 Lang := Teams_GetLang()
-RaiseHandName := Teams_GetLangName("RaiseHand",Lang)
-If (RaiseHandName="") {
-    If !InStr(Lang,"en-") {
-        Text := "Language " . Lang . " not implemented!"
-        sUrl := Teamsy_Help("lang",false)
-        PowerTools_ErrDlg(Text,sUrl:="")
-    }
+Prop := "RaiseHand"
+If InStr(Lang,"en-") or (Lang="") {
     RaiseHandName := "Raise"
     LowerHandName := "Lower"
+} Else
+    RaiseHandName := Teams_GetLangName(Prop,Lang)
+If (RaiseHandName="") {
+    Text := "Language " . Lang . " not implemented!"
+    sUrl := Teamsy_Help("lang",false)
+    PowerTools_ErrDlg(Text,sUrl:="")
 }
 
 If (LowerHandName ="") {
@@ -2836,15 +2854,9 @@ TeamsEl := UIA.ElementFromHandle(WinId)
 
 ; Language specific implementation
 Lang := Teams_GetLang()
-Name := Teams_GetLangName(Reaction,Lang)
-If (Name="") {
-    If !InStr(Lang,"en-") {
-        Text := "Language " . Lang . " not implemented!"
-        sUrl := Teamsy_Help("lang",false)
-        PowerTools_ErrDlg(Text,sUrl:="")
-    }
-    Name := Reaction
-}
+Name := Teams_GetLangName(Reaction,Reaction,Lang)
+If (Name="") 
+    return
 
 WinGet, curWinId, ID, A
 
@@ -3201,18 +3213,26 @@ If Teams_IsNew() {
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_GetLangName(Prop,Lang:="") {
+Teams_GetLangName(Prop,Def,Lang:="") {
+; Name := Teams_GetLangName(Prop,Def,Lang:="")
+; Def: Default value for English/unspecified language
     If (Lang="")
         Lang:=Teams_GetLang()
 
+    If InStr(Lang,"en-") or (Lang="")
+        return Def
+    
+    sHelpUrl := Teamsy_Help("lang",false)
+    
+    
     If !FileExist("PowerTools.ini") {
-        ;PowerTools_ErrDlg("No PowerTools.ini file found!")
+        PowerTools_ErrDlg("No PowerTools.ini file found! Language specific setting not implemented!")
         return
     }
 
     IniRead, TeamsLangNames, PowerTools.ini,Teams,TeamsLangNames
     If (TeamsLangNames="ERROR") { ; Section [Jira] Key JiraAuth not found
-        PowerTools_ErrDlg("TeamsLangNames key not found in PowerTools.ini file [Teams] section!")
+        PowerTools_ErrDlg("TeamsLangNames key not found in PowerTools.ini file [Teams] section!",sHelpUrl)
         return
     }
 
@@ -3223,14 +3243,17 @@ Teams_GetLangName(Prop,Lang:="") {
         If InStr(Lang,lang_i) {
             Name := langName[Prop]
             If (Name="") { 
-                PowerTools_ErrDlg("Property '" . Prop . "'' is not defined in PowerTools.ini file [Teams] section, TeamsLangNames key for lang '" . Lang . "'!")
+                PowerTools_ErrDlg("Property '" . Prop . "'' is not defined in PowerTools.ini file [Teams] section, TeamsLangNames key for lang '" . Lang . "'!",sHelpUrl)
                 return
             }
             return Name 
         }
     }
     ; Lang could not be found take first entry as default value
-    return Name := JsonObj[1][Prop]
+    If (Name="") {
+        Text := "Language " . Lang . " for '" . Prop . "' not implemented!"
+        PowerTools_ErrDlg(Text,sHelpUrl)
+    }
 
 }
 ; -------------------------------------------------------------------------------------------------------------------

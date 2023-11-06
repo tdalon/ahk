@@ -8,7 +8,12 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-11-06
+  * [Added Meeting End 'end' and 'le+' keywords](https://tdalon.blogspot.com/2023/07/end-teams-meeting-with-recording.html)
+* 2023-11-04
+  * Added mic(+-) and cam(+-) keyword 
 * 2023-11-03
+  * [Meeting record](https://tdalon.blogspot.com/2023/11/teams-shortcuts-record.html)
   * [Set meeting background](https://tdalon.blogspot.com/2023/11/teams-set-background.html)
 * 2023-11-02
   * Teams Meeting Reactions will change Tray icon to display corresponding reaction for a few seconds

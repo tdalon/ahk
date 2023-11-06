@@ -18,8 +18,11 @@ If FoundPos {
 
 Switch sKeyword
 {
-Case "-g": ; gui/ launcher    
+Case "-g": ; gui/ launcher 
+
+    hWin := WinExist("A")
 	sCmd := TeamsyInputBox()
+    WinActivate, ahk_id %hWin% ; required because active window looses focus after the Gui closes
     if ErrorLevel
 		return
 	sCmd := Trim(sCmd) 
@@ -86,7 +89,10 @@ Case "m","me","meet": ; activate meeting window
     WinActivate, ahk_id %WinId%
     return
 Case "le","leave": ; leave meeting
-    Teams_Leave()
+    Teams_MeetingLeave("?")
+    return
+Case "le+","end": ; leave meeting
+    Teams_MeetingLeave("e")
     return
 Case "raise","hand","ha","rh","ra":  
     Teams_RaiseHand()
@@ -188,6 +194,15 @@ Case "mu+":
 Case "mu-":
     Teams_Mute(0)
     return
+Case "mic":
+    Teams_Mute(2)
+    return
+Case "mic+":
+    Teams_Mute(0)
+    return
+Case "mic-":
+    Teams_Mute(1)
+    return
 Case "de":  ; decline call
     WinId := Teams_GetMainWindow()
     If !WinId ; empty
@@ -222,13 +237,13 @@ Case "n","new","x","nc": ; new expanded conversation
     WinActivate, ahk_id %WinId%
     Teams_NewConversation()
     return
-Case "v","vi": ; Toggle video 
+Case "v","vi","cam": ; Toggle video 
     Teams_Video()
     return
-Case "vi+":
+Case "vi+","cam+":
     Teams_Video(1)
     return
-Case "vi-":
+Case "vi-","cam-":
     Teams_Video(0)
     return
 Case "f","fav":
@@ -256,7 +271,7 @@ Case "2c","oc": ; Selection To Chat, Open Chat
     Teams_OpenChat()
     return
 Case "st","status": ; Set Status Message
-    Teams_SetStatusMessage()()
+    Teams_SetStatusMessage()
     return
 Case "t2xl":
     Teams_Members2Excel()
@@ -370,10 +385,12 @@ Case "ptt":
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-shortcuts-ptt.html"
 Case "rh":
     sUrl := "https://tdalon.blogspot.com/2021/02/teams-raise-hand.html"
-Case "mu":
+Case "mu","mic":
     sUrl := "https://tdalon.blogspot.com/2021/04/teams-shortcuts-mute-on-off.html"
 Case "rec":
     sUrl :="https://tdalon.blogspot.com/2023/11/teams-shortcuts-record.html"
+Case "end":
+    sUrl := "https://tdalon.blogspot.com/2023/07/end-teams-meeting-with-recording.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 

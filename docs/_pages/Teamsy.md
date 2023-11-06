@@ -82,7 +82,8 @@ The list below might not be exhaustive. Look at the code for the full up to date
 Keywords  |  Action
 --|--
 mu(+-)   |  Toggle mute/unmute microphone
-vi(+-)  |  Toggle video on/off
+mic(+-)   |   Toggle, unmute/mute microphone
+vi(+-) cam(+-) |  Toggle Video/camera on/off
 sh(+-)  |  Toggle share/ unshare
 lo  |  Love (Meeting Reaction)  
 li  |  Like (Meeting Reaction)    
