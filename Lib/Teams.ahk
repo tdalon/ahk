@@ -711,21 +711,35 @@ Teams_Link2Fav(sUrl,FavsDir,"Group Chat -" . sName)
 ; ----------------------------------------------------------------------
 
 Teams_IsNew(){
+; IsNew := Teams_IsNew()
+; return true or false depending if Teams New Client is installed and Classic Teams running
     static IsNew
     If !(IsNew = "")
         return IsNew
     fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps\ms-teams.exe
-    IsNew := (FileExist(fExe) != "")
-    If !IsNew {
-        return IsNew
-    }
-    ; Possibility to overwrite in ini file
+    If !(FileExist(fExe)) ; New Teams not installed
+        return IsNew := False
+
+    ; Check if a Teams process is running
+    Process, Exist, Teams.exe
+	If (!ErrorLevel= 0) {
+		;Classic Teams
+		return IsNew:=False
+	}
+
+    Process, Exist, ms-teams.exe
+	If (!ErrorLevel= 0) {
+		;Classic Teams
+		return IsNew:=True
+	}
+
+    ; Possibility to overwrite in ini file if Teams is not started
     If FileExist("PowerTools.ini") {
         IniRead, IniIsNew, PowerTools.ini,Teams,TeamsIsNew
         If !(IniIsNew="ERROR")  
-            IsNew := IniIsNew
+           return IsNew := IniIsNew
     }
-    return IsNew
+    return IsNew:=True
 } ;eofun
 
 ; ----------------------------------------------------------------------
