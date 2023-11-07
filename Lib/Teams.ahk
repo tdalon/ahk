@@ -710,7 +710,7 @@ Teams_Link2Fav(sUrl,FavsDir,"Group Chat -" . sName)
 } ; eofun
 ; ----------------------------------------------------------------------
 
-Teams_IsNew(){
+Teams_IsNew(){ ; @fun_teams_isnew
 ; IsNew := Teams_IsNew()
 ; return true or false depending if Teams New Client is installed and Classic Teams running
     static IsNew
@@ -2360,7 +2360,7 @@ Run %sCmd%,,Hide
 } ; eofun 
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_Mute(State := 2,showInfo:=true,restoreWin:=true){
+Teams_Mute(State := 2,showInfo:=true,restoreWin:=true){ ; @fun_teams_mute@
 ; State: 
 ;    0: mute off, unmute
 ;    1: mute on
