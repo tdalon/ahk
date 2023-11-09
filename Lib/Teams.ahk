@@ -236,8 +236,8 @@ Teams_MeetingBackgroundSet(File:="") {
     El :=  TeamsEl.WaitElementExist("AutomationId=video-effects-and-avatar-button",,,,1000)  
     El.Click() 
 
-    Name := "Show all background effects"
-    El :=  TeamsEl.WaitElementExistByName(Name,,1,false,1000)  ; TODO Lang ; 1 match mode start with
+    Name := Teams_GetLangName("ShowAllBackgrounds","Show all background effects")
+    El :=  TeamsEl.WaitElementExistByName(Name,,1,false,1000)  ; 1 match mode start with
     If !El {
         ;error notification
         PowerTools_ErrDlg("UIA Element 'Show all backgrounds' not found!")
@@ -271,6 +271,46 @@ Teams_MeetingBackgroundSet(File:="") {
     WinActivate, ahk_id %curWinId%
 
 } ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Teams_MeetingBackgroundSettings() {
+; Open Background Settings
+
+    WinId := Teams_GetMeetingWindow() 
+    If !WinId ; empty
+        return
+    
+    WinActivate, ahk_id %WinId%
+
+    UIA := UIA_Interface()  
+    TeamsEl := UIA.ElementFromHandle(WinId)
+
+    ; Check if rail pane already opened - if yes close it
+    El :=  TeamsEl.FindFirstBy("AutomationId=rail-header-close-button")  
+    El.Click()
+    
+    TeamsEl.WaitElementNotExist("AutomationId=rail-header-close-button")
+    El.Click()
+    
+
+    ; Click on More -> Video Effects
+    El :=  TeamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn")  
+    El.Click() 
+    El :=  TeamsEl.WaitElementExist("AutomationId=video-effects-and-avatar-button",,,,1000)  
+    El.Click() 
+
+    Name := Teams_GetLangName("ShowAllBackgrounds","Show all background effects")
+    El :=  TeamsEl.WaitElementExistByName(Name,,1,false,1000)  ; 1 match mode start with
+    If !El {
+        ;error notification
+        PowerTools_ErrDlg("UIA Element 'Show all backgrounds' not found!")
+        WinActivate, ahk_id %curWinId%
+        return
+    }
+    El.Click()
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
 
 Teams_BackgroundFile2Name(File:="",mode:="r"){
     ; Name := Teams_BackgroundFile2Name(File:="",mode:="r")
@@ -1800,7 +1840,7 @@ PowerTools_RegWrite("TeamsMentionPersonalize",TeamsMentionPersonalize)
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-Teams_GetMainWindow(){
+Teams_GetMainWindow(){ ; @fun_teams_getmainwindow@
 ; See implementation explanations here: https://tdalon.blogspot.com/get-teams-window-ahk
 ; Syntax: hWnd := Teams_GetMainWindow()
 
@@ -1915,7 +1955,7 @@ SendInput +{enter}
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_GetMeetingWindow(Minimize:=false,showTrayTip:=true){
+Teams_GetMeetingWindow(Minimize:=false,showTrayTip:=true){ ; @fun_teams_getmeetingwindow@
 ; Syntax: 
 ;      hWnd := Teams_GetMeetingWindow(Minimize:=true) 
 ;   If window is not found, hwnd is empty
@@ -1924,25 +1964,34 @@ Teams_GetMeetingWindow(Minimize:=false,showTrayTip:=true){
 ;
 ; See implementation explanations here: 
 ;   https://tdalon.blogspot.com/2022/07/ahk-get-teams-meeting-win.html
-; Known issue: if reactions menus with images are visible, other elements are hidden
+; Does not require window to be activated
 UIA := UIA_Interface()
 TeamsExe := Teams_GetExeName()
 
 WinGet, Win, List, ahk_exe %TeamsExe%
+/* 
+If restoreWin
+    WinGet, curWinId, ID, A 
+*/
 Loop %Win% {
     WinId := Win%A_Index%
+   ; WinActivate, ahk_id %WinId%
     TeamsEl := UIA.ElementFromHandle(WinId)
    
     ;MsgBox % TeamsEl.Name
+
     If Teams_IsMeetingWindow(TeamsEl)  {
         If (!Minimize)
             If Teams_IsMinMeetingWindow(TeamsEl)
                 Continue
-
         return WinId
     }
 } ; End Loop
 
+/* 
+If (restoreWin)
+    WinActivate, ahk_id %curWinId% ; restore win 
+*/
 If (showTrayTip)
     TrayTip, Could not find Meeting Window! , No active Teams meeting window found!,,0x2
 } ; eofun
@@ -2378,24 +2427,23 @@ If (showInfo) {
     Tray_Icon_On := "HBITMAP:*" . Create_Mic_On_ico()
     Tray_Icon_Off := "HBITMAP:*" . Create_Mic_Off_ico()
 }
-    
-
 UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
 Lang := Teams_GetLang()
 
-
-MuteName := Teams_GetLangName("Mute","Mute",Lang)
-  
+MuteName := Teams_GetLangName("Mute","Mute",Lang) 
 If (MuteName="") 
     return
-
 UnmuteName := Teams_GetLangName("Unmute","Unmute",Lang)
 If (UnmuteName ="")
     return
 
 El:=TeamsEl.FindFirstBy("AutomationId=microphone-button")
+If !El {
+    TrayTip TeamsShortcuts: ERROR, Microphone button UIA Element not found!,,0x2
+    Return
+}
 
 If RegExMatch(El.Name,"^" . MuteName) {
     If (State = 0) {
@@ -2496,21 +2544,29 @@ FocusAssist(-)
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_MeetingLeave(mode:="?") {
+Teams_MeetingLeave(mode:="?") { ; @fun_teams_meetingleave@
 ; mode : "e" : end meeting "?" ask if you want to end
     WinId := Teams_GetMeetingWindow(true)
     If !WinId ; empty
         return
     
     WinGet, curWinId, ID, A
-    WinActivate ahk_id %WinId%
+    WinActivate ahk_id %WinId% ; activate window to click on element
     
     UIA := UIA_Interface()  
     TeamsEl := UIA.ElementFromHandle(WinId)
 
-    El :=  TeamsEl.FindFirstBy("AutomationId=menu722")  ; Name More options menu722
-    If El
-        El.Click() ; Click element without moving the mouse - will activate window
+    El := TeamsEl.FindFirstBy("AutomationId=hangup-button")
+    If El {
+        El.Click() ; SendInput ^+h ; Ctrl+Shift+H
+        GoTo Finish
+    }
+
+    Els :=  TeamsEl.FindAllByNameAndType("More options","Button")  ; Name More options ; AutomationId changing menuddd
+    for i, El in Els   
+        If InStr(El.ClassName,"SplitButton") { ;   
+        ; ClassName =fui-Button rlr4yyk fui-MenuButton fui-SplitButton__menuButton toggleButton ___z3kncc0 f1sbtcvk fwiuce9 fdghr9 f15vdbe4 fwbmr0d f44c6la frrbwxo f1um7c6d f6pwzcr fdl5y0r f1p3nwhy f11589ue f1q5o8ev f1pdflbu fonrgv7 f5k7jbu f1s2uweq fr80ssc f1ukrpxl fecsdlb fhhy8jn fqwlww5 f1bbhs8t f1i3by9 fbb8suj f1sw78cg f1vj5d8e f1udo9fm f1hoz3np 
+            El.Click() ; Click element without moving the mouse
         EndEl:=TeamsEl.WaitElementExistByName("End meeting",,,,2000)
         If (EndEl) and (mode="e")
             GoTo EndMeeting
@@ -2518,22 +2574,23 @@ Teams_MeetingLeave(mode:="?") {
             MsgBox, 0x24, End Meeting?,Do you want to End the meeting?
             IfMsgBox Yes
                 GoTo EndMeeting
-            Else
-                GoTo LeaveMeeting
+            Else {
+                TeamsEl.FindFirstBy("AutomationId=splitButton-ddd__primaryActionButton").Click()
+                GoTo Finish
+            }
+                
         }
-    Else ; leave
-        GoTo LeaveMeeting
-
+    } 
+    
+    TrayTip TeamsShortcuts: ERROR, Leave button UIA Element not found!,,0x2
+    return
+    
 
     EndMeeting:
     EndEl.Click()
     EndEl:=TeamsEl.WaitElementExistByNameAndType("End","Button",,3,,2000) ; exact match
     EndEl.Click()
-    GoTo Finish
-    LeaveMeeting:
-        ; SendInput ^+h ; Ctrl+Shift+H
 
-    TeamsEl.FindFirstBy("AutomationId=splitButton-723__primaryActionButton").Click()
     
     Finish:
     ; Restore pevious window
@@ -3184,7 +3241,7 @@ Teams_ClearFlash(){
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
-Teams_GetLang() {
+Teams_GetLang() { ; @fun_teams_getlang@
 ; return desktop client language
 ; sLang := Teams_GetLang()
 
@@ -3227,7 +3284,7 @@ If Teams_IsNew() {
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_GetLangName(Prop,Def,Lang:="") {
+Teams_GetLangName(Prop,Def,Lang:="") { ; @fun_teams_getlangname@
 ; Name := Teams_GetLangName(Prop,Def,Lang:="")
 ; Def: Default value for English/unspecified language
     If (Lang="")
