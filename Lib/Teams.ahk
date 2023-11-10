@@ -2270,6 +2270,7 @@ Teams_MeetingShare(ShareMode := 2){
     ; Hide Sharing Control Bar
     Name := Teams_GetLangName("SharingControlBar","Sharing control bar",Lang)
     If !(Name="") {
+        TeamsExe := Teams_GetExeName()
         wTitle =  %Name% ahk_exe %TeamsExe%
         WinWait, %wTitle%,,2
         Teams_SharingControlBar("-")
