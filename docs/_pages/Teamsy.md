@@ -91,7 +91,7 @@ ap  |  Applause (Meeting Reaction)
 lol  |  Laugh (Meeting Reaction)
 su  |  Surprised (Meeting Reaction)   
 rh(+-)  |  [Raise your Hand](https://tdalon.blogspot.com/2021/02/teams-raise-hand.html)
-le  |  Leave Meeting
+le  |  [Leave Meeting](https://tdalon.blogspot.com/2023/11/teamsy-leave-meeting.html)
 sb(+-) | [Hide/Show Sharing Control bar](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html)
 bg | [Set Background](https://tdalon.blogspot.com/2023/11/teams-set-background.html)
 
@@ -138,6 +138,10 @@ It is recommended to also download the PowerTools.ini file.
 ### [Share To Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
 
 Keyword: 's2t'
+
+### Meeting Leave ###
+
+<div style="text-align:center"><img src="/ahk/assets/images/Teamsy_Meeting_Leave.gif" alt="Teamsy Meeting Leave"></div>
 
 ## YouTube Playlist
 
