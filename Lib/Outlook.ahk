@@ -286,7 +286,7 @@ return oPA.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x5D01001E")
 ; ------------------------------------------------------------------
 
 
-Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false) { @fun_outlook_jointeamsmeeting@
+Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false) { ; @fun_outlook_jointeamsmeeting@
 ; Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false)
 ; If oItem is empty, call Outlook_GetTeamsMeeting: user will be prompted to select Today's Teams meeting to join (Meetings are extracted from Outlook main calendar)
 If (oItem == "") 
@@ -299,18 +299,22 @@ If (sMeetingLink = "")
 sMeetingLink := sMeetingLink1
 ; Use microsoft edge because better integrated. Teams Links can be whitelisted (Application Links) to be always opened in Teams Client
 Run, msedge.exe "%sMeetingLink%" " --new-window"
-WinWaitActive, Join conversation ahk_exe msedge.exe 
+WinWaitActive, ahk_exe msedge.exe
+NewEdgeWinId := WinExist("ahk_exe msedge.exe") 
 
-Title := oItem.Subject
 TeamsExe := Teams_GetExeName()
-WinWaitActive, %Title% ahk_exe %TeamsExe%,,2 ; Title can be misleading if meetings are copied/pasted->Timeout 2s in this case to be sure to catch the Join window and not the main Window
-JoinWinId := WinExist("ahk_exe " . TeamsExe)
-; WinGetTitle, JoinWinTitle , ahk_id %JoinWinId%
+WinWaitActive, ahk_exe %TeamsExe%,,2
+If ErrorLevel {
+    TrayTipAutoHide("Error!","Joined Teams Meeting Window not found!",2000,3)
+    return
+}
 
-; Close remaining browser window
-WinActivate, Join conversation ahk_exe msedge.exe 
-Sleep 5
-Send ^w ; close tab
+JoinWinId := WinActive("A")
+
+If WinExist("ahk_id " . NewEdgeWinId) {
+    WinActivate
+    Send ^w ; Close leftover browser window
+}
 
 
 ; Click on join button
@@ -325,19 +329,13 @@ If (autoJoin) {
         return
     }
     TeamsJoinBtn.Click()   
-
-    Timeout := 2000
-    SleepTime := 100
-    Loop {
-        Sleep, %SleepTime%
-        If ! Teams_IsMeetingWindow(TeamsEl)
-            break
-        If (%A_Count% * %SleepTime% > %Timeout%)
-            break
-    }
-
+    ; Wait for meeting window to open
+    MuteEl:=TeamsEl.WaitElementExist("AutomationId=microphone-button",,,,2000)
     ; Unmute
-    TeamsEl.FindFirstByNameAndType("Unmute", "button",,2).Click
+    Name:=Teams_GetLangName("Unmute","Unmute")
+    If (MuteEl.Name = %Name%)
+        MuteEl.Click()
+    ; Maximize
     WinMaximize, ahk_exe %TeamsExe%
 
 }
