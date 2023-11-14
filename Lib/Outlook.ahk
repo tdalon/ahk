@@ -286,9 +286,7 @@ return oPA.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x5D01001E")
 ; ------------------------------------------------------------------
 
 
-
-
-Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false) {
+Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false) { @fun_outlook_jointeamsmeeting@
 ; Outlook_JoinTeamsMeeting(oItem:="",autoJoin := false, openChat := false)
 ; If oItem is empty, call Outlook_GetTeamsMeeting: user will be prompted to select Today's Teams meeting to join (Meetings are extracted from Outlook main calendar)
 If (oItem == "") 
@@ -300,12 +298,13 @@ If (sMeetingLink = "")
     return
 sMeetingLink := sMeetingLink1
 ; Use microsoft edge because better integrated. Teams Links can be whitelisted (Application Links) to be always opened in Teams Client
-Run, microsoft-edge:%sMeetingLink%
+Run, msedge.exe "%sMeetingLink%" " --new-window"
 WinWaitActive, Join conversation ahk_exe msedge.exe 
 
 Title := oItem.Subject
-WinWaitActive, %Title% ahk_exe Teams.exe,,2 ; Title can be misleading if meetings are copied/pasted->Timeout 2s in this case to be sure to catch the Join window and not the main Window
-JoinWinId := WinExist("ahk_exe Teams.exe")
+TeamsExe := Teams_GetExeName()
+WinWaitActive, %Title% ahk_exe %TeamsExe%,,2 ; Title can be misleading if meetings are copied/pasted->Timeout 2s in this case to be sure to catch the Join window and not the main Window
+JoinWinId := WinExist("ahk_exe " . TeamsExe)
 ; WinGetTitle, JoinWinTitle , ahk_id %JoinWinId%
 
 ; Close remaining browser window
@@ -339,8 +338,7 @@ If (autoJoin) {
 
     ; Unmute
     TeamsEl.FindFirstByNameAndType("Unmute", "button",,2).Click
-
-    WinMaximize, ahk_exe Teams.exe
+    WinMaximize, ahk_exe %TeamsExe%
 
 }
 
@@ -351,7 +349,7 @@ If (openChat)
 } ; eofun
 
 
-
+;-------------------------------------------------------------------------
 Outlook_GetTeamsMeeting() {
 ; oItem := Outlook_GetTeamsMeeting()
 ; Get Teams Meeting Appointment Item from today meetings in Outlook main calendar
@@ -456,3 +454,4 @@ oItem := appts[ApptId1]
 return oItem
 
 } ; eofun
+;-------------------------------------------------------------------------

@@ -139,7 +139,7 @@ It is recommended to also download the PowerTools.ini file.
 
 Keyword: 's2t'
 
-### Meeting Leave ###
+### [Meeting Leave](https://tdalon.blogspot.com/2023/11/teamsy-meeting-leave.html)
 
 <div style="text-align:center"><img src="/ahk/assets/images/Teamsy_Meeting_Leave.gif" alt="Teamsy Meeting Leave"></div>
 
