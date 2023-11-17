@@ -46,6 +46,7 @@ GroupAdd, OpenLinks, ahk_exe onenote.exe
 GroupAdd, OpenLinks, ahk_exe word.exe
 GroupAdd, OpenLinks, ahk_exe winword.exe
 GroupAdd, OpenLinks, ahk_exe Teams.exe
+GroupAdd, OpenLinks, ahk_exe ms-teams.exe
 GroupAdd, OpenLinks, ahk_exe lync.exe ; Skype
 GroupAdd, OpenLinks, ahk_exe chrome.exe 
 GroupAdd, OpenLinks, ahk_exe EXCEL.exe 
@@ -315,11 +316,10 @@ return
 
 ; Shift Mouse click
 +LButton:: ;
-; If target window is not under focus, e.g. MButton on Chrome Tab
 Clip_All := ClipboardAll  ; Save the entire clipboard to a variable
 Clipboard =  ; Empty the clipboard to allow ClipWait work
 
-sleep, 200 ;(wait in ms) leave time to release the Shift 
+Send {Shift Up} ; Release shift because of Conflict to open context menu if pressed down
 SendEvent {RButton} ;Click Right does not work in Outlook embedded tables
 sleep, 200 ;(wait in ms) give time for the menu to popup	
 
@@ -767,11 +767,10 @@ PasteCleanUrl(encode:= False){
 ; -------------------------------------------------------------------------------------------------------------------
 ; Function OpenLink
 ; Open Link in Default browser - See https://tdalon.blogspot.com/2023/06/ahk-browser-link-redirector.html
-OpenLink(sUrl) {
+OpenLink(sUrl) { ; @fun_open_link@
 ; Based on PowerTools.ini files [Browsers] and [BrowserRules] definition
 
-;sUrl := IntelliPaste_CleanUrl(sUrl)
-
+;sUrl := IntelliPaste_CleanUrl(sUrl) 
 
 If InStr(sUrl,"teams.microsoft.com") { ; remove browser leftover window
 	Teams_OpenUrl(sUrl)
