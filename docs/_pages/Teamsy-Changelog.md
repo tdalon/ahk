@@ -8,8 +8,14 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-11-20
+  * Bug Fix Teams Meeting Share Hide Sharing Control Bar
+* 2023-11-16
+  * Quick Meeting Join: Dismiss Outlook Reminder. Fix for [plain meeting invitation issue](https://techcommunity.microsoft.com/t5/microsoft-teams/meeting-invitation-in-outlook-not-rendering-correctly/m-p/3268856)
+* 2023-11-07
+  * 'bgs' keyword for open background settings (Teams New)
 * 2023-11-06
-  * [Added Meeting End 'end' and 'le+' keywords](https://tdalon.blogspot.com/2023/07/end-teams-meeting-with-recording.html)
+  * [Added Meeting End 'end' and 'le+' keywords](https://tdalon.blogspot.com/2023/11/teamsy-meeting-leave.html)
 * 2023-11-04
   * Added mic(+-) and cam(+-) keyword 
 * 2023-11-03

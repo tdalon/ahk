@@ -1,7 +1,7 @@
 ; Author: Thierry Dalon
 ; Source: https://github.com/tdalon/ahk/blob/main/OutlookShortcuts.ahk
 
-LastCompiled = 20211014103642
+LastCompiled = 20230130144219
 
 #Include <PowerTools>
 #Include <Clip>
@@ -136,7 +136,8 @@ If WinActive("Reminder(s) ahk_class #32770"){ ; Reminder Windows
 	;Send +{F10} ; Shift+F10 - Open Context Menu
 	SendInput {Tab}
 	Send j ; Join accelerator
-	WinWaitActive, ahk_exe Teams.exe,,5
+	TeamsExe := Teams_GetExe()
+	WinWaitActive, ahk_exe %TeamsExe%,,5
 	If ErrorLevel
 		Return
 	Sleep 1000 ; time for the window to load

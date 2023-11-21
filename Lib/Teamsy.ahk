@@ -44,12 +44,12 @@ Case "h","-h","help":
 Case "bgf","bgo","backgrounds","cbg":
     Teams_BackgroundGetFolder()
     return
-
 Case "bg":
     Teams_MeetingBackgroundSet(sInput)
     return
 Case "bgs": ; open background settings via Ctrl+Shift+P depreciated
-    Teams_MeetingShortcuts("bg")
+    ;Teams_MeetingShortcuts("bg")
+    Teams_MeetingBackgroundSettings()
     return
 Case "bgi": ; import backgrounds
     Teams_BackgroundImport()
@@ -85,8 +85,9 @@ Case "ca","cal","calendar":
     SendInput ^4; open calendar
     return
 Case "m","me","meet": ; activate meeting window
-    WinId := Teams_GetMeetingWindow()
-    WinActivate, ahk_id %WinId%
+    WinId := Teams_GetMeetingWindow(false,true) ; do not restore
+    If WinId
+        WinActivate, ahk_id %WinId%
     return
 Case "le","leave": ; leave meeting
     Teams_MeetingLeave("?")
@@ -279,7 +280,7 @@ Case "t2xl":
 Case "e2m": ; emails 2 mentions
     Teams_Selection2Mentions()
     return
-Case "jo","join": ; join current meeting
+Case "jo","join","j": ; join current meeting
     Outlook_JoinTeamsMeeting()
     return
 Case "jo+": ; join meeting with autoJoin and openChat
@@ -357,21 +358,21 @@ Case "s2t": ; Share To teams
     sUrl := "https://tdalon.blogspot.com/2023/01/share-to-teams.html"
 Case "bgi": ; Import Backgrounds
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-import-backgrounds.html"
+Case "bg":
+    sUrl := "https://tdalon.blogspot.com/2023/11/teams-set-background.html"
+Case "obg","cbg":
+    sUrl := "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html"
 Case "cl": ; clear cache
     sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html" 
 Case "2": ; second instance
     sUrl := "https://tdalon.blogspot.com/2020/12/open-multiple-microsoft-teams-instances.html"
 Case "e2t":
     sUrl := "https://tdalon.blogspot.com/2020/03/emails-to-team.html"
-Case "bg":
-    sUrl := "https://tdalon.blogspot.com/2023/11/teams-set-background.html"
-Case "obg","cbg":
-    sUrl := "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html"
 Case "t2xl": ; Export Team Members to Excel 
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html"
 Case "e2m": ; Emails to Mentions
     sUrl:= "https://tdalon.blogspot.com/2020/11/teams-shortcuts-send-mentions.html"
-Case "jo": ; Emails to Mentions
+Case "jo": 
     sUrl:= "https://tdalon.blogspot.com/2023/02/teams-quick-join-meeting.html"
 Case "sw": ; switch tenant
     sUrl := "https://tdalon.blogspot.com/2023/10/teams-switch-tenant.html"
@@ -389,8 +390,8 @@ Case "mu","mic":
     sUrl := "https://tdalon.blogspot.com/2021/04/teams-shortcuts-mute-on-off.html"
 Case "rec":
     sUrl :="https://tdalon.blogspot.com/2023/11/teams-shortcuts-record.html"
-Case "end":
-    sUrl := "https://tdalon.blogspot.com/2023/07/end-teams-meeting-with-recording.html"
+Case "end","le":
+    sUrl := "https://tdalon.blogspot.com/2023/11/teamsy-meeting-leave.html"
 /* 
 Case "ts2xl": ; Export Teams to Excel ; TODO
     sUrl := "https://tdalon.blogspot.com/2020/08/teams-users2excel.html" 

@@ -293,17 +293,25 @@ If (oItem == "")
     oItem := Outlook_GetTeamsMeeting()
     
 ; Join meeting
-RegExMatch(oItem.Body,"<(https://teams.microsoft.com/l/meetup-join/[^>]*)>",sMeetingLink)
-If (sMeetingLink = "")
+If RegExMatch(oItem.Body,"U)<(https://teams\.microsoft\.com/l/meetup-join/.*)>",sMeetingLink)
+    sMeetingLink := sMeetingLink1
+; for issue with plain Meeting invitation https://techcommunity.microsoft.com/t5/microsoft-teams/meeting-invitation-in-outlook-not-rendering-correctly/m-p/3268856
+Else If RegExMatch(oItem.Body,"Um)^https://teams\.microsoft\.com/l/meetup-join/.*$",sMeetingLink) { 
+    ; do nothing
+}
+    
+If (sMeetingLink = "") {
+    ; MsgBox % oItem.Body
     return
-sMeetingLink := sMeetingLink1
+}
+
 ; Use microsoft edge because better integrated. Teams Links can be whitelisted (Application Links) to be always opened in Teams Client
 Run, msedge.exe "%sMeetingLink%" " --new-window"
 WinWaitActive, ahk_exe msedge.exe
 NewEdgeWinId := WinExist("ahk_exe msedge.exe") 
 
 TeamsExe := Teams_GetExeName()
-WinWaitActive, ahk_exe %TeamsExe%,,2
+WinWaitActive, ahk_exe %TeamsExe%,,3
 If ErrorLevel {
     TrayTipAutoHide("Error!","Joined Teams Meeting Window not found!",2000,3)
     return
@@ -344,6 +352,17 @@ If (autoJoin) {
 If (openChat) 
     Teams_MeetingOpenChat(sMeetingLink)
 
+; Dismiss Meeting Reminder
+RemWinId := WinExist("Reminder(s) ahk_class #32770")  ; Reminder Windows
+If RemWinId {
+    UIA := UIA_Interface()  
+    OlEl := UIA.ElementFromHandle(RemWinId)
+    OlEl.FindFirstByName("Meeting. " . oItem.Subject).Click()
+    SendInput {tab}{2}
+    SendInput d ; Dismiss
+}
+    
+
 } ; eofun
 
 
@@ -373,7 +392,7 @@ strRestriction := "[Start] >= """ . myStart . """ AND [End] < """ . myEnd . """"
 ;MsgBox % strRestriction
 
 oCalendar := olApp.GetNameSpace("MAPI").GetDefaultFolder(olFolderCalendar := 9)  ; olFolderCalendar = 9
-oItems := oCalendar.items
+oItems := oCalendar.items()
 oItems.IncludeRecurrences := True
 oItems.Sort("[Start]")
 ; Restrict the Items collection for the date range
@@ -382,8 +401,7 @@ oItemsInDateRange := oItems.Restrict(strRestriction)
 appts := Array()
 cnt := 0
 for appt in oItemsInDateRange  {
-    ;MsgBox % appt.Subject
-    If !RegExMatch(appt.Body,"<(https://teams.microsoft.com/l/meetup-join/[^>]*)>",teamslink)  
+    If !InStr(appt.Body,"https://teams.microsoft.com/l/meetup-join/")  
         Continue
     cnt += 1
     ti := DateParse(appt.Start)
@@ -392,9 +410,8 @@ for appt in oItemsInDateRange  {
     ti := DateParse(appt.End)
     FormatTime, endTime, %ti%, Time
     
-    
     Title := appt.Subject . " (" . stTime " - " . endTime . ")"
-    ApptList .= ( (ApptList<>"") ? "|" : "" ) . Title . "  {" . cnt . "}"
+    ApptList .= ( (ApptList<>"") ? "|" : "" ) . Title
     appts.Push(appt)       
 } ; end for
 
@@ -409,23 +426,25 @@ If (cnt= 0) {
 EnvAdd, myStartSel, -30 , Minutes
 EnvAdd, myEndSel, +30 , Minutes
 
-FormatTime, stTime, %myStartSel%, Time
+FormatTime, stTime, %myStartSel%, Time ;h:mm tt
 myStartSel := today . " " . stTime
-
-
 FormatTime, endTime, %myEndSel%, Time
 myEndSel := today . " " . endTime
 
 ; Construct filter 
-strRestriction := "[Start] >= """ . myStartSel . """ AND [Start] < """ . myEndSel . """"
+strRestriction := "[Start] >= """ . myStartSel . """ AND [Start] < """ . myEndSel . """ AND [End] < """ . myEnd . """"
 
 ; Restrict the Items collection for the date range
+
+; https://learn.microsoft.com/en-us/answers/questions/930189/restrict-function-not-working-properly-with-recurr
+
 oItemsInDateRange := oItems.Restrict(strRestriction)
+
 
 cnt := 0
 for apptsel in oItemsInDateRange  {
-    If !RegExMatch(apptsel.Body,"<(https://teams.microsoft.com/l/meetup-join/[^>]*)>",teamslink)  
-        Continue
+    If !InStr(appt.Body,"https://teams.microsoft.com/l/meetup-join/")    
+        Continue   
     cnt := 1
     break   
 } ; end for
@@ -443,11 +462,10 @@ If (cnt=1) {
 ;-------------------------------------------------------------------------
 
 
-LB := ListBox("Join Meeting","Select Teams Meeting",ApptList,sel)
+LB := ListBox("Join Meeting","Select Teams Meeting",ApptList,sel,,True)
 If (LB ="")
     return
-RegExMatch(LB,"\{([^}]*)\}$",ApptId)
-oItem := appts[ApptId1]
+oItem := appts[LB]
 
 return oItem
 

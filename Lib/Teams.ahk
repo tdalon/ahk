@@ -499,7 +499,6 @@ Teams_Emails2Chat(sEmailList)
 Teams_Emails2Meeting(sEmailList){
 ; Create and Open Teams Meeting from list of Emails
 sLink := "https://teams.microsoft.com/l/meeting/new?attendees=" . StrReplace(sEmailList, ";",",") 
-TeamsExe = Teams_GetExe()
 Teams_OpenUrl(sLink) 
 } ; eofun
 
@@ -551,7 +550,10 @@ sFile := FavsDir . "\" . sFileName . ".url"
 IniWrite, %sUrl%, %sFile%, InternetShortcut, URL
 
 ; Add icon file:
-TeamsExe := Teams_GetExe()
+If Teams_IsNew()
+    TeamsExe := Teams_GetExe()
+Else
+    TeamsExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe
 IniWrite, %TeamsExe%, %sFile%, InternetShortcut, IconFile
 IniWrite, 0, %sFile%, InternetShortcut, IconIndex
 
@@ -750,7 +752,7 @@ Teams_Link2Fav(sUrl,FavsDir,"Group Chat -" . sName)
 } ; eofun
 ; ----------------------------------------------------------------------
 
-Teams_IsNew(){ ; @fun_teams_isnew
+Teams_IsNew(){ ; @fun_teams_isnew@
 ; IsNew := Teams_IsNew()
 ; return true or false depending if Teams New Client is installed and Classic Teams running
     static IsNew
@@ -783,15 +785,30 @@ Teams_IsNew(){ ; @fun_teams_isnew
 } ;eofun
 
 ; ----------------------------------------------------------------------
-Teams_GetExe(){
+Teams_GetExe() {
     If Teams_IsNew()
         ; New Teams in WindowsApp C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps
-        fExe := "ms-teams.exe"
+        fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps\ms-teams.exe
     Else { ; Classic Team Client
-        ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
-        fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe"
+        ;EnvGet, userprofile , userprofile
+        ;fExe = %userprofile%\AppData\Local\Microsoft\Teams\current\Teams.exe ;C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe
+        fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
     }
     return fExe
+}
+
+Teams_RunExe(){
+    If Teams_IsNew() {
+        ; New Teams in WindowsApp C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps
+        fExe := "ms-teams.exe"
+        ;MsgBox % fExe
+        Run %fExe%
+    } Else { ; Classic Team Client
+        ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
+        ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe"
+        Run "C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe" --processStart "Teams.exe"
+    }
+    
 } ;eofun
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
@@ -1150,6 +1167,7 @@ If GetKeyState("Ctrl") {
 
 savedClipboard := ClipboardAll
 sSelectionHtml := Clip_GetSelectionHtml(False)
+MsgBox % sSelectionHtml
 
 If (sSelectionHtml="") { ; no selection -> default reply
     Send !+r ; Alt+Shift+r
@@ -1380,6 +1398,8 @@ return sList
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ConversationGetLink(){
+; Shift+F10 Open Context Menu->Copy Link
+
 ; Alternative to select all Thread: Double MouseClick, Left
 SendInput +{Up} ; Shift + Up Arrow: select all thread
 Sleep 200
@@ -1848,7 +1868,6 @@ Teams_GetMainWindow(){ ; @fun_teams_getmainwindow@
 TeamsMainWinId := PowerTools_RegRead("TeamsMainWinId") ; use registry vs. static to make it persistent to tool restart
 If WinExist("ahk_id " . TeamsMainWinId) 
     return TeamsMainWinId
-
 TeamsExe := Teams_GetExeName()
 
 WinGet, WinCount, Count, ahk_exe %TeamsExe%
@@ -1856,17 +1875,19 @@ WinGet, WinCount, Count, ahk_exe %TeamsExe%
 If (WinCount = 0)
     GoTo, StartTeams
 
-; when virtuawin is running Teams main window can be on another virtual desktop = hidden
-Process, Exist, VirtuaWin.exe
-VirtuaWinIsRunning := ErrorLevel
-If (WinCount = 1) and Not (VirtuaWinIsRunning) {
-    TeamsMainWinId := WinExist("ahk_exe " . TeamsExe)
-    RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, TeamsMainWinId, %TeamsMainWinId%
-    return TeamsMainWinId
-}
-
 ; Get main window via Acc Window Object Name - only for Classic Client
-If !Teams_IsNew() {
+If !Teams_IsNew() { ; Classic Teams
+
+    ; If only one window opened- main window (no true for New Teams where main window can be closed)
+    ; when virtuawin is running Teams main window can be on another virtual desktop = hidden
+    Process, Exist, VirtuaWin.exe
+    VirtuaWinIsRunning := ErrorLevel
+    If (WinCount = 1) and Not (VirtuaWinIsRunning) {
+        TeamsMainWinId := WinExist("ahk_exe " . TeamsExe)
+        RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, TeamsMainWinId, %TeamsMainWinId%
+        return TeamsMainWinId
+    }
+
     WinGet, WinId, List,ahk_exe %TeamsExe%
     Loop, %WinId%
     {
@@ -1891,9 +1912,12 @@ If WinActive("ahk_exe " . TeamsExe) {
 } 
 
 StartTeams: 
-fTeamsExe := Teams_GetExe()
-Run, "%fTeamsExe%"
+Teams_RunExe()
 WinWaitActive, ahk_exe %TeamsExe%,,5
+If ErrorLevel {
+    TrayTip, Could not find Teams Main Window! , Timeout exceeded!,,0x2
+    return
+}
 TeamsMainWinId := WinExist("A")
 
 ; restore previous active window
@@ -2232,17 +2256,14 @@ Teams_MeetingShare(ShareMode := 2){
     }
 
     Lang := Teams_GetLang()
-   
         
     Name := Teams_GetLangName("Share","Share",Lang)
     If (Name="") 
         return
     
     IsSharing := !RegExMatch(ShareEl.Name,"^" . Name) 
-
     If (ShareMode = 1) and (IsSharing) ; already sharing
         Return
-
     If (ShareMode = 0) and !(IsSharing) ; already not sharing
         Return
 
@@ -2266,16 +2287,6 @@ Teams_MeetingShare(ShareMode := 2){
 
     SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
 
-    
-    ; Hide Sharing Control Bar
-    Name := Teams_GetLangName("SharingControlBar","Sharing control bar",Lang)
-    If !(Name="") {
-        TeamsExe := Teams_GetExeName()
-        wTitle =  %Name% ahk_exe %TeamsExe%
-        WinWait, %wTitle%,,2
-        Teams_SharingControlBar("-")
-    }
-
     ; Move Meeting Window to secondary screen
     SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
     If (MonitorCount > 1) {
@@ -2288,6 +2299,16 @@ Teams_MeetingShare(ShareMode := 2){
 
     ; Activate FocusAssistant
     FocusAssist("+")
+
+    ; Hide Sharing Control Bar
+    Name := Teams_GetLangName("SharingControlBar","Sharing control bar",Lang)
+    If !(Name="") {
+        TeamsExe := Teams_GetExeName()
+        wTitle =  %Name% ahk_exe %TeamsExe%
+        WinWait, %wTitle%,,2
+        WinHide, %wTitle%
+    }
+
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
@@ -2578,8 +2599,7 @@ Teams_MeetingLeave(mode:="?") { ; @fun_teams_meetingleave@
             Else {
                 TeamsEl.FindFirstBy("AutomationId=splitButton-ddd__primaryActionButton").Click()
                 GoTo Finish
-            }
-                
+            }   
         }
     } 
     
@@ -2594,9 +2614,14 @@ Teams_MeetingLeave(mode:="?") { ; @fun_teams_meetingleave@
 
     
     Finish:
-    ; Restore pevious window
-    WinActivate, ahk_id %curWinId%
+    ; Dismiss Call Quality Window
+    El:=TeamsEl.WaitElementExist("AutomationId=cqf-dismiss-button",,,,1000) 
+    If El
+        El.Click()
     
+    ; Restore previous window
+    WinActivate, ahk_id %curWinId%
+
     ; Reset FocusAssistant
     FocusAssist(-)
 } ; eofun
