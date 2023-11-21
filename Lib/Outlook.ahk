@@ -311,13 +311,13 @@ WinWaitActive, ahk_exe msedge.exe
 NewEdgeWinId := WinExist("ahk_exe msedge.exe") 
 
 TeamsExe := Teams_GetExeName()
-WinWaitActive, ahk_exe %TeamsExe%,,3
+WinWaitActive, ahk_exe %TeamsExe%,,1
 If ErrorLevel {
-    TrayTipAutoHide("Error!","Joined Teams Meeting Window not found!",2000,3)
+    TrayTipAutoHide("Error!","Join Teams Meeting Window not found!",2000,3)
     return
 }
 
-JoinWinId := WinActive("A")
+JoinWinId := WinExist("A")
 
 If WinExist("ahk_id " . NewEdgeWinId) {
     WinActivate
@@ -330,7 +330,7 @@ If (autoJoin) {
     UIA := UIA_Interface()
     TeamsEl := UIA.ElementFromHandle(JoinWinId)
     
-    TeamsJoinBtn := TeamsEl.FindFirstBy("AutomationId=prejoin-join-button")
+    TeamsJoinBtn := TeamsEl.WaitElementExist("AutomationId=prejoin-join-button",,,,2000) ; takes time to load elements in window
 
     If !TeamsJoinBtn {
         TrayTip, Join Teams Meeting! , "Join button not found!",,0x2
@@ -338,7 +338,7 @@ If (autoJoin) {
     }
     TeamsJoinBtn.Click()   
     ; Wait for meeting window to open
-    MuteEl:=TeamsEl.WaitElementExist("AutomationId=microphone-button",,,,2000)
+    MuteEl:= TeamsEl.WaitElementExist("AutomationId=microphone-button",,,,2000)
     ; Unmute
     Name:=Teams_GetLangName("Unmute","Unmute")
     If (MuteEl.Name = %Name%)
