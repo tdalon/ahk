@@ -2333,7 +2333,7 @@ Run, %sUrl%
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_GetCacheDir(IsNew := true) {
 ; CacheDir := Teams_GetCacheDir()
-If IsNew() {
+If IsNew {
     ; %localappdata%\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams
     TeamsDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams"
 } Else {
