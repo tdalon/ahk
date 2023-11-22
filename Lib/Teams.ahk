@@ -11,6 +11,20 @@ Teamsy("-g")
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
+Teams_GetVer() { ; NOT WORKING
+; Get Client Version information
+If Teams_IsNew() {
+    Loop, Reg, HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages\ 
+        {
+            MsgBox % A_LoopRegName
+            If RegExMatch(A_LoopRegName,"U)^MSTeams_(.*)_",sMatch)
+                return sMatch1
+        }
+}
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
 Teams_BackgroundOpenLibrary() {
     If GetKeyState("Ctrl") {
         Teamsy_Help("cbg")
@@ -2331,14 +2345,17 @@ Run, %sUrl%
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_GetCacheDir(IsNew := true) {
+Teams_GetCacheDir(isNew := "") {
 ; CacheDir := Teams_GetCacheDir()
-If IsNew {
+If (isNew="")
+    isNew := Teams_IsNew()
+If isNew {
     ; %localappdata%\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams
-    TeamsDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams"
+    CacheDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams"
 } Else {
-    TeamsDir = %A_AppData%\Microsoft\Teams
+    CacheDir = %A_AppData%\Microsoft\Teams
 }
+return CacheDir
 } ; eofun
 
 
