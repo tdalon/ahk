@@ -1,4 +1,5 @@
 ; From https://github.com/cocobelgica/AutoHotkey-JSON
+; Includes fix https://github.com/cocobelgica/AutoHotkey-JSON/issues/11
 Jxon_Load(ByRef src, args*)
 {
 	static q := Chr(34)
@@ -117,7 +118,7 @@ Jxon_Load(ByRef src, args*)
 			; SOMETIMES return strings due to certain optimizations. Since it
 			; is just 'SOMETIMES', numerify to be consistent w/ v2.0-a
 				else if (val == "true" || val == "false")
-					val := %value% + 0
+					val := %val% + 0 ; TD
 			; AHK_H has built-in null, can't do 'val := %value%' where value == "null"
 			; as it would raise an exception in AHK_H(overriding built-in var)
 				else if (val == "null")

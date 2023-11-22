@@ -8,6 +8,8 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2023-11-22
+  * Improved Teams_MeetingLeave: prompt for End or Leave
 * 2023-11-20
   * Bug Fix Teams Meeting Share Hide Sharing Control Bar
 * 2023-11-16

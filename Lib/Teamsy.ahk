@@ -220,7 +220,7 @@ Case "re","restart": ; restart
 Case "clean": ; clean restart
     Teams_CleanRestart()
     return
-Case "clear","cache","cl": ; clear cache
+Case "clear","cache","cl","clc": ; clear cache
     Teams_ClearCache()
     return
 Case "nm": ; new meeting
@@ -362,7 +362,7 @@ Case "bg":
     sUrl := "https://tdalon.blogspot.com/2023/11/teams-set-background.html"
 Case "obg","cbg":
     sUrl := "https://tdalon.blogspot.com/2021/01/teams-custom-backgrounds.html"
-Case "cl": ; clear cache
+Case "cl","clc": ; clear cache
     sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html" 
 Case "2": ; second instance
     sUrl := "https://tdalon.blogspot.com/2020/12/open-multiple-microsoft-teams-instances.html"

@@ -324,7 +324,6 @@ If WinExist("ahk_id " . NewEdgeWinId) {
     Send ^w ; Close leftover browser window
 }
 
-
 ; Click on join button
 If (autoJoin) {
     UIA := UIA_Interface()

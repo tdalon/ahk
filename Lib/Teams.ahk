@@ -2331,9 +2331,20 @@ Run, %sUrl%
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_ClearCache(){
+Teams_GetCacheDir(IsNew := true) {
+; CacheDir := Teams_GetCacheDir()
+If IsNew() {
+    ; %localappdata%\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams
+    TeamsDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams"
+} Else {
+    TeamsDir = %A_AppData%\Microsoft\Teams
+}
+} ; eofun
+
+
+Teams_ClearCache(){ ; @fun_teams_clearcache@
     If GetKeyState("Ctrl") {
-        Teamsy_Help("cl")
+        Teamsy_Help("clc")
         return
     }
 
@@ -2354,14 +2365,13 @@ Teams_ClearCache(){
 
     ; Delete Folders and Files in Cache Directory
     If IsNew { ; https://microsoft365pro.co.uk/2023/07/31/teams-real-simple-with-pictures-clear-cache-in-teams-2-1-client/ @Microsoft365Pro
-        TeamsDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams" ; AppData env variable points to Roaming
-        /* 
-        FileRemoveDir, %TeamsDir%\EBWebView, 1
-        FileRemoveDir, %TeamsDir%\Logs, 1 
-        */
+        TeamsDir := RegExReplace(A_AppData,"\\[^\\]*$") . "\Local\packages\MSTeams_8wekyb3d8bbwe\Localcache\Microsoft\MSTeams" ; AppData env variable points to Roaming        
+        FileRecycle, %TeamsDir%\EBWebView
+        FileRecycle, %TeamsDir%\Logs 
+        FileRecycle, %TeamsDir%\*.dat64
+        FileRecycle, %TeamsDir%\*.json
     } Else { ; Teams Classic ; https://learn.microsoft.com/en-us/microsoftteams/troubleshoot/teams-administration/clear-teams-cache
         TeamsDir = %A_AppData%\Microsoft\Teams
-        /* 
         FileRemoveDir, %TeamsDir%\application cache\cache, 1
         FileRemoveDir, %TeamsDir%\blob_storage, 1
         FileRemoveDir, %TeamsDir%\databases, 1
@@ -2370,26 +2380,20 @@ Teams_ClearCache(){
         FileRemoveDir, %TeamsDir%\Indexeddb, 1
         FileRemoveDir, %TeamsDir%\Local Storage, 1
         FileRemoveDir, %TeamsDir%\tmp, 1 
-        */
     }
-
-    ; TODO do not clear Backgrounds\Uploads
-
-    FileRecycle, %TeamsDir%\*
-
     Teams_GetMainWindow()
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_CleanRestart(){
+Teams_CleanRestart(){ ; @fun_teams_cleanrestart@
 If GetKeyState("Ctrl") {
     sUrl := "https://tdalon.blogspot.com/2021/01/teams-clear-cache.html"
     Run, "%sUrl%"
 	return
 }
 ; Warning all appdata will be deleted
-MsgBox, 0x114,Teams Clean Restart, Are you sure you want to delete all Teams Client local application data?
+MsgBox, 0x114,Teams Clean Restart, Are you sure you want to delete all Teams Client local application data? (incl. custom Backgrounds)
 IfMsgBox No
    return
 
@@ -2402,10 +2406,10 @@ If (ErrorLevel) {
 While WinExist("ahk_exe " . TeamsExe)
     Sleep 500
 
-TeamsDir = %A_AppData%\Microsoft\Teams
-FileRemoveDir, %TeamsDir%, 1
-
-Teams_GetMainWindow()
+TeamsDir = Teams_GetCacheDir(Teams_IsNew())
+;FileRemoveDir, %TeamsDir%, 1
+FileRecycle, %TeamsDir%\*
+Teams_GetMainWindow() ; will restart Teams
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -2587,19 +2591,28 @@ Teams_MeetingLeave(mode:="?") { ; @fun_teams_meetingleave@
     Els :=  TeamsEl.FindAllByNameAndType("More options","Button")  ; Name More options ; AutomationId changing menuddd
     for i, El in Els   
         If InStr(El.ClassName,"SplitButton") { ;   
-        ; ClassName =fui-Button rlr4yyk fui-MenuButton fui-SplitButton__menuButton toggleButton ___z3kncc0 f1sbtcvk fwiuce9 fdghr9 f15vdbe4 fwbmr0d f44c6la frrbwxo f1um7c6d f6pwzcr fdl5y0r f1p3nwhy f11589ue f1q5o8ev f1pdflbu fonrgv7 f5k7jbu f1s2uweq fr80ssc f1ukrpxl fecsdlb fhhy8jn fqwlww5 f1bbhs8t f1i3by9 fbb8suj f1sw78cg f1vj5d8e f1udo9fm f1hoz3np 
-            El.Click() ; Click element without moving the mouse
-        EndEl:=TeamsEl.WaitElementExistByName("End meeting",,,,2000)
-        If (EndEl) and (mode="e")
-            GoTo EndMeeting
-        Else If (mode="?") {
-            MsgBox, 0x24, End Meeting?,Do you want to End the meeting?
-            IfMsgBox Yes
+            ; ClassName =fui-Button rlr4yyk fui-MenuButton fui-SplitButton__menuButton toggleButton ___z3kncc0 f1sbtcvk fwiuce9 fdghr9 f15vdbe4 fwbmr0d f44c6la frrbwxo f1um7c6d f6pwzcr fdl5y0r f1p3nwhy f11589ue f1q5o8ev f1pdflbu fonrgv7 f5k7jbu f1s2uweq fr80ssc f1ukrpxl fecsdlb fhhy8jn fqwlww5 f1bbhs8t f1i3by9 fbb8suj f1sw78cg f1vj5d8e f1udo9fm f1hoz3np 
+                El.Click() ; Click element without moving the mouse
+            EndEl:=TeamsEl.WaitElementExistByName("End meeting",,,,2000)
+            If (EndEl) and (mode="e")
                 GoTo EndMeeting
-            Else {
-                TeamsEl.FindFirstBy("AutomationId=splitButton-ddd__primaryActionButton").Click()
-                GoTo Finish
-            }   
+            Else If (mode="?") {
+                OnMessage(0x44, "OnLeaveMsgBox")
+                MsgBox, 0x23, Leave End Meeting,Do you want to End or Leave the meeting?
+                OnMessage(0x44, "")
+                IfMsgBox Cancel 
+                    {
+                        El.Click()
+                        WinActivate, ahk_id %curWinId%
+                        return
+                    }
+
+                IfMsgBox Yes ; End
+                    GoTo EndMeeting
+                Else { ; Leave
+                    TeamsEl.FindFirstBy("AutomationId=splitButton-ddd__primaryActionButton").Click()
+                    GoTo Finish
+                }   
         }
     } 
     
@@ -2607,24 +2620,38 @@ Teams_MeetingLeave(mode:="?") { ; @fun_teams_meetingleave@
     return
     
 
+
     EndMeeting:
     EndEl.Click()
-    EndEl:=TeamsEl.WaitElementExistByNameAndType("End","Button",,3,,2000) ; exact match
+    EndEl:=TeamsEl.WaitElementExistByNameAndType("End","Button",,3,,2000) ; exact match ; TODO Lang specific
     EndEl.Click()
 
     
     Finish:
+    ; Reset FocusAssistant
+    FocusAssist(-)
+
+    ; Restore previous window
+    WinActivate, ahk_id %curWinId%
+
     ; Dismiss Call Quality Window
     El:=TeamsEl.WaitElementExist("AutomationId=cqf-dismiss-button",,,,1000) 
     If El
         El.Click()
-    
-    ; Restore previous window
-    WinActivate, ahk_id %curWinId%
 
-    ; Reset FocusAssistant
-    FocusAssist(-)
+    
 } ; eofun
+
+
+OnLeaveMsgBox() {
+    DetectHiddenWindows, On
+    Process, Exist
+    If (WinExist("ahk_class #32770 ahk_pid " . ErrorLevel)) {
+        ControlSetText Button1, End
+		ControlSetText Button2, Leave
+    }
+}
+
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_PushToTalk(KeyName:="MButton"){

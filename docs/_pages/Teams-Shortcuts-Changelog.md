@@ -8,6 +8,8 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2023-11-22
+  * Improved Teams_MeetingLeave: prompt for End or Leave
 * 2023-11-03
   * [Set meeting background](https://tdalon.blogspot.com/2023/11/teams-set-background.html)
 * 2023-10-27
