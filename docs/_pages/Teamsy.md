@@ -94,10 +94,10 @@ rh(+-)  |  [Raise your Hand](https://tdalon.blogspot.com/2021/02/teams-raise-han
 le  |  [Leave Meeting](https://tdalon.blogspot.com/2023/11/teamsy-leave-meeting.html)
 sb(+-) | [Hide/Show Sharing Control bar](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html)
 bg | [Set Background](https://tdalon.blogspot.com/2023/11/teams-set-background.html)
+bgn | Set Background Name
+bgs | Open Background Settings
 
 ### Others
-
-
 
 Keywords  |  Action
 --|--

@@ -231,32 +231,50 @@ return Config
 }
 ; ----------------------------------------------------------------------
 PowerTools_SetConfig(){
-RegRead, Config, HKEY_CURRENT_USER\Software\PowerTools, Config
-DefListConfig := "Default|Ini"
-If FileExist("Lib/ET.ahk")
-    DefListConfig := DefListConfig . "|ET"
-If FileExist("Lib/Conti.ahk")
-    DefListConfig := DefListConfig . "|Conti|Vitesco"
-Select := 0
-Loop, parse, DefListConfig, | 
-{
-    If (A_LoopField = Config) {
-        Select := A_Index
-        break
+; Config := PowerTools_SetConfig()
+    RegRead, Config, HKEY_CURRENT_USER\Software\PowerTools, Config
+    DefListConfig := "Default|Ini"
+    If FileExist("Lib/ET.ahk")
+        DefListConfig := DefListConfig . "|ET"
+    If FileExist("Lib/Conti.ahk")
+        DefListConfig := DefListConfig . "|Conti|Vitesco"
+    Select := 0
+    Loop, parse, DefListConfig, | 
+    {
+        If (A_LoopField = Config) {
+            Select := A_Index
+            break
+        }
     }
-}
-Config := ListBox("PowerTools Config","Select your configuration:",DefListConfig,Select)
-If (Config="")
-    return
-PowerTools_RegWrite("Config",Config)
-return Config
+    Config := ListBox("PowerTools Config","Select your configuration:",DefListConfig,Select)
+    If (Config="")
+        return
+    PowerTools_RegWrite("Config",Config)
+    return Config
 } ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+PowerTools_IniRead(Section,Key) {
+    ; PowerTools_IniRead(Section,Key)
+    ; return "ERROR" if key was not found in PowerTools.ini File
+    IniRead, OutputVar, PowerTools.ini,%Section%,%Key%
+    return OutputVar
+    } ; eofun
+    ; -------------------------------------------------------------------------------------------------------------------
+    ; -------------------------------------------------------------------------------------------------------------------
+    PowerTools_IniWrite(Var,Section,Key) {
+        ; PowerTools_IniWrite(Var,Section,Key)
+        ; ErrorLevel is returned
+        IniWrite, %Var%, PowerTools.ini, %Section%, %Key%
+    } ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_RegRead(Prop){
 RegRead, OutputVar, HKEY_CURRENT_USER\Software\PowerTools, %Prop%
 return OutputVar
-}
+} ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_RegWrite(Prop, Value){
@@ -599,3 +617,62 @@ PowerTools_ErrDlg(Text,sUrl:=""){
     return
 
 } ; eofun
+
+
+; -------------------------------------------------------------------------------------------------------------------
+; Open Link in Default browser - See https://tdalon.blogspot.com/2023/06/ahk-browser-link-redirector.html
+PowerTools_OpenLink(sUrl) { ; @fun_open_link@
+    ; Based on PowerTools.ini files [Browsers] and [BrowserRules] definition
+    
+    ;sUrl := IntelliPaste_CleanUrl(sUrl) 
+    
+    If InStr(sUrl,"teams.microsoft.com") { ; remove browser leftover window
+        Try { ; in case Teams library is not provided with this OpenLink function
+            FunStr := "Teams_OpenUrl" ; hide function from compiler
+            %FunStr%(sUrl)
+            Return
+        }
+    }
+    
+    If !FileExist("PowerTools.ini") {
+        PowerTools_ErrDlg("OpenLink: No PowerTools.ini file found!")
+        GoTo OpenDefault
+    }
+    
+    ProjectKey := RegExReplace(sKey,"\-.*$")
+    IniRead, BrowserRules, PowerTools.ini,BrowserRules
+    If (BrowserRules="ERROR") { ; Section [BrowserRules] not found
+        PowerTools_ErrDlg("No section [BrowserRules] in PowerTools.ini file was found!")
+        GoTo OpenDefault
+    }
+    
+    Loop Parse, BrowserRules,`n,`r
+    {
+        RegExMatch(A_LoopField,"(.*)=(.*)",sMatch)
+        Loop Parse, sMatch2, CSV 
+            {
+                If InStr(sUrl,A_LoopField) {
+                    BrowserName := sMatch1
+                    break
+                }	
+            }
+        If BrowserName
+            break
+    }
+    
+    If BrowserName { ; not empty 
+        IniRead, BrowserCmd, PowerTools.ini,Browsers,%BrowserName%
+        If (BrowserCmd="ERROR") { ; Section [BrowserRules] not found
+            PowerTools_ErrDlg("OpenLink: No Browser Key matching BrowserName=" . BrowserName . " found in section [Browsers] in PowerTools.ini file!")
+            return
+        }
+        sCmd = "%BrowserCmd%" "%sUrl%" ; Reading String in Ini files removes trailing quotes
+        Run, %sCmd%
+        return
+    } 
+        
+    OpenDefault:
+    Run, "%sUrl%" ; Default Browser
+    return
+    
+    } ; eofun End Function OpenLink

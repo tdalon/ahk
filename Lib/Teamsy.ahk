@@ -47,6 +47,9 @@ Case "bgf","bgo","backgrounds","cbg":
 Case "bg":
     Teams_MeetingBackgroundSet(sInput)
     return
+Case "bgn":
+    Teams_BackgroundFile2Name("","w")
+    return
 Case "bgs": ; open background settings via Ctrl+Shift+P depreciated
     ;Teams_MeetingShortcuts("bg")
     Teams_MeetingBackgroundSettings()

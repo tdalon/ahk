@@ -314,7 +314,7 @@ return
 #IfWinActive, ahk_group OpenLinks
 ; Open in Default Browser (incl. Office applications) - see OpenLink function
 
-; Shift Mouse click
+; Shift Mouse click OpenLink
 +LButton:: ;
 Clip_All := ClipboardAll  ; Save the entire clipboard to a variable
 Clipboard =  ; Empty the clipboard to allow ClipWait work
@@ -344,7 +344,7 @@ sUrl := Clipboard
 If sUrl { ; Not empty
 	;sUrl := IntelliPaste_CleanUrl(sUrl) ; convert e.g. teams links to SP links
 	;Run %sUrl% ; Handled by BrowserTamer -> blocked by IT
-	OpenLink(sUrl)
+	PowerTools_OpenLink(sUrl) 
 } Else {
 	Send {LButton}
 }		
@@ -762,84 +762,6 @@ PasteCleanUrl(encode:= False){
 	Clip_Paste(sUrl)
 	return
 }
-
-
-; -------------------------------------------------------------------------------------------------------------------
-; Function OpenLink
-; Open Link in Default browser - See https://tdalon.blogspot.com/2023/06/ahk-browser-link-redirector.html
-OpenLink(sUrl) { ; @fun_open_link@
-; Based on PowerTools.ini files [Browsers] and [BrowserRules] definition
-
-;sUrl := IntelliPaste_CleanUrl(sUrl) 
-
-If InStr(sUrl,"teams.microsoft.com") { ; remove browser leftover window
-	Teams_OpenUrl(sUrl)
-	Return
-}
-	
-
-If !FileExist("PowerTools.ini") {
-	PowerTools_ErrDlg("OpenLink: No PowerTools.ini file found!")
-	GoTo OpenDefault
-}
-
-ProjectKey := RegExReplace(sKey,"\-.*$")
-IniRead, BrowserRules, PowerTools.ini,BrowserRules
-If (BrowserRules="ERROR") { ; Section [BrowserRules] not found
-	PowerTools_ErrDlg("No section [BrowserRules] in PowerTools.ini file was found!")
-	GoTo OpenDefault
-}
-
-Loop Parse, BrowserRules,`n,`r
-{
-	RegExMatch(A_LoopField,"(.*)=(.*)",sMatch)
-	Loop Parse, sMatch2, CSV 
-		{
-			If InStr(sUrl,A_LoopField) {
-				BrowserName := sMatch1
-				break
-			}	
-		}
-	If BrowserName
-		break
-}
-
-If BrowserName { ; not empty 
-	IniRead, BrowserCmd, PowerTools.ini,Browsers,%BrowserName%
-	If (BrowserCmd="ERROR") { ; Section [BrowserRules] not found
-		PowerTools_ErrDlg("OpenLink: No Browser Key matching BrowserName=" . BrowserName . " found in section [Browsers] in PowerTools.ini file!")
-		return
-	}
-	sCmd = "%BrowserCmd%" "%sUrl%" ; Reading String in Ini files removes trailing quotes
-	Run, %sCmd%
-	return
-} 
-	
-
-OpenDefault:
-Run, "%sUrl%" ; Default Browser
-return
-
-
-	If SharePoint_IsUrl(sUrl) {
-		If InStr(sUrl,".xlsx") {
-			sUrl := "ms-excel:ofe|u|" . sUrl
-			Run, "%sUrl%"
-		}
-	} If IsIELink(sUrl) {
-		;Run, %A_ProgramFiles%\Internet Explorer\iexplore.exe %sUrl%
-		Run, iexplore.exe "%sUrl%"
-	} Else If Confluence_IsUrl(sUrl)  || Jira_IsUrl(sUrl)  { ; JIRA or Confluence urls							
-		;Run, C:\Users\%A_UserName%\AppData\Local\Google\Chrome\Application\chrome.exe %sUrl%
-		Run, "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 3" "%sUrl%"
-	} Else If InStr(sUrl,"https://teams.microsoft.com/") { ; Teams url=>open by default in App
-		;Run, StrReplace(sUrl, "https://","msteams://")
-		Run, "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 4" "%sUrl%"
-	} Else {
-		;sUrl := IntelliPaste_CleanUrl(sUrl) ; No need to clean because handled by Redirector
-		Run, "C:\Program Files\Google\Chrome\Application\chrome.exe" --profile-directory="Profile 1" "%sUrl%"
-	} ; End If
-} ; eofun End Function OpenLink
 
 ; ----------------------------------------------------------------------
 QuickSearch(){
