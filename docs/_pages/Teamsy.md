@@ -96,6 +96,7 @@ sb(+-) | [Hide/Show Sharing Control bar](https://tdalon.blogspot.com/2023/10/tea
 bg | [Set Background](https://tdalon.blogspot.com/2023/11/teams-set-background.html)
 bgn | Set Background Name
 bgs | Open Background Settings
+sh(+-) | [Share](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html)
 
 ### Others
 
@@ -134,6 +135,10 @@ It is recommended to also download the PowerTools.ini file.
 <div style="text-align:center"><img src="/ahk/assets/images/Teamsy_Launcher_StatusChange.gif" alt="Teamsy Status Change"></div>
 
 ### [Meeting Live Reactions](Teams-Meeting-Reactions)
+
+### [Meeting Share](https://tdalon.blogspot.com/2023/10/teams-quick-share-screen.html)
+
+<div style="text-align:center"><img src="/ahk/assets/images/Teamsy_Meeting_Share.gif" alt="Teamsy Meeting Share"></div>
 
 ### [Share To Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
 
