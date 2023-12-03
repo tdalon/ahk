@@ -2,11 +2,11 @@
 ; AutoResize: https://www.autohotkey.com/boards/viewtopic.php?style=17&t=1403
 ; -------------------------------------------------------------------------------
 
-ListBox(Title := "", Prompt := "", List := "", Select := 0, AlwaysOnTop := True) {
+ListBox(Title := "", Prompt := "", List := "", Select := 0, AlwaysOnTop := True,returnIndex := False ) {
 ; LB := ListBox(Title := "", Prompt := "", List := "", Select := 0, AlwaysOnTop := True)
     ;-------------------------------------------------------------------------------
 ; show a custom input box with a ListBox control
-; return the text of the selected item. Empty if cancelled
+; return the index of the selected item. Empty if cancelled
 ;---------------------------------------------------------------------------
 ; Title is the title for the GUI
 ; Prompt is the text to display
@@ -22,12 +22,19 @@ Gui, -MinimizeBox
 If Prompt ; not empty
     Gui, Add, Text,, %Prompt%
 
-Loop Parse, List,|
+Loop Parse, List,| 
+{
     rCnt++
-Gui, Add, ListBox, r%rCnt% vLB hwndHLB Choose%Select%, %List%
+    maxsize := StrLen(A_LoopField) > maxsize ? StrLen(A_LoopField) : maxsize
+}
+boxwidth := maxsize * 5  
+If returnIndex
+    Gui, Add, ListBox, +AltSubmit w%boxwidth% r%rCnt% vLB hwndHLB Choose%Select%, %List%
+Else  
+    Gui, Add, ListBox, w%boxwidth% r%rCnt% vLB hwndHLB Choose%Select%, %List%
 
-W := LB_EX_CalcWidth(HLB)
-GuiControl, Move, HLB, w%W% ; h%H%
+;W := LB_EX_CalcWidth(HLB)
+;GuiControl, Move, HLB, w%W% ; h%H%
 
 Gui, Add, Button, w60 Default, &OK
 Gui, Add, Button, x+m wp, &Cancel
@@ -78,9 +85,9 @@ LB_EX_CalcWidth(HLB) { ; calculates the width of the list box needed to show the
    Loop, Parse, Items, `n
    {
       Txt := A_LoopField
-      DllCall("Gdi32.dll\GetTextExtentPoint32", "Ptr", HDC, "Ptr", &Txt, "Int", StrLen(Txt), "Ptr", &Size)
-      If (W := NumGet(SIZE, 0, "Int")) > MaxW
-         MaxW := W
+      DllCall("Gdi32.dll\GetTextExtentPoint32", "Ptr", HDC, "Ptr", &Txt, "Int", StrLen(Txt), "UIntP", Width)
+      If (Width > MaxW)
+        MaxW := Width
    }
    DllCall("User32.dll\ReleaseDC", "Ptr", HLB, "Ptr", HDC)
    Return MaxW + 8 ; + 8 for the margins

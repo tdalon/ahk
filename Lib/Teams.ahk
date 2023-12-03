@@ -2015,8 +2015,6 @@ Loop %Win% {
     WinId := Win%A_Index%
    ; WinActivate, ahk_id %WinId%
     TeamsEl := UIA.ElementFromHandle(WinId)
-   
-    ;MsgBox % TeamsEl.Name
 
     If Teams_IsMeetingWindow(TeamsEl)  {
         If (!Minimize)
@@ -2036,30 +2034,6 @@ If (showTrayTip)
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-
-
-
-; -------------------------------------------------------------------------------------------------------------------
-Teams_IsMinMeetingWindow(TeamsEl) {
-; Return true if the window is a minimized meeting window
-; Check for button "Navigate back"
-    Name := Teams_GetLangName("NavigateBack","Navigate back to call window.")
-    If InStr(Lang,"en-") or (Lang="")
-        Name := 
-    If (Name="") 
-        return 
-
-        
-    El := TeamsEl.FindFirstByNameAndType(Name, "button") ; 
-    
-    If El 
-        return true
-    Else 
-        return false
-
-} ; eofun
-
-; ---------------------------------------------------------
 Teams_IsMeetingWindow(TeamsEl,ExOnHold:=true){
 ; does not return true on Share / Call in progress window
 
@@ -2079,6 +2053,25 @@ If TeamsEl.FindFirstBy("AutomationId=microphone-button") {
     return true
 }
 return false
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Teams_IsMinMeetingWindow(TeamsEl) {
+; Return true if the window is a minimized meeting window
+; Check for button "Navigate back"
+    Name := Teams_GetLangName("NavigateBack","Navigate back to call window.")
+    If InStr(Lang,"en-") or (Lang="")
+        Name := 
+    If (Name="") 
+        return 
+
+    El := TeamsEl.FindFirstByNameAndType(Name, "button") ; 
+    
+    If El 
+        return true
+    Else 
+        return false
+
 } ; eofun
 
 

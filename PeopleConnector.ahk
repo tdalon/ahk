@@ -3,7 +3,7 @@
 ; See help/homepage: https://tdalon.github.io/ahk/People-Connector
 
 ; Calls: ExtractEmails, TrayTipAutoHide, ToStartup
-LastCompiled = 20230123165715
+LastCompiled = 20230130144220
 
 #SingleInstance force ; for running from editor
 
@@ -184,8 +184,8 @@ If InStr(sEmailList,";") { ; multiple Emails
     TrayTipAutoHide("People Connector warning!","Feature does not work for multiple users!")   
     return
 } Else {
-    EnvGet, userprofile , userprofile
-    Run,  %userprofile%\AppData\Local\Microsoft\Teams\current\Teams.exe callto:%sEmailList%
+    TeamsExe := Teams_GetExe()
+    Run,  %TeamsExe% callto:%sEmailList%
 }
 return
 

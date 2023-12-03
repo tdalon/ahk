@@ -1,4 +1,4 @@
-; wrapper for ToolTip command
+; wrapper for Tray Icon command with Time to display option
 TrayIcon(IcoFile, TimeToDisplay := 1000)
 {
 	; display IcoFile
