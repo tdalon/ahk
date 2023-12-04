@@ -773,29 +773,37 @@ Teams_IsNew(){ ; @fun_teams_isnew@
     If !(IsNew = "")
         return IsNew
     fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps\ms-teams.exe
-    If !(FileExist(fExe)) ; New Teams not installed
-        return IsNew := False
+    If !(FileExist(fExe)) { ; New Teams not installed
+        IsNew := False
+        return IsNew
+    }
 
     ; Check if a Teams process is running
     Process, Exist, Teams.exe
 	If (!ErrorLevel= 0) {
 		;Classic Teams
-		return IsNew:=False
+		IsNew := False
+        return IsNew
 	}
 
     Process, Exist, ms-teams.exe
 	If (!ErrorLevel= 0) {
 		;Classic Teams
-		return IsNew:=True
+		IsNew:=True
+        return IsNew
 	}
 
     ; Possibility to overwrite in ini file if Teams is not started
     If FileExist("PowerTools.ini") {
         IniRead, IniIsNew, PowerTools.ini,Teams,TeamsIsNew
-        If !(IniIsNew="ERROR")  
-           return IsNew := IniIsNew
+        If !(IniIsNew="ERROR") {
+            IsNew := IniIsNew
+            return IsNew
+        } 
+           
     }
-    return IsNew:=True
+    IsNew:=True
+    return IsNew
 } ;eofun
 
 ; ----------------------------------------------------------------------
@@ -815,12 +823,11 @@ Teams_RunExe(){
     If Teams_IsNew() {
         ; New Teams in WindowsApp C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps
         fExe := "ms-teams.exe"
-        ;MsgBox % fExe
-        Run %fExe%
+        Run, %fExe%
     } Else { ; Classic Team Client
         ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
         ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe"
-        Run "C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe" --processStart "Teams.exe"
+        Run, "C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe" --processStart "Teams.exe"
     }
     
 } ;eofun
