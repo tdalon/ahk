@@ -343,8 +343,16 @@ If (autoJoin) {
     If (MuteEl.Name = %Name%)
         MuteEl.Click()
     ; Maximize
-    WinMaximize, ahk_exe %TeamsExe%
+    WinId := WinActive("ahk_exe %TeamsExe%")
 
+    ; Move Meeting Window to secondary screen and maximize
+    SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
+    If (MonitorCount > 1) {
+        ; Move to secondary monitor
+        Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
+        Sleep 500 ; Wait for move to Maximize
+    } ; end if secondary monitor
+    WinMaximize, ahk_id %WinId%
 }
 
 ; Open Meeting Chat in Web browser

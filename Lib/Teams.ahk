@@ -770,28 +770,31 @@ Teams_IsNew(){ ; @fun_teams_isnew@
 ; IsNew := Teams_IsNew()
 ; return true or false depending if Teams New Client is installed and Classic Teams running
     static IsNew
-    If !(IsNew = "")
+    If !(IsNew = "") {
+        ;MsgBox IsNew:%IsNew%
         return IsNew
+    }
+        
     fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps\ms-teams.exe
     If !(FileExist(fExe)) { ; New Teams not installed
         IsNew := False
         return IsNew
     }
 
-    ; Check if a Teams process is running
-    Process, Exist, Teams.exe
-	If (!ErrorLevel= 0) {
-		;Classic Teams
-		IsNew := False
-        return IsNew
-	}
-
     Process, Exist, ms-teams.exe
-	If (!ErrorLevel= 0) {
+	If Not (ErrorLevel= 0) {
 		;Classic Teams
 		IsNew:=True
         return IsNew
 	}
+
+     ; Check if a Teams process is running ; need to disable Microsoft Teams classic in Startup to work at startup
+     Process, Exist, Teams.exe
+     If Not (ErrorLevel= 0) {
+         ;Classic Teams
+         IsNew := False
+         return IsNew
+     }
 
     ; Possibility to overwrite in ini file if Teams is not started
     If FileExist("PowerTools.ini") {
@@ -800,7 +803,6 @@ Teams_IsNew(){ ; @fun_teams_isnew@
             IsNew := IniIsNew
             return IsNew
         } 
-           
     }
     IsNew:=True
     return IsNew
@@ -820,24 +822,23 @@ Teams_GetExe() {
 }
 
 Teams_RunExe(){
-    If Teams_IsNew() {
-        ; New Teams in WindowsApp C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps
-        fExe := "ms-teams.exe"
-        Run, %fExe%
-    } Else { ; Classic Team Client
-        ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
-        ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe"
-        Run, "C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe" --processStart "Teams.exe"
-    }
-    
+If Teams_IsNew() {
+    ; New Teams in WindowsApp C:\Users\%A_UserName%\AppData\Local\Microsoft\WindowsApps
+    fExe := "ms-teams.exe"
+    Run, %fExe%
+} Else { ; Classic Team Client
+    ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\current\Teams.exe
+    ;fExe = C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe"
+    Run, "C:\Users\%A_UserName%\AppData\Local\Microsoft\Teams\Update.exe" --processStart "Teams.exe"
+}
 } ;eofun
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
-Teams_GetExeName(){
-    If Teams_IsNew()
-        return "ms-teams.exe"
-    Else
-        return "Teams.exe"
+Teams_GetExeName(IsNew:=""){
+If Teams_IsNew()
+    return "ms-teams.exe"
+Else
+    return "Teams.exe"
 } ;eofun
 ; ----------------------------------------------------------------------
 
@@ -849,7 +850,6 @@ Teams_SharingControlBar(mode:="-") {
         return
     }
     
-
     Lang := Teams_GetLang()
     Prop := "SharingControlBar"
     Name := Teams_GetLangName(Prop,"Sharing control bar",Lang)
@@ -2001,18 +2001,19 @@ SendInput +{enter}
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_GetMeetingWindow(Minimize:=false,showTrayTip:=true){ ; @fun_teams_getmeetingwindow@
+; Get active Teams Meeting window
 ; Syntax: 
-;      hWnd := Teams_GetMeetingWindow(Minimize:=true) 
+;      hWnd := Teams_GetMeetingWindow(Minimize:=false,showTrayTip:=true) 
 ;   If window is not found, hwnd is empty
 ; Input Arguments:
 ;   Minimize: if true, minimized (aka Call in Progress) meeting window can be returned
 ;
+
 ; See implementation explanations here: 
 ;   https://tdalon.blogspot.com/2022/07/ahk-get-teams-meeting-win.html
 ; Does not require window to be activated
 UIA := UIA_Interface()
 TeamsExe := Teams_GetExeName()
-
 WinGet, Win, List, ahk_exe %TeamsExe%
 /* 
 If restoreWin
@@ -2042,12 +2043,10 @@ If (showTrayTip)
 ; -------------------------------------------------------------------------------------------------------------------
 
 Teams_IsMeetingWindow(TeamsEl,ExOnHold:=true){
-; does not return true on Share / Call in progress window
-
-; If Meeting Reactions Submenus are opened AutomationId are not visible.
-
+; Check if UIA Window is an active* meeting window
+; By default exclude On-hold meetings (with Resume button)
 If (ExOnHold) {
-     Name := Teams_GetLangName("Resume","Resume")
+    Name := Teams_GetLangName("Resume","Resume")
     If (Name="") 
         return
 }
@@ -2067,13 +2066,9 @@ Teams_IsMinMeetingWindow(TeamsEl) {
 ; Return true if the window is a minimized meeting window
 ; Check for button "Navigate back"
     Name := Teams_GetLangName("NavigateBack","Navigate back to call window.")
-    If InStr(Lang,"en-") or (Lang="")
-        Name := 
     If (Name="") 
         return 
-
     El := TeamsEl.FindFirstByNameAndType(Name, "button") ; 
-    
     If El 
         return true
     Else 
@@ -2092,10 +2087,10 @@ Teams_ActivateMainWindow(){
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_ActivateMeetingWindow(){
-    ; WinId := Teams_ActivateMainWindow()
-        WinId:= Teams_GetMeetingWindow()
-        WinActivate, ahk_id %WinId%
-        return WinId
+; WinId := Teams_ActivateMainWindow()
+    WinId:= Teams_GetMeetingWindow()
+    WinActivate, ahk_id %WinId%
+    return WinId
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
