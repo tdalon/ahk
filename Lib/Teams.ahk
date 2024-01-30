@@ -2280,7 +2280,6 @@ Teams_MeetingShare(ShareMode := 2){
 
     ShareEl.Click() ; does not require Window to be active
     
-
     If (ShareMode=0) or ((ShareMode=2) and IsSharing) { ; unshare->done
         FocusAssist("-") ; deactivate focusassist 
         return 
@@ -2293,21 +2292,18 @@ Teams_MeetingShare(ShareMode := 2){
         El.Click()
     }
 
-
     SendInput {Tab}{Tab}{Tab}{Enter} ; Select first screen - New Share design requires 3 {Tab}
 
     ; Move Meeting Window to secondary screen
     SysGet, MonitorCount, MonitorCount	; or try:    SysGet, var, 80
     If (MonitorCount > 1) {
-        ; Move to secondary monitor
+        ; Move to secondary monitor (activates window)
         Monitor_MoveToSecondary(WinId,false)   ; bug: unshare on winactivate
         Sleep 500 ; Wait for move to Maximize
         WinMaximize, ahk_id %WinId%
-
+        Sleep 500 ; Wait for maximize to switch screen
     } ; end if secondary monitor
 
-    ; Activate FocusAssistant
-    FocusAssist("+")
 
     ; Hide Sharing Control Bar
     Name := Teams_GetLangName("SharingControlBar","Sharing control bar",Lang)
@@ -2317,6 +2313,9 @@ Teams_MeetingShare(ShareMode := 2){
         WinWait, %wTitle%,,2
         WinHide, %wTitle%
     }
+
+     ; Activate FocusAssistant
+     FocusAssist("+")
 
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------

@@ -28,7 +28,9 @@ See [all blog posts tagged with #teamsy](https://tdalon.blogspot.com/search/labe
 Teamsy is a available as standalone .exe application. [Download link](https://github.com/tdalon/ahk/raw/main/PowerTools/Teamsy.exe)
 
 You can run Teamsy from the [command line](https://tdalon.blogspot.com/2022/03/ahk-command-line.html) or from an Application Launcher.
-I [recommend](https://tdalon.blogspot.com/2020/08/executor-my-preferred-app-launcher.html) [Executor](http://executor.dk/) as application launcher.
+I [LaunchyQt](https://github.com/samsonwang/LaunchyQt) as application launcher.
+
+N.B.: the Teamsy Launcher is also integrated in the [Teams-Shortcuts] Powertool or available as standalone [Teamsy-Launcher].
 
 ### Setup with Executor
 
@@ -140,17 +142,17 @@ It is recommended to also download the PowerTools.ini file.
 
 <div style="text-align:center"><img src="/ahk/assets/images/Teamsy_Meeting_Share.gif" alt="Teamsy Meeting Share"></div>
 
-### [Share To Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
-
-Keyword: 's2t'
-
 ### [Meeting Leave](https://tdalon.blogspot.com/2023/11/teamsy-meeting-leave.html)
 
 <div style="text-align:center"><img src="/ahk/assets/images/Teamsy_Meeting_Leave.gif" alt="Teamsy Meeting Leave"></div>
 
+### [Share To Teams](https://tdalon.blogspot.com/2023/01/share-to-teams.html)
+
+Keyword: 's2t'
+
 ## YouTube Playlist
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=PLUSZfg60tAwLDw9tBZXLYH3OXlP3f4Awn" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<div align="center"><iframe width="560" height="315" src="https://www.youtube.com/embed/kQSbinZc7jQ?si=unjtasI2ZdHWMfT_" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe><br><a href="https://www.youtube.com/watch?v=kQSbinZc7jQ&list=PLUSZfg60tAwLDw9tBZXLYH3OXlP3f4Awn">Direct Link to YouTube Playlist</a></div>
 
 ## Source Code
 

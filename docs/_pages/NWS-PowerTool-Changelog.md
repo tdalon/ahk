@@ -5,6 +5,8 @@ excerpt: "Release notes for NWS PowerTool."
 ---
 
 [NWS PowerTool](NWS-PowerTool) Changelog
+* 2024-01-23
+  * OpenLink for New Outlook
 * 2023-06-22
   * Bug fix b64encode
 * 2023-06-19
