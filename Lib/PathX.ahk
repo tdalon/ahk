@@ -1,3 +1,15 @@
+
+/*  https://www.autohotkey.com/boards/viewtopic.php?t=75317
+PathX() splits a filepath and returns filepath parts as an associative array with following keys:
+  1) Drive
+  2) Dir
+  3) Fname (Filename without extension)
+  4) Ext
+  5) Folder (Concatenation of 1 & 2)
+  6) File (Concatenation of 3 & 4)
+  7) Full (Concatenation of 1,2,3 & 4) 
+*/
+
 PathX(S, P*) {                                ; PathX v0.67 by SKAN on D34U/D35I @ tiny.cc/pathx
 Local K,V,N,  U:={},   T:=Format(A_IsUnicode ? "{1:260}" : "{1:520}", ""),   dr:=di:=fn:=ex := T
 

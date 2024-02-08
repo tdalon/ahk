@@ -17,7 +17,6 @@
 ; -l : last modified
 ; j c projectKey: create issue
 
-
 Atlasy(sInput:="-g"){
     
     FoundPos := InStr(sInput," ")  
@@ -32,28 +31,276 @@ Atlasy(sInput:="-g"){
 
     Switch sKeyword
     {
-    Case "-g": ; gui/ launcher    
+    Case "-g": ; gui/ launcher 
+        hWin := WinExist("A")
         sCmd := AtlasyInputBox()
+        WinActivate, ahk_id %hWin% ; required because active window looses focus after the Gui closes
         if ErrorLevel
             return
         sCmd := Trim(sCmd) 
         Atlasy(sCmd)
         return
-    Case "r": ; r4j
-        If (sInput = "") {
-            sIssueKey := R4J_GetIssueKey()
-            R4J_OpenIssue(sIssueKey)
-            return
-        } 
-        StringUpper, sInput, sInput ; R4J is case sensitive for keys->convert to uppercase
-        If (RegExMatch(sInput,"\d")) ; Issue Key
-            R4J_OpenIssue(sInput)
-        Else
-            R4J_OpenProject(sInput)
     Case "h","-h","help":
         Atlasy_Help(sInput)
         return
+    Case "jl": ; quick add link
+        ;IssueKeys := Jira_GetIssueKeys()
+        sLog := Jira_AddLink("",Jira_GetIssueKeys()) ; user will be prompted for link name and target issues
+        If !(sLog = "") {
+            ;TrayTipAutoHide("e.CoSys PowerTool",Text)
+            ;TrayTip, e.CoSys PowerTool, %Text%
+            OSDTIP_Pop("PowerTool: Link(s) added!",sLog)
+        }
+        return
+    Case "j":
+        If (sInput = "") {
+            
+
+            Atlasy_OpenIssue()
+            return
+        } 
+        JiraRootUrl := Jira_GetRootUrl()
+        IsCloud := Jira_IsCloud(JiraRootUrl)
+
+        ; Short navigation keys
+        If (sInput = "-b") or RegExMatch(sInput,"^\-b\s(.*)",sMatch) {
+            If IsCloud
+                sUrl := JiraRootUrl . "/jira/boards?contains=" . sMatch1
+            Else
+                sUrl := JiraRootUrl . "/secure/ManageRapidViews.jspa"
+            Atlasy_OpenUrl(sUrl)
+            return
+        }
+
+        If (sInput = "-s")  {
+            sUrl := JiraRootUrl . "/issues/?jql=" . sMatch1
+            Atlasy_OpenUrl(sUrl)
+            Return
+        }
+
+        If RegExMatch(sInput,"^\-?s\s(.*)",sMatch) {
+            Jira_QuickSearch(sMatch1)
+            Return
+        }
+
+        If (sInput = "-l") { ; AddLink
+            ;IssueKeys := Jira_GetIssueKeys()
+            sLog := Jira_AddLink("",Jira_GetIssueKeys()) ; user will be prompted for link name and target issues
+            If !(sLog = "") {
+                ;TrayTipAutoHide("e.CoSys PowerTool",Text)
+                ;TrayTip, e.CoSys PowerTool, %Text%
+                OSDTIP_Pop("PowerTool: Link(s) added!",sLog)
+            }
+            return
+        }
+
+        If (sInput = "-c") or (sInput = "c") or RegExMatch(sInput,"^\-?c\s(.*)",sMatch) { ; create issue
+            Jira_CreateIssue("",sMatch1)
+            return
+        }
+        
+        ; issue Key
+        sKeyPat := "i)([A-Z\d]{3,}\-[\d]{1,})"
+        If RegExMatch(sInput,sKeyPat,sMatch)  {
+            sUrl := JiraRootUrl . "/browse/" . sMatch1
+            Atlasy_OpenUrl(sUrl)
+            Return
+        }
+
+         ; Project Key
+         sKeyPat := "i)([A-Z\d]{3,})"
+         If RegExMatch(sInput,sKeyPat,sMatch)  {
+             sUrl := JiraRootUrl . "/browse/" . sMatch1
+             Atlasy_OpenUrl(sUrl)
+             Return
+         }
+
+        If (sInput = "-i") or RegExMatch(sInput,"^\-i\s(.*)",sMatch) {
+            sUrl := JiraRootUrl . "/issues/?jql=" . sMatch1
+            Atlasy_OpenUrl(sUrl)
+            Return
+        }
+
+        If (sInput = "-f") or RegExMatch(sInput,"^\-f\s(.*)",sMatch) {
+            If IsCloud
+                sUrl := JiraRootUrl . "/jira/filters?name=" . sMatch1
+            Else
+                sUrl := JiraRootUrl . "/secure/ManageFilters.jspa"
+            Atlasy_OpenUrl(sUrl)
+            Return
+        }
+
+      
+        ; dp; default project  
+        If (sInput = "-dp") {
+            PowerTools_SetSetting("JiraProject")
+            return
+        } 
+        
+        If RegExMatch(sInput,"^\-dp\s(.*)",sMatch) {
+            StringUpper, pj, sMatch1
+            PowerTools_RegWrite("JiraProject",pj)
+            return
+        } 
+        
+        If (sInput = "-pl") { ; Project List
+            SettingName := "JiraProjects"
+            Section := "Jira"
+            Projects := PowerTools_IniRead(Section,SettingName)
+	        If (Projects="ERROR")  
+                Projects =""
+            InputBox, Projects, PowerTools Setting, Enter %SettingName%:,, 250, 125, , , , ,%Projects%
+            If ErrorLevel
+                return
+            StringUpper, Projects, Projects
+            PowerTools_IniWrite(Projects,Section,SettingName)
+            return
+        } 
+
+    Case "e":
+       If (sInput = "-p") {
+            PowerTools_SetSetting("ECProject")
+            return
+        } Else If RegExMatch(sInput,"^\-p\s(.*)",sMatch) {
+            StringUpper, pj, sMatch1
+            PowerTools_RegWrite("ECProject",pj)
+        } Else If (sInput = "-pl") { ; Project List
+            SettingName := "ECProjects"
+            Section := "e.CoSys"
+            Projects := PowerTools_IniRead(Section,SettingName)
+	        If (Projects="ERROR")  
+                Projects =""
+            InputBox, Projects, PowerTools Setting, Enter %SettingName%:,, 250, 125, , , , ,%Projects%
+            If ErrorLevel
+                return
+            StringUpper, Projects, Projects
+            PowerTools_IniWrite(Projects,Section,SettingName)
+        }
+
+        return
+    ;---------------------- 
+    Case "r","r4j":
+        If (sInput = "") {
+            sIssueKey := R4J_GetIssueKey()
+            If !(sIssueKey = "") {
+                R4J_OpenIssue(sIssueKey)
+                Return
+            }   
+        }
+        
+        view := "d" ; default
+        Loop, Parse, % Trim(sInput), %A_Space%
+        {
+            If RegExMatch(A_LoopField,"^\-") { ; commands start with - e.g. -cv -cp
+                cmd :=  A_LoopField 
+                continue
+            }
+
+            Switch A_LoopField {                    
+                Case "d","c","t":
+                    view := A_LoopField
+                Default:
+                    If (cmd != "") {
+                        cmd2 := A_LoopField
+                    } Else {
+                        pj := A_LoopField
+                        StringUpper, pj, pj ; R4J is case sensitive for keys->convert to uppercase
+                    }
+                    
+            } ; end sw
+        }     
+
+        If (cmd != "") {
+            Switch cmd {
+                Case "-cp": ; Copy Path Jql
+                    R4J_CopyPathJql()
+                    return
+                Case "-p": ; Paste Migrated Jql
+                    Jql := Clipboard    
+                    NewJql := R4J_Migrate_Jql(Jql)
+                    Clip_Paste(NewJql)
+                    return
+                Case "-f": ; Open in issue navigator r4jPath filter
+                    R4J_OpenPathJql()
+                    return
+                Case "-cv","-c","-t","-tv":
+                    If InStr(cmd,"c")
+                        viewtype := "c"
+                    Else
+                        viewtype := "t"
+                    Switch cmd2 {
+                        Case "c","cp","mv":
+                            R4J_View_Copy(viewtype)
+                            return
+                        Case "i":
+                            R4J_View_Import(viewtype)
+                            return
+                        Case "d":
+                            R4J_View_Delete(viewtype)
+                            return
+                        Case "e","x":
+                            R4J_View_Export(viewtype)
+                            return
+                        Default:
+                            R4J_View_Copy(viewtype)
+                            return
+                    }
+            }
+        }
+
+
+        If (pj="") {
+            pj := R4J_GetProjectDef()
+        }
+
+        If (RegExMatch(pj,"\d")) ; Issue Key
+            R4J_OpenIssue(pj)
+        Else
+            R4J_OpenProject(pj,view)
+
+    ;---------------------- 
+    Case "x": ; xray, test
+        view := "r" ; default repository
+        Loop, Parse, % Trim(sInput), %A_Space%
+        {
+            Switch A_LoopField
+            {
+                case "r","p", "e","trace","m","te","tp","tr","ts","t","c","cov":
+                    view := A_LoopField
+                case "gs":
+                    Xray_Open("gs")
+                    return
+                case "doc":
+                    Xray_Open(A_LoopField,RegExReplace(sInput,"doc "))
+                    return
+                Default:
+                    pj := A_LoopField
+                    StringUpper, pj, pj                    
+            } ; end switch
+        }    ; end loop
+        Xray_Open(view,pj)
+        return
+    
     Case "c": ; Confluence
+
+        If (sInput = "") {
+            Atlasy_OpenUrl(Confluence_GetRootUrl())
+            return
+        }
+        
+        
+        If RegExMatch(sInput,"^\-?s?\s(.*)",sMatch)  {
+            Confluence_QuickSearch(sMatch1)
+            Return
+        }
+
+        If RegExMatch(sInput,"^\-?o?\s(.*)",sMatch)  {
+            Confluence_QuickOpen(sMatch1)
+            Return
+        }
+        
+        
+        
         FoundPos := InStr(sInput," ")  
         If FoundPos {
             sSpace := SubStr(sInput,1,FoundPos-1)
@@ -62,20 +309,45 @@ Atlasy(sInput:="-g"){
             sSpace := sInput
         Confluence_SearchSpace(sSpace,sQuery)
     Case "bp":  ; BigPicture
-        ; %JiraRootUrl%/plugins/servlet/ac/eu.softwareplant.bigpicture/bigpicture
-        
+        JiraRootUrl := Jira_GetRootUrl()
+        If InStr(JiraRootUrl,".atlassian,net") { ; cloud
+           sUrl := JiraRootUrl . "/plugins/servlet/ac/eu.softwareplant.bigpicture/bigpicture" ;#!box/ROOT/o/hierarchy"
+        } Else { ; server/dc
+            sUrl := JiraRootUrl . "/plugins/servlet/ac/eu.softwareplant.bigpicture/bigpicture"
+        }
+        Atlasy_OpenUrl(sUrl)
+        return
+
+    Case "sw": ; switch server <->cloud
+        If !Browser_IsWinActive()   {
+            TrayTipAutoHide("e.CoSys PowerTool","Switch only possible from browser window!")
+            return
+        } 
+        sUrl := Browser_GetUrl()
+        If (sUrl="") {
+            return
+        }
+        If R4J_IsUrl(sUrl)
+            sUrl := R4J_Redirect(sUrl)
+        Else If BigPicture_IsUrl(sUrl)
+            sUrl := BigPicture_Redirect(sUrl)
+        Else If Confluence_IsUrl(sUrl)
+            sUrl := Confluence_Redirect(sUrl)
+        Else If Jira_IsUrl(sUrl)
+            sUrl := Jira_Redirect(sUrl)
+
+        Atlasy_OpenUrl(sUrl)
         return
     } ; end case keyword
-
-
     
-} ; End function     
+} ; eofun  
+; -----------------------------------------
 
 
 AtlasyInputBox(){
     static
     ButtonOK:=ButtonCancel:= false
-	Gui GuiAtlasy:New,, Atlasy
+	Gui GuiAtlasy:New ,, Atlasy
     ;Gui, add, Text, ;w600, % Text
     Gui, add, Edit, w190 vAtlasyEdit
     Gui, add, Button, w60 gAtlasyOK Default, &OK
@@ -108,6 +380,7 @@ AtlasyInputBox(){
     Gui, Cancel
     return
 }
+; -----------------------------------------
 
 
 
@@ -148,18 +421,20 @@ Atlasy_Fav(){
 } ; eofun
 
 ; -----------------------------------------
-Atlasy_OpenUrl(sUrl) {
-    If Browser_WinActive() {
-        sCurUrl := Browser_GetUrl()
-        If Confluence_IsUrl(sCurUrl) or Jira_IsUrl(sCurUrl) {
-            Send ^t ; Open new Tab
-            Sleep 100
-            Clip_Paste(sUrl)
-            SendInput {enter}
-            return
-        }
-    }
+Atlasy_IsUrl(sUrl) {
 
+If Jira_IsUrl(sUrl)
+    return true
+If Confluence_IsUrl(sUrl)
+    return true
+return false
+
+} ; eofun
+; -----------------------------------------
+
+Atlasy_OpenUrl(sUrl) {
+    If (sUrl="")
+        return
     ; Get Browser from PowerTools.ini Settings [Atlasy] section with optional keys Browser and BrowserCloud
     If FileExist("PowerTools.ini") {
         If InStr(sUrl,".atlassian.net") { ; 
@@ -175,6 +450,9 @@ Atlasy_OpenUrl(sUrl) {
             }
         }
     }
+
+    sQuote = "
+    sUrl := StrReplace(sUrl,sQuote,"%22") ; encode quotes for run cmd
     If (BrowserCmd = "")
         Run %sUrl%
     Else {
@@ -182,22 +460,18 @@ Atlasy_OpenUrl(sUrl) {
 	    Run, %sCmd%
     }
 
-
-
 }
 ; -----------------------------------------
 
 Atlasy_Help(sKeyword:=""){
+    sUrl := PowerTools_OpenDoc("atlasy")
+    
     Switch sKeyword 
     {
-    Case "":
-        sUrl := "https://tdalon.github.io/ahk/Atlasy"
     Case "2c","oc":
         sUrl := ""
     Case "f","fav","f+","of": ; favorites
         sUrl := ""
-    Default:
-        sUrl := "https://tdalon.github.io/ahk/Atlasy"
     } ; end switch
     Run, "%sUrl%"
 } ; eofun
@@ -212,8 +486,9 @@ Atlasy_Launcher(){
 
 Atlasy_HotkeySet(HKid){
     If GetKeyState("Ctrl")  { ; exclude ctrl if use in the hotkey
-        sUrl := "https://tdalon.github.io/ahk/Atlasy-Global-Hotkeys"
-        Run, "%sUrl%"
+        dockey := "Atlasy_" . HKid
+        StringLower dockey, dockey 
+        PowerTools_OpenDoc(dockey)
         return
     }
     
@@ -225,7 +500,7 @@ Atlasy_HotkeySet(HKid){
     HKid := StrReplace(HKid," ","")
     
     RegRead, prevHK, HKEY_CURRENT_USER\Software\PowerTools, AtlasyHotkey%HKid%
-    newHK := Hotkey_GUI(,prevHK,,,"Atlasy " . HKid . " - Set Global Hotkey")
+    newHK := Hotkey_GUI(,prevHK,,,"Atlasy " . HKid . " - Set Hotkey")
     
     If ErrorLevel ; Cancelled
         return
@@ -267,7 +542,7 @@ Atlasy_HotkeyActivate(HKid,HK,showTrayTip := False) {
 Atlasy_OpenIssueDoc() {
 ; ^+v:: ; <--- Open Issue in R4J Document
     If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-        PowerTools_OpenDoc("r4j_openissuedoc") 
+        PowerTools_OpenDoc("atlasy_openissuedoc") 
         return
     }
     If WinActive("ahk_exe EXCEL.EXE") {
@@ -284,29 +559,24 @@ Atlasy_OpenIssueDoc() {
 
 Atlasy_OpenIssue() {
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	PowerTools_OpenDoc("jira_openissue") 
+	PowerTools_OpenDoc("atlasy_openissue") 
 	return
 }
-If Browser_WinActive() { ; switch ServiceDesk Requester <-> Jira Agent
-	sUrl := Browser_GetUrl()
-	If Jira_IsUrl(sUrl) {
-		IssueKey := Jira_Url2IssueKey(sUrl)
-		If InStr(IssueKey,"ECOSYS-") {
-			If InStr(sUrl,"/portal/") {
-				sUrl := "https://instartconsult.atlassian.net/browse/" . IssueKey
-			} Else 
-				sUrl := "https://instartconsult.atlassian.net/servicedesk/customer/portal/15/" . IssueKey
 
-			Run, %sUrl%
-			return
-		}
-	}
-} Else If WinActive("ahk_exe EXCEL.EXE") {
+If R4J_IsWinActive() {
+    R4J_OpenIssueSelection()
+    return
+}
+If WinActive("ahk_exe EXCEL.EXE") {
 	sKey := Jira_Excel_GetIssueKeys()
 	If (sKey="")
 		return
 	Jira_OpenIssues(sKey)
 } Else {
-	Jira_OpenIssueSelection()
+	ik := Jira_OpenIssueSelection()
+    If (ik="") {
+        JiraRootUrl := Jira_GetRootUrl()
+        Atlasy_OpenUrl(JiraRootUrl)
+    }
 }
 } ; eofun
