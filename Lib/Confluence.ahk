@@ -58,12 +58,10 @@ Confluence_BasicAuth(sUrl:="",sToken:="") {
 		}
 	}
 	
-		
-	
 	If (JiraUserName ="") {
 		JiraUserName :=  PowerTools_RegRead("ConfluenceUserName")
 		If !JiraUserName
-			JiraUserName :=  JiraUserName :=  Jira_GetUserName()
+			JiraUserName :=  Jira_GetUserName()
 	}
 		
 	If (JiraUserName ="")
@@ -197,30 +195,83 @@ return sUrl
 Confluence_Get(sUrl){
 ; Requires JiraUserName or ConfluenceUserName to be set in the Registry if different from Windows Username
 ; Syntax: sResponse := Confluence_Get(sUrl)
-; Calls: b64Encode
+; Calls: Confluence_BasicAuth
 
-sPassword := Login_GetPassword()
-If (sPassword="") ; cancel
-    return	
+If !RegExMatch(sUrl,"^http")  ; missing root url or default url
+	sUrl := Confluence_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+
+sAuth := Confluence_BasicAuth(sUrl,sPassword)
+If (sAuth="") {
+	TrayTip, Error, Confluence Authentication failed!,,3
+	return
+}
 sUrl := RegExReplace(sUrl,"#.*","") ; remove link to section
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("GET", sUrl, false) ; Async=false
 
-sAuth := Confluence_BasicAuth(sUrl)
+; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
+
+sAuth := "Basic " . sAuth
+WebRequest.setRequestHeader("Authorization", sAuth) 
+WebRequest.setRequestHeader("Content-Type", "application/json")
+WebRequest.Send()        
+return WebRequest.responseText
+} ; eofun
+; ----------------------------------------------------------------------
+Confluence_Post(sUrl,sBody:="",sPassword:=""){
+; Syntax: sResponseText := Confluence_Post(sUrl,sBody,sPassword*)
+; Calls: Confluence_BasicAuth
+If !RegExMatch(sUrl,"^http")  ; missing root url or default url
+	sUrl := Confluence_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+
+sAuth := Confluence_BasicAuth(sUrl,sPassword)
 If (sAuth="") {
 	TrayTip, Error, Confluence Authentication failed!,,3
 	return
-} 
+}
+
+WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+WebRequest.Open("POST", sUrl, false) ; Async=false
+
 WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
 WebRequest.setRequestHeader("Content-Type", "application/json")
-
-WebRequest.Send()        
-sResponse := WebRequest.responseText
-return sResponse
-
+If (sBody = "")
+	WebRequest.Send() 
+Else
+	WebRequest.Send(sBody)   
+WebRequest.WaitForResponse()
+;MsgBox %sUrl%`n%sBody% 
+;MsgBox % WebRequest.Status    ; DBG
+return WebRequest.responseText
 } ; eofun
-; ----------------------------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------------------
+Confluence_WebRequest(sReqType,sUrl,sBody:="",sPassword:=""){
+; Syntax: WebRequest := Confluence_WebRequest(sReqType,sUrl,sBody:="",sPassword:="")
+; Output WebRequest with fields Status and ResponseText
+	
+; Calls: Confluence_BasicAuth
+		
+If !RegExMatch(sUrl,"^http")  ; missing root url or default url
+	sUrl := Confluence_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+sAuth := Confluence_BasicAuth(sUrl,sPassword)
+If (sAuth="") {
+	TrayTip, Error, Confluence Authentication failed!,,3
+	return
+}
+
+WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+WebRequest.Open(sReqType, sUrl, false) ; Async=false
+WebRequest.setRequestHeader("Authorization", "Basic " . sAuth) 
+WebRequest.setRequestHeader("Content-Type", "application/json")
+If (sBody = "")
+	WebRequest.Send() 
+Else
+	WebRequest.Send(sBody)   
+WebRequest.WaitForResponse()
+return WebRequest
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
 
 Confluence_ViewInHierachy(sUrl :=""){
 ; Confluence_ViewInHierachy(sUrl*)
@@ -228,55 +279,149 @@ Confluence_ViewInHierachy(sUrl :=""){
 If (sUrl="")
 	sUrl:= Browser_GetUrl()
 
-sResponse := Confluence_Get(sUrl)
-sPat = s)<meta name="ajs-page-id" content="([^"]*)">.*<meta name="ajs-space-key" content="([^"]*)">
-If !RegExMatch(sResponse, sPat, sMatch) {
-	TrayTipAutoHide("Confluence Error!","Getting PageId by API failed!")  	
-	return
-}
-; extract section
-If RegExMatch(sUrl,"#([^?&]*)",sSection) {
-	sSection := RegExReplace(sSection1,".*-","")
-	sLinkText := sLinkText . ": " . sSection
-}
-sLinkText := sLinkText . " - Confluence"
-
 RegExMatch(sUrl, "https://[^/]*", sRootUrl)
-sUrl := sRootUrl . "/pages/reorderpages.action?key=" . sMatch2 . "&openId=" . sMatch1 . "#selectedPageInHierarchy"
-Run, %sUrl%
+If InStr(sRootUrl,".atlassian.net") { ; Cloud version
+	sRootUrl := sRootUrl . "/wiki"
+	If RegExMatch(sUrl, "\.atlassian\.net/wiki/spaces/([^/]*)/pages/([^/]*)",sMatch) {
+		spaceKey := sMatch1
+		pageId := sMatch2
+	} Else {
+		TrayTipAutoHide("Confluence Error!","Getting PageId from Url failed!")  	
+		return
+	}
+
+} Else { ; server
+	sResponse := Confluence_Get(sUrl)
+	sPat = s)<meta name="ajs-page-id" content="([^"]*)">.*<meta name="ajs-space-key" content="([^"]*)">
+	If !RegExMatch(sResponse, sPat, sMatch) {
+		TrayTipAutoHide("Confluence Error!","Getting PageId and SpaceKey by API failed!")  	
+		return
+	}
+	spaceKey := sMatch2
+	pageId := sMatch1
+}
+
+sUrl := sRootUrl . "/pages/reorderpages.action?key=" . spaceKey . "&openId=" . pageId . "#selectedPageInHierarchy"
+Atlasy_OpenUrl(sUrl)
 } ; eofun
 
+; -------------------------------------------------------------------------------------------------------------------
 
 Confluence_ViewPageInfo(sUrl :=""){
-; Confluence_ViewPageIno(sUrl*)
+; Confluence_ViewPageInfo(sUrl*)
 		
 If (sUrl="")
 	sUrl:= Browser_GetUrl()
-
 
 pageId := Confluence_GetPageId(sUrl)
 If (pageId="")
 	return
 RegExMatch(sUrl, "https://[^/]*", sRootUrl)
+If InStr(sRootUrl,".atlassian.net") ; Cloud version
+	sRootUrl := sRootUrl . "/wiki"
 sUrl := sRootUrl . "/pages/viewinfo.action?pageId=" . pageId
-Run, %sUrl%
+
+Atlasy_OpenUrl(sUrl)
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+Confluence_ViewPageHistory(sUrl :=""){
+	; Confluence_ViewPageHistory(sUrl*)
+			
+	If (sUrl="")
+		sUrl:= Browser_GetUrl()
+
+	RegExMatch(sUrl, "https://[^/]*", sRootUrl)
+	If InStr(sRootUrl,".atlassian.net") { ; Cloud version
+		sRootUrl := sRootUrl . "/wiki"
+		If RegExMatch(sUrl, "\.atlassian\.net/wiki/spaces/([^/]*)/pages/([^/]*)",sMatch) {
+			spaceKey := sMatch1
+			pageId := sMatch2
+		} Else {
+			TrayTipAutoHide("Confluence Error!","Getting PageId from Url failed!")  	
+			return
+		}
+
+	} Else { ; server
+		sResponse := Confluence_Get(sUrl)
+		sPat = s)<meta name="ajs-page-id" content="([^"]*)">.*<meta name="ajs-space-key" content="([^"]*)">
+		If !RegExMatch(sResponse, sPat, sMatch) {
+			TrayTipAutoHide("Confluence Error!","Getting PageId and SpaceKey by API failed!")  	
+			return
+		}
+		spaceKey := sMatch2
+		pageId := sMatch1
+	}
+	
+	sUrl := sRootUrl . "/spaces/" . spaceKey . "/history/" . pageId
+	Atlasy_OpenUrl(sUrl)
+
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+Confluence_ViewAttachments(sUrl :=""){
+	; Confluence_ViewAttachments(sUrl*)
+			
+	If (sUrl="")
+		sUrl:= Browser_GetUrl()
+	pageId := Confluence_GetPageId(sUrl)
+	If (pageId="")
+		return
+	RegExMatch(sUrl, "https://[^/]*", sRootUrl)
+	If InStr(sRootUrl,".atlassian.net") ; Cloud version
+		sRootUrl := sRootUrl . "/wiki"
+	sUrl := sRootUrl . "/pages/viewpageattachments.action?pageId=" . pageId
+	Run, %sUrl%
 } ; eofun
 	
 ; -------------------------------------------------------------------------------------------------------------------
 
 Confluence_GetPageId(sUrl) {
 ; PageId := Confluence_GetPageId(sUrl)
-
+If InStr(sUrl,".atlassian.net") { ; cloud
+	If RegExMatch(sUrl, "\.atlassian\.net/wiki/spaces/([^/]*)/pages/(?:edit/|edit\-v2/|)([^/]*)",sMatch)
+		return sMatch2
+	Else {
+		TrayTipAutoHide("Confluence Error!","Getting PageId from Url failed!")  	
+		return
+	}
+}
 If RegExMatch(sUrl,"pageId=(\d*)",sMatch)
 	return sMatch1
 
+; for server only
 sResponse := Confluence_Get(sUrl)
-sPat = s)<meta name="ajs-page-id" content="([^"]*)">
+sPat = sU)<meta name="ajs-page-id" content="(.*)">
 If !RegExMatch(sResponse, sPat, sMatch) {
 	TrayTipAutoHide("Confluence Error!","Getting PageId by API failed!")  	
 	return
 }
 return sMatch1
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+Confluence_GetPageTitle(sUrl) {
+	; PageId := Confluence_GetPageId(sUrl)
+	
+	If InStr(sUrl,".atlassian.net") { ; cloud
+		pageId := Confluence_GetPageId(sUrl)
+		RegExMatch(sUrl, "https://[^/]*", rootUrl) ; Get RootUrl
+		RestUrl := rootUrl  . "/wiki/rest/api/content/" .  pageId
+		sResponse := Confluence_Get(RestUrl)
+		sPat = "title":"([^"]*)"
+	} Else { ; server/DC
+		sResponse := Confluence_Get(sUrl)
+		sPat = sU)<meta name="ajs-page-id" content="(.*)">
+	}
+
+	If !RegExMatch(sResponse, sPat, sMatch) {
+		TrayTipAutoHide("Confluence Error!","Getting Page Title by API failed!")  	
+		return
+	}
+	return sMatch1
+	
 } ; eofun
 
 
@@ -295,18 +440,6 @@ ExpandLink(sLink){
 	return
 } ; eofun
 
-; -------------------------------------------------------------------------------------------------------------------
-Confluence_GetRootUrl(){
-	If FileExist("PowerTools.ini") {
-		IniRead, ConfluenceRootUrl, PowerTools.ini,Confluence,ConfluenceRootUrl
-		If !(ConfluenceRootUrl="ERROR") ; Key found
-			return ConfluenceRootUrl
-	}
-	sJiraUrl := Jira_GetRootUrl()
-	If InStr(sJiraUrl,".atlassian.net") ; cloud version
-		sUrl := sJiraUrl . "/wiki"
-	return sUrl
-}
 
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -325,17 +458,146 @@ Confluence_SearchSpace(sSpace,sQuery) {
 		Else
 			sUrl := sRootUrl . "/display/" . sSpace
 	} Else {
-		sCQL := Query2CQL(sQuery,sSpace)
-		sUrl := sRootUrl . "/dosearchsite.action?cql=" . sCQL
+		If InStr(sRootUrl,".atlassian.net") {
+			sQuery := Trim(sQuery) 
+			sParam := Query2Param(sQuery,sSpace)
+			sUrl := sRootUrl . "/search" . sParam
+		} Else { ; Server/DC
+			sCQL := Query2CQL(sQuery,sSpace)
+			sUrl := sRootUrl . "/dosearchsite.action?cql=" . sCQL
+		}
+	}
+	Atlasy_OpenUrl(sUrl)
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+Confluence_GetRootUrl() {
+; Get Confluence Root Url
+; From current Browser window (Jira or Confluence opened)
+; From PowerTools Setting (JiraRootUrl for Cloud or ConfluenceRootUrl for Server)
+
+; From Browser Url
+If Browser_WinActive() {
+	sUrl := Browser_GetUrl()
+	If Jira_IsUrl(sUrl) {
+		RegExMatch(sUrl,"https?://[^/]*",JiraRootUrl)
+		If InStr(JiraRootUrl,".atlassian.net")
+			return JiraRootUrl . "/wiki"
+	}
+	If Confluence_IsUrl(sUrl) {
+		RegExMatch(sUrl,"https?://[^/]*",ConfluenceRootUrl)
+		If InStr(ConfluenceRootUrl,".atlassian.net")
+			ConfluenceRootUrl := ConfluenceRootUrl . "/wiki"
+		return ConfluenceRootUrl
+	}
+}
+JiraRootUrl := PowerTools_GetSetting("JiraRootUrl")
+If InStr(JiraRootUrl,".atlassian.net")
+	return JiraRootUrl . "/wiki"
+
+If FileExist("PowerTools.ini") {
+	IniRead, ConfluenceRootUrl, PowerTools.ini,Confluence,ConfluenceRootUrl
+	If !(ConfluenceRootUrl="ERROR") ; Key found
+		return ConfluenceRootUrl
+}
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+Confluence_QuickOpen(sSearch,sSpace :="") { ;@fun_confluence_quickopen@
+; called by Altasy c -o keyword
+	If (sSpace ="") {
+		pat := "^\-?s\s([^\s]*)"
+		If RegExMatch(sSearch,pat,sMatch) {
+			sSpace := sMatch1
+			sSearch := Trim(RegExReplace(sSearch,pat))
+		}
+	}
+	cql := Query2CQL(sSearch,sSpace)
+	cql := uriEncode(cql)
+	rootUrl := Confluence_GetRootUrl()
+	restUrl := rootUrl . "/rest/api/content/search?cql=" . cql
+	response := Confluence_Get(restUrl)
+	JsonObj := Jxon_Load(response)
+	resultsObj := JsonObj["results"]
+	pageId := resultsObj[1]["id"]
+	If (pageId="") {
+		TrayTip, Warning, Confluence no results found!,,2
+		;TrayTipAutoHide("Confluence: No result","No results found matching the query!")  
+		return
+	}
+	url := rootUrl . "/pages/viewpage.action?pageId=" . pageId
+	Atlasy_OpenUrl(url)
+
+	; /history e.g. <root>/wiki/rest/api/content/131432476/history will get lastUpdated:by, "when": "2024-01-15T13:24:58.927Z" and previousVersion:by->"Display Name"
+	; createdBy->{publicName}, createdDate
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+Confluence_QuickSearch(sSearch,sSpace :="") {
+; quick open first result of input search
+; called by Altasy c -o keyword
+	If (sSpace ="") {
+		pat := "^\-?s\s([^\s]*)"
+		If RegExMatch(sSearch,pat,sMatch) {
+            sSpace := sMatch1
+			sSearch := Trim(RegExReplace(sSearch,pat))
+        }
+	}
+	cql := Query2CQL(sSearch,sSpace)
+	cql := uriEncode(cql)
+
+	rootUrl := Confluence_GetRootUrl()
+	restUrl := rootUrl . "/rest/api/content/search?cql=" . cql
+	response := Confluence_Get(restUrl)
+	JsonObj := Jxon_Load(response)
+	resultsObj := JsonObj["results"]
+	For i, page in resultsObj 
+	{
+		title := page["title"]
+		id := page["id"]
+		pageRestUrl := rootUrl . "/rest/api/content/" . id
 	}
 
-	Atlasy_OpenUrl(sUrl)
+	; /history e.g. <root>/wiki/rest/api/content/131432476/history will get lastUpdated:by, "when": "2024-01-15T13:24:58.927Z" and previousVersion:by->"Display Name"
+	; createdBy->{publicName}, createdDate
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+
+
+Confluence_Search(sUrl:=""){
+If (sUrl = "")
+	sUrl := Confluence_GetRootUrl()
+If InStr(sUrl,".atlassian.net") ; Cloud
+	ConfluenceSearch_Cloud(sUrl)
+Else 
+	ConfluenceSearch_Server(sUrl)
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+ConfluenceSearch_Cloud(sUrl) {
+	; $root/wiki/search?text=ux&labels=cloud%2Cjira&spaces=PMT&type=page
+
+If RegExMatch(sUrl,"U)/spaces/(.*)/",sMatch) {
+	sSpace := sMatch1
+}
+
+InputBox, sSearch , Confluence Search, Enter search string (use # for labels):,,640,125,,,,,%sDefSearch% 
+If ErrorLevel
+	return
+sSearch := Trim(sSearch) 
+sParam := Query2Param(sSearch,sSpace)
+RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
+sSearchUrl := sRootUrl . "/wiki/search" . sParam
+
 
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-Confluence_Search(sUrl){
+ConfluenceSearch_Server(sUrl){
 ; Confluence Search - Search within current Confluence Space
 ; Called by: NWS.ahk-> QuickSearch (Win+F Hotkey)
 ; 
@@ -424,7 +686,7 @@ Confluence_Search(sUrl){
 	}
 	sDefSearch := Trim(sDefSearch)
 	InputBox, sSearch , Confluence Search, Enter search string (use # for labels):,,640,125,,,,,%sDefSearch% 
-	if ErrorLevel
+	If ErrorLevel
 		return
 	sSearch := Trim(sSearch) 
 
@@ -448,13 +710,47 @@ Confluence_Search(sUrl){
 } ; eofun
 
 
+Query2Param(sSearch,sSpace) {
+;.atlassian.net/wiki/search?spaces=ES&type=page&labels=meeting-notes%2Ctoto&text=test
+	sQuote = "
 
+	; Convert labels to params
+	sPat := "#([^#\s]*)" 
+	Pos=1
+	While Pos :=    RegExMatch(sSearch, sPat, label,Pos+StrLen(label)) {
+		sLabels := sLabels . "%2C" . label1
+	} ; end while
+	
+	If !(sLabels="") {
+		sLabels := RegExReplace(sLabels,"^%2C","&labels=")
+	}
+
+	; remove labels from search string
+	sSearch := RegExReplace(sSearch, sPat , "")
+	sSearch := Trim(sSearch)
+
+	; Check for leading wildcard -> convert to regexp
+	If RegExMatch(sSearch,"^\*") {
+		sSearch := "%2F" . sSearch "%2F" ; %2F is / encoded
+		sSearch := StrReplace(sSearch,"*",".*")
+	}
+	
+	If sSearch ; not empty
+		sParam := sParam . "&text=" . sSearch
+	If sSpace
+		sParam := sParam . "&spaces=" . sSpace
+
+	If sLabels ; not empty
+		sParam := sParam . sLabels
+
+	sParam := RegExReplace(sParam,"^&","?")
+	return sParam
+} ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
-;.atlassian.net/wiki/search?spaces=ES&type=page&labels=meeting-notes%2Ctoto&text=test
+
 
 Query2CQL(sSearch,sSpace) {
-
 	sQuote = "
 
 	; Convert labels to CQL
@@ -547,6 +843,187 @@ Clipboard := ClipboardBackup
 
 
 ; -------------------------------------------------------------------------------------------------------------------
+Confluence_VersionComment(pageId,versionNumber:="",message:="") {
+; https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content-versions/#api-wiki-rest-api-content-id-version-post
+
+rootUrl := Confluence_GetRootUrl()
+If (versionNumber="") { ; get version number from current page
+	url := rootUrl . "/api/v2/pages/" . pageId
+	resp := Confluence_Get(url)
+	respJson := Jxon_Load(resp)
+	version := respJson["version"]
+	versionNumber := version["number"]
+}
+
+; status: historical or current
+
+; Create dummy/empty version (required for restoring non-current version)
+; PUT
+empty_versionNumber := versionNumber + 1
+bodyData = {"id": "%pageId%","status": "current","title": "Dummy (PowerTool:Confluence:VersionComment)","body": {"representation": "storage", "value": ""},"version": { "number": %empty_versionNumber%,"message": "empty"}}
+url := rootUrl . "/api/v2/pages/" . pageId
+WebRequest := Confluence_WebRequest("PUT",url,bodyData)
+
+; Restore page
+If (message="") { ; prompt user for comment version
+	InputBox, message , Version Comment, Enter version description:,,640,125,,,,, %sDefSearch%
+	if ErrorLevel
+		return
+}
+bodyData = {"operationKey": "restore","params": {"versionNumber": %versionNumber%,"message": "%message%","restoreTitle": true}}
+url := rootUrl . "/rest/api/content/" . pageId . "/version"
+resp := Confluence_Post(url,bodyData)
+
+; Delete empty/dummy version
+; https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content-versions/#api-wiki-rest-api-content-id-version-versionnumber-delete
+; DELETE /wiki/rest/api/content/{id}/version/{versionNumber}
+url := rootUrl . "/rest/api/content/" . pageId . "/version/" . empty_versionNumber
+WebRequest := Confluence_WebRequest("DELETE",url)
+
+; Delete original version
+url := rootUrl . "/rest/api/content/" . pageId . "/version/" . versionNumber
+WebRequest := Confluence_WebRequest("DELETE",url)
+
+
+; Copy Page Content
+; https://community.atlassian.com/t5/Confluence-questions/Re-How-to-edit-the-page-content-using-rest-api/qaq-p/905680/comment-id/121163#M121163
+
+; GET <INSTANCE>/rest/api/content/<PAGEID>?expand=body.storage,version
+url := rootUrl . "/rest/api/content/" . pageId . "?expand=body.storage" 
+
+} ; eofun
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Confluence_GetCurrentVersion(pageId) {
+	rootUrl := Confluence_GetRootUrl()
+	; Get page current version information from pageId
+	; "version": {"number": 663,"message": "","minorEdit": false,"authorId": "6141c0a0eaef3400697a1834","createdAt": "2024-01-31T07:45:30.869Z"}
+	url := rootUrl . "/api/v2/pages/" . pageId 
+	resp := Confluence_Get(url)
+	respJsonObj :=  Jxon_Load(resp)
+	return respJsonObj["version"] 
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Confluence_GetPageInfo(pageId,rootUrl:="") {
+If (rootUrl="")
+	rootUrl := Confluence_GetRootUrl()
+; Get page current version information from pageId
+; "version": {"number": 663,"message": "","minorEdit": false,"authorId": "6141c0a0eaef3400697a1834","createdAt": "2024-01-31T07:45:30.869Z"}
+url := rootUrl . "/api/v2/pages/" . pageId 
+resp := Confluence_Get(url)
+return  Jxon_Load(resp)
+} ; eofun
+	
+; -------------------------------------------------------------------------------------------------------------------
+Confluence_Version2Link(pageId,versionNumber) {
+rootUrl := Confluence_GetRootUrl()
+; From version number get page Id
+; https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-version/#api-pages-id-versions-get
+url := rootUrl . "/api/" . pageId . "/versions"
+
+resp := Confluence_Get(url)
+
+; look for number=versionNumber in results array
+respJsonObj :=  Jxon_Load(resp)
+results := respJsonObj["results"]
+
+For i, ver in results
+{
+	url := 
+	If (ver["number"] = versionNumber) {
+		pageId := ver["page"]["id"]
+		break
+	}
+}
+
+If (pageId ="")
+	Return
+link := rootUrl . "/pages/viewpage.action?pageId=" . pageId
+return link
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+Confluence_Redirect(sUrl,tgtRootUrl:="") {
+If (tgtRootUrl = "") { ; read from Ini file Cloud JiraRootUrls
+
+	If !FileExist("PowerTools.ini") {
+		PowerTools_ErrDlg("No PowerTools.ini file found and not tgtRootUrl passed!")
+		return
+	}
+		
+	IniRead, JiraRootUrls, PowerTools.ini,Jira,JiraRootUrls
+	If (JiraRootUrls="ERROR") { ; Section [Jira] Key JiraRootUrls not found
+		PowerTools_ErrDlg("JiraRootUrls key not found in PowerTools.ini file [Jira] section!")
+		return
+	}
+
+	If InStr(sUrl,".atlassian.net") { ; from Cloud to Server
+		IniRead, tgtRootUrl, PowerTools.ini,Confluence,ConfluenceRootUrl
+		If (tgtRootUrl="ERROR") { 
+			PowerTools_ErrDlg("ConfluenceRootUrl key not found in PowerTools.ini file [Confluence] section!")
+			return
+		}
+		
+	} Else { ; from server to Cloud
+		Loop, Parse, JiraRootUrls,`,
+		{
+			If InStr(A_LoopField,".atlassian.net")
+				JiraCloudRootUrl := A_LoopField
+		}
+		If (JiraCloudRootUrl ="") {
+			PowerTools_ErrDlg("JiraRootUrls does not contain a Cloud url!")
+			return
+		}
+		tgtRootUrl := JiraCloudRootUrl . "/wiki"
+	}
+
+} Else {
+	tgtRootUrl := RegExReplace(tgtRootUrl,"/$") ; remove trailing sep
+	tgtRootUrl := RegExReplace(tgtRootUrl,"\.atlassian\.net$","\.atlassian\.net\wiki") ; append wiki to Cloud root url if no
+}
+
+; https://community.atlassian.com/t5/Confluence-questions/Post-migration-to-the-cloud-Redirection/qaq-p/1118935
+
+If InStr(sUrl,".atlassian.net") { ; cloud
+	If RegExMatch(sUrl,"/wiki/spaces/([^/]*)/pages/([^/]*)/([^/#]*)",sMatch) {
+		spaceKey := sMatch1
+		;pageId := sMatch2
+		pageTitle := sMatch3
+	} Else {
+		TrayTipAutoHide("Confluence Error!","Getting Page Title from Url failed!")  
+		return
+	}
+} Else { ; server/DC
+	sResponse := Confluence_Get(sUrl)
+	; "ajs-space-key" "ajs-page-title"
+	; Get Page Name
+	sPat = sU)<meta name="ajs-page-title" content="(.*)">
+	If !RegExMatch(sResponse, sPat, sMatch) {
+		TrayTipAutoHide("Confluence Error!","Getting Page Title by API failed!")  
+		return
+	}
+	pageTitle := sMatch1
+
+	; Get space key
+	sPat = sU)<meta name="ajs-space-key" content="(.*)">
+	If !RegExMatch(sResponse, sPat, sMatch) {
+		TrayTipAutoHide("Confluence Error!","Getting Space Key by API failed!")  	
+		return
+	}
+	spaceKey := sMatch1
+}
+
+sUrl := tgtRootUrl . "/display/" . spaceKey . "/" . pageTitle
+return sUrl
+
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
+
+	
+; -------------------------------------------------------------------------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------------------
 
 ; NOT USED
@@ -586,4 +1063,5 @@ RegExMatch(sResponse, sPat, sMatch)
 
 sLinkText := sMatch2 " (" sMatch1 " Confluence)"
 return [sUrl, sLinkText]
-}
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
