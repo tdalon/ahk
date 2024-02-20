@@ -107,11 +107,13 @@ R4J_OpenIssue(sIssueKey) {
 
     Atlasy_OpenUrl(sUrl)
 } ; eofun
+; ---------------------------------------------------------------------------------
 
 R4J_J2R(sIssueKey) {
     R4J_OpenIssue(sIssueKey)
 } ; eofun
 
+; ---------------------------------------------------------------------------------
 
 R4J_OpenProject(sProjectKey,view := "d",JiraRootUrl:="") {
     ; Open project R4J tree
@@ -123,7 +125,6 @@ R4J_OpenProject(sProjectKey,view := "d",JiraRootUrl:="") {
     } Else ; server/dc
         sUrl := JiraRootUrl . "/plugins/servlet/com.easesolutions.jira.plugins.requirements" 
     
-
     Switch view {
         Case "d","doc","tree":
             If InStr(JiraRootUrl,".atlassian.net")
@@ -228,7 +229,6 @@ return sUrl
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-
 R4J_Arch_OpenIssueSelection() {
 ; Called by Hotkey Ctrl+Shift+V
 ClipSaved := ClipboardAll
@@ -273,6 +273,8 @@ return SubStr(sIssueKeyList,1,-1) ; remove ending ;
  
 R4J_CopyPathJql(sIssueKey:="") {
     sJql := R4J_GetPathJql(sIssueKey)
+    If (sJql="") ; Cancel
+        return
     Clipboard := sJql
     TrayTipAutoHide("R4J PowerTool","Jql '" . sJql . "' was copied to the clipboard!")
 } ; eofun
@@ -286,7 +288,7 @@ R4J_OpenPathJql(sIssueKey:="") {
         return
     }
     jiraRootUrl := Jira_GetRootUrl()
-    IsCloud := Jira_IsCloud(jiraRootUrl )
+    IsCloud := Jira_IsCloud(jiraRootUrl)
     If !InStr(sIssueKey,"-") { ; root level 
         If (IsCloud) 
             sJql := "r4jPath in ('" . sIssueKey . "')"
@@ -303,6 +305,38 @@ R4J_OpenPathJql(sIssueKey:="") {
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
+R4J_CopyChildrenJql() { ; @fun_r4j_CopyChildrenJql@
+If GetKeyState("Ctrl") and !GetKeyState("Shift") { ; open help
+    PowerTools_OpenDoc("r4j_CopyChildrenJql")
+    return
+} 
+issueKeys := Jira_GetIssueKeys()
+IsCloud := Jira_IsCloud(jiraRootUrl)
+/* 
+If (issueKeys.Length() > 1) {
+    op := ButtonBox("Jql combine","Choose your logical operator:","OR|AND")
+    If ( op = "ButtonBox_Cancel") or ( op = "Timeout")
+        return
+} 
+*/
+op := "OR"
+for index, Key in issueKeys 
+{
+    If (IsCloud) 
+        Jql_i := "r4jPath in ('" . Key . "')"
+    Else 
+        Jql_i := "issue in requirementsPath('" . Key . "')"
+    If (index=1)
+        Jql := Jql_i
+    Else
+        Jql := Jql . " " . op . " " . Jql_i
+} ; end for   
+Clipboard := Jql
+TrayTipAutoHide("R4J PowerTool","Jql '" . Jql . "' was copied to the clipboard!")
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+; -------------------------------------------------------------------------------------------------------------------
+
 
 R4J_GetPathJql(sIssueKey:="") {
 If GetKeyState("Ctrl") and !GetKeyState("Shift") { ; open help
@@ -317,16 +351,19 @@ If (sIssueKey="") {
     return
 }
 
+If !InStr(sIssueKey,"-") ; root level
+    sPath := sIssueKey
+Else {
+    sPath := R4J_GetPath(sIssueKey)
+    If !sPath ; empty=error
+        return
+    ; Select Path : to issue or parent issue
+    sPath := ListBox("R4J Get Path","Choose path to use:",sPath . "/" . sIssueKey . "|" . sPath ,1)
+    If (sPath="") ; check if cancel
+        return
+}
+
 IsCloud := Jira_IsCloud() ; check before ListBox to keep browser window active
-
-sPath := R4J_GetPath(sIssueKey)
-If !sPath ; empty=error
-    return
-; Select Path : to issue or parent issue
-sPath := ListBox("R4J Get Path","Choose path to use:",sPath . "/" . sIssueKey . "|" . sPath ,1)
-If (sPath="") ; check if cancel
-    return
-
 If (IsCloud) 
     sJql := "r4jPath in ('" . sPath . "')"
 Else 
@@ -559,6 +596,10 @@ If (sIssueKey="") {
     TrayTip, Error, Jira Issue could not be identified!,,3
     return
 }
+
+If !InStr(sIssueKey,"-") ; root level
+    return sIssueKey
+
 If (sProjectKey="") {
     If Browser_IsWinActive() {
         sUrl := Browser_GetUrl()
@@ -1185,6 +1226,14 @@ If GetKeyState("Ctrl")  {
     return
 }
 
+JiraRootUrl := Jira_GetRootUrl()
+If (JiraRootUrl = "")
+    return
+If Jira_IsCloud(JiraRootUrl) {
+    PowerTools_ErrDlg("Coverage Report is not implemented for Cloud version!")
+    return
+}
+
 static S_CR_DestFolder := A_ScriptDir
 static S_JsonFile := "r4j"
 
@@ -1194,9 +1243,7 @@ If (JiraPassword = "") ; cancel
     return	
 EnvSet, JIRA_PASSWORD, %JiraPassword%
 
-JiraRootUrl := Jira_GetRootUrl()
-If (JiraRootUrl = "")
-    return
+
 EnvSet, JIRA_HOST_URL, %JiraRootUrl%
 
 JiraUserName := Jira_GetUserName()
@@ -1298,7 +1345,6 @@ IfMsgBox Yes
             infoSheet.Range("B" . nRow).Formula := sFormula ; escape quotes
             sFormula = =SUBSTITUTE(CONCAT('%SheetName%'!4:4),"Coverage:","")
             infoSheet.Range("C" . nRow).Formula := sFormula 
-
             srcWorkbook.Close(False)
         } Else {
             ; Fill Info sheet

@@ -279,17 +279,12 @@ needle := "\s\-u"
 If RegExMatch(sJql,needle) 
 	sJql := RegExReplace(sJql, needle, " AND resolution = Unresolved")
 
-
-; Default Filter from ini file
-JiraDefJql := PowerTools_IniRead("Jira","JiraDefJql")
-If !(JiraDefJql="ERROR") {
-	sJql := JiraDefJql . " AND " . RegExReplace(sJql,"^\s?AND ")
-}
-
 ; Default Project
-If RegExMatch(searchString,"^\-p\s([^\s]*)",sMatch)
+needle := "\s\-?p\s([^\s]*)"
+If RegExMatch(sJql,needle,sMatch) {
 	projectKey := sMatch1
-Else {
+	sJql := RegExReplace(sJql, needle)
+} Else {
 	defProjectKey := PowerTools_GetSetting("JiraProject")
 	If !(defProjectKey="")
 		projectKey := defProjectKey
@@ -297,13 +292,27 @@ Else {
 If !(projectKey = "")
 	sDefJql = project = %projectKey%
 
-If !(sDefJql = "") {
-	sJql := sDefJql . " AND " . RegExReplace(sJql,"^\s?AND ")
-}
 sJql := RegExReplace(sJql,"^\s?AND ")
-searchUrl := jiraRootUrl . "/issues/?jql=" . sJql . sJqlLabels
+If !(sDefJql = "") {
+	If (sJql ="")
+		sJql := sDefJql
+	Else
+		sJql := sDefJql . " AND " . RegExReplace(sJql,"^\s?AND ")
+}
 
-Atlasy_OpenUrl(searchUrl)
+; Default Filter from ini file
+JiraDefJql := PowerTools_IniRead("Jira","JiraDefJql")
+If !(JiraDefJql="ERROR") {
+	If (sJql = "")
+		sJql := JiraDefJql
+	Else
+		sJql := JiraDefJql . " AND " . RegExReplace(sJql,"^\s?AND ")
+}
+
+sJql := RegExReplace(sJql,"^\s?AND ")
+If (sJql ="")
+	sJqlLabels := RegExReplace(sJqlLabels,"^\s?AND ")
+Jira_OpenJql(sJql . sJqlLabels,jiraRootUrl)
 } ; eofun
 
 ; ----------------------------------------------------------------------
@@ -451,7 +460,7 @@ Else If RegExMatch(sUrl,"/browse/(?P<ProjectKey>[A-Z\d]*)-(?P<IssueNb>\d*)$",Out
 	MsgBox, 0x24,IntelliPaste: Question, Do you want to convert Ticket link into an Issue link?	
 	IfMsgBox Yes 
 	{
-		RegExMatch(sUrl, "https://[^/]*", sRootUrl) ; Get RootUrl
+		RegExMatch(sUrl,"https://[^/]*", sRootUrl) ; Get RootUrl
 		sUrl = %sRootUrl%/browse/%sIssueKey%
 	}
 	sLinkText := sIssueKey	
@@ -793,7 +802,7 @@ For i, issue in JsonIssues
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Jira_GetIssueKeys(sIssueKeys :=""){
+Jira_GetIssueKeys(sIssueKeys :=""){ ; @fun_Jira_GetIssueKeys@
 ; KeyArray := Jira_GetIssueKeys()
 ; returns a String Array which each element containing an IssueKey (string)
 
@@ -816,11 +825,8 @@ If Browser_WinActive() {
 	} ; end if R4J_IsUrl
 				
 	If Jira_IsUrl(sUrl) {
-		
 		KeyArray := Jira_Url2IssueKeys(sUrl)
 		return KeyArray
-		
-
 	} ; end if Jira_IsUrl
 	
 } Else If WinActive("ahk_exe EXCEL.EXE") {
@@ -833,6 +839,7 @@ return Jira_Selection2IssueKeys(sSelection)
 
 } ; eofun
 
+; -------------------------------------------------------------------------------------------------------------------
 
 Jira_Url2IssueKeys(sUrl) {
 	
@@ -845,9 +852,7 @@ Jira_Url2IssueKeys(sUrl) {
 	
 	If RegExMatch(sUrl,"iU)/issues/\?jql=(?:issue)?Key\sin\s\((.*)\)",sMatch) {
 		Loop sMatch1,  `,
-		{
 			KeyArray.Push(A_LoopField)
-		}
 		return KeyArray
 	}
 	; From Bulk Edit e.g. R4J
@@ -860,17 +865,16 @@ Jira_Url2IssueKeys(sUrl) {
 		}
 		return KeyArray
 	}
-
-	; cloud TODO
+	; cloud 
 	; $root/secure/views/bulkedit/BulkEdit1!default.jspa?reset=true&jql=key%20in%20(RDMO-24%2CRDMO-23%2CRDMO-25)
 	If RegExMatch(sUrl,"iU)/bulkedit/.*jql=key\sin\s\((.*)\)",sMatch) {
 		Loop,Parse, sMatch1,`,
 		{
+			;MsgBox % A_LoopField ; DBG
 			KeyArray.Push(Trim(A_LoopField))
 		}
 		return KeyArray
 	}
-
 	Key := Jira_Url2IssueKey(sUrl)
 	If (Key = "")
 		return
@@ -883,7 +887,6 @@ Jira_Selection2IssueKeys(sSelection :="") {
 ; return a String Array of Keys
 	If (sSelection="")
 		sSelection := Clip_GetSelection()
-
 	If (sSelection = "")
 		return []
 
@@ -914,24 +917,19 @@ ClipSaved := ClipboardAll
 
 ; Try first if selection is manually set (Triple click doesn't work in Outlook #35)
 sSelection := Clip_GetSel()
-
 If (sSelection = "")
 {
 	Click 3 ; Click 2 won't get the word because "-" split it. Select the line
 	; Does not work in Outlook
 	Send, ^c			;Copy (Ctrl+C)	
 	Click ; Remove word selection
-	
 }
-
 sSelection := Clipboard
 Clipboard := ClipSaved ; restore clipboard
-
 If (sSelection = "")
 	return
 
 ; Loop on issue keys
-
 sPat := "([A-Z\d]{3,})-([\d]{1,})"
 Pos = 1 
 While Pos := RegExMatch(sSelection,sPat,sMatch,Pos+StrLen(sMatch))
@@ -946,17 +944,71 @@ return SubStr(sIssueKeyList,1,-1) ; remove ending ;
 } ; eofun
 ; ---------------------------------------------------------------------------------
 
-
-Jira_OpenIssues(IssueArray) {
+Jira_OpenIssues(IssueArray:="") {
+; Open Issues one-by-one in issue details view
+If (IssueArray ="")
+	IssueArray := Jira_GetIssueKeys()
 If IsObject(IssueArray) {
 	for index, element in IssueArray 
-		{
-			 Jira_OpenIssue(element)
-		}
-} Else {
+	{
+		Jira_OpenIssue(element)
+	}
+} Else 
 	Jira_OpenIssue(IssueArray)
-}
+} ; eofun
+; ---------------------------------------------------------------------------------
 
+Jira_OpenIssuesNav(IssueArray:="") {
+; Open Issues in issue navigator
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+    PowerTools_OpenDoc("jira_openissue") 
+    return
+}
+If (IssueArray ="")
+	IssueArray := Jira_GetIssueKeys()
+If IsObject(IssueArray) {
+	for index, key in IssueArray 
+	{
+		If (index=1)
+			jql := "key in (" . key
+		Else
+			jql := jql . "," . key
+	}
+	jql := jql . ")"
+} Else 
+	jql := "key in (" . key . ")"
+
+Jira_OpenJql(Jql)
+} ; eofun
+; ---------------------------------------------------------------------------------
+
+Jira_OpenJql(Jql,rootUrl:="") {
+If (rootUrl = "")
+	rootUrl := Jira_GetRootUrl()
+Url := rootUrl . "/issues/?jql=" . Jql
+Atlasy_OpenUrl(Url)
+} ; eofun
+; ---------------------------------------------------------------------------------
+
+Jira_BulkEdit(IssueArray:="") {
+; Open Issues in Bulk Edit
+; $root/secure/views/bulkedit/BulkEdit1!default.jspa?issueKeys=RDMO-16%2CRDMO-18&reset=true
+If (IssueArray ="")
+	IssueArray := Jira_GetIssueKeys()
+
+If IsObject(IssueArray) {
+	for index, key in IssueArray 
+	{
+		If (index=1)
+			ikl := key
+		Else
+			ikl := ikl . "%2C" . key
+	}
+} Else 
+	ikl := key
+	
+Url := Jira_GetRootUrl() . "/secure/views/bulkedit/BulkEdit1!default.jspa?issueKeys=" . ikl
+Atlasy_OpenUrl(Url)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -1180,12 +1232,7 @@ Loop, Parse, sLinkName,`,
 linkNames := RegExReplace(linkNames, "^,","") ; remove first ,
 
 sJql := "issueFunction in linkedIssuesOf('key =" . IssueKey . "'," . linkNames . ")"
-
-sRootUrl := Jira_GetRootUrl()
-sUrl := sRootUrl . "/issues/?jql=" . sJql
-Run, %sUrl%
-
-
+Jira_OpenJql(sJql)
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 

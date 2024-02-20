@@ -2,14 +2,7 @@
 #Include <Confluence>
 
 ; Launcher for Atlassian related Tools: Jira, Confluence, Bitbucket, BigPicture, R4J, Xray 
-; Example of commands
-; j : jira
-; jc: jira cloud
-; c : confluence
-; cc : confluence cloud
-; bp : BigPicture
-; r : r4j
-; d|g doc or guidelines (PMT space)
+; See documentation of commands in Atlasy.md
 
 ; s : search
 ; r : recent
@@ -43,27 +36,19 @@ Atlasy(sInput:="-g"){
     Case "h","-h","help":
         Atlasy_Help(sInput)
         return
-    Case "jl": ; quick add link
-        ;IssueKeys := Jira_GetIssueKeys()
-        sLog := Jira_AddLink("",Jira_GetIssueKeys()) ; user will be prompted for link name and target issues
-        If !(sLog = "") {
-            ;TrayTipAutoHide("e.CoSys PowerTool",Text)
-            ;TrayTip, e.CoSys PowerTool, %Text%
-            OSDTIP_Pop("PowerTool: Link(s) added!",sLog)
-        }
-        return
-    Case "j":
+    Case "?":
+        sFile:= A_ScriptDir . "\doc\Atlasy.md"
+        Run, %sFile%
+    Case "j": ;#jira
         If (sInput = "") {
-            
-
-            Atlasy_OpenIssue()
+            Jira_OpenIssues()
             return
         } 
         JiraRootUrl := Jira_GetRootUrl()
         IsCloud := Jira_IsCloud(JiraRootUrl)
 
         ; Short navigation keys
-        If (sInput = "-b") or RegExMatch(sInput,"^\-b\s(.*)",sMatch) {
+        If (sInput = "-b") or (sInput = "b") or RegExMatch(sInput,"^\-?b\s(.*)",sMatch) {
             If IsCloud
                 sUrl := JiraRootUrl . "/jira/boards?contains=" . sMatch1
             Else
@@ -72,18 +57,12 @@ Atlasy(sInput:="-g"){
             return
         }
 
-        If (sInput = "-s")  {
-            sUrl := JiraRootUrl . "/issues/?jql=" . sMatch1
-            Atlasy_OpenUrl(sUrl)
-            Return
-        }
-
         If RegExMatch(sInput,"^\-?s\s(.*)",sMatch) {
             Jira_QuickSearch(sMatch1)
             Return
         }
 
-        If (sInput = "-l") { ; AddLink
+        If (sInput = "-l") or (sInput = "l") { ; AddLink
             ;IssueKeys := Jira_GetIssueKeys()
             sLog := Jira_AddLink("",Jira_GetIssueKeys()) ; user will be prompted for link name and target issues
             If !(sLog = "") {
@@ -98,9 +77,19 @@ Atlasy(sInput:="-g"){
             Jira_CreateIssue("",sMatch1)
             return
         }
+
+        If (sInput = "b")  { ; bulk edit
+            Jira_BulkEdit()
+            return
+        }
+
+        If (sInput = "n")  { ; open issues in issue navigator
+            Jira_OpenIssuesNav()
+            return
+        }
         
         ; issue Key
-        sKeyPat := "i)([A-Z\d]{3,}\-[\d]{1,})"
+        sKeyPat := "i)^([A-Z\d]{3,}\-[\d]{1,})$"
         If RegExMatch(sInput,sKeyPat,sMatch)  {
             sUrl := JiraRootUrl . "/browse/" . sMatch1
             Atlasy_OpenUrl(sUrl)
@@ -108,22 +97,22 @@ Atlasy(sInput:="-g"){
         }
 
          ; Project Key
-         sKeyPat := "i)([A-Z\d]{3,})"
+         sKeyPat := "i)^([A-Z\d]{3,})$"
          If RegExMatch(sInput,sKeyPat,sMatch)  {
              sUrl := JiraRootUrl . "/browse/" . sMatch1
              Atlasy_OpenUrl(sUrl)
              Return
          }
 
-        If (sInput = "-i") or RegExMatch(sInput,"^\-i\s(.*)",sMatch) {
+        If (sInput = "-i") or (sInput = "i") or RegExMatch(sInput,"^\-?i\s(.*)",sMatch) {
             sUrl := JiraRootUrl . "/issues/?jql=" . sMatch1
             Atlasy_OpenUrl(sUrl)
             Return
         }
 
-        If (sInput = "-f") or RegExMatch(sInput,"^\-f\s(.*)",sMatch) {
+        If (sInput = "-f") or (sInput = "f") or RegExMatch(sInput,"^\-?f\s(.*)",sMatch) {
             If IsCloud
-                sUrl := JiraRootUrl . "/jira/filters?name=" . sMatch1
+                sUrl := JiraRootUrl . "/jira/filters?name=""" . sMatch1 . """"
             Else
                 sUrl := JiraRootUrl . "/secure/ManageFilters.jspa"
             Atlasy_OpenUrl(sUrl)
@@ -132,18 +121,18 @@ Atlasy(sInput:="-g"){
 
       
         ; dp; default project  
-        If (sInput = "-dp") {
+        If (sInput = "-dp") or (sInput = "dp") {
             PowerTools_SetSetting("JiraProject")
             return
         } 
         
-        If RegExMatch(sInput,"^\-dp\s(.*)",sMatch) {
+        If RegExMatch(sInput,"^\-?dp\s(.*)",sMatch) {
             StringUpper, pj, sMatch1
             PowerTools_RegWrite("JiraProject",pj)
             return
         } 
         
-        If (sInput = "-pl") { ; Project List
+        If (sInput = "-pl") or (sInput = "pl")  { ; Project List
             SettingName := "JiraProjects"
             Section := "Jira"
             Projects := PowerTools_IniRead(Section,SettingName)
@@ -157,14 +146,14 @@ Atlasy(sInput:="-g"){
             return
         } 
 
-    Case "e":
-       If (sInput = "-p") {
+    Case "e": ;#eCoSys
+       If (sInput = "-p") or (sInput = "p") {
             PowerTools_SetSetting("ECProject")
             return
-        } Else If RegExMatch(sInput,"^\-p\s(.*)",sMatch) {
+        } Else If RegExMatch(sInput,"^\-?p\s(.*)",sMatch) {
             StringUpper, pj, sMatch1
             PowerTools_RegWrite("ECProject",pj)
-        } Else If (sInput = "-pl") { ; Project List
+        } Else If (sInput = "-pl") or (sInput = "pl") { ; Project List
             SettingName := "ECProjects"
             Section := "e.CoSys"
             Projects := PowerTools_IniRead(Section,SettingName)
@@ -179,7 +168,7 @@ Atlasy(sInput:="-g"){
 
         return
     ;---------------------- 
-    Case "r","r4j":
+    Case "r","r4j": ;#r4j
         If (sInput = "") {
             sIssueKey := R4J_GetIssueKey()
             If !(sIssueKey = "") {
@@ -212,15 +201,18 @@ Atlasy(sInput:="-g"){
 
         If (cmd != "") {
             Switch cmd {
-                Case "-cp": ; Copy Path Jql
+                Case "-cp","cp": ; Copy Path Jql
                     R4J_CopyPathJql()
                     return
-                Case "-p": ; Paste Migrated Jql
+                Case "-cc","cc": ; Copy Children Jql
+                    R4J_CopyChildrenJql()
+                    return
+                Case "-p","p": ; Paste Migrated Jql
                     Jql := Clipboard    
                     NewJql := R4J_Migrate_Jql(Jql)
                     Clip_Paste(NewJql)
                     return
-                Case "-f": ; Open in issue navigator r4jPath filter
+                Case "-n","n": ; Open in issue navigator r4jPath filter
                     R4J_OpenPathJql()
                     return
                 Case "-cv","-c","-t","-tv":
@@ -259,7 +251,7 @@ Atlasy(sInput:="-g"){
             R4J_OpenProject(pj,view)
 
     ;---------------------- 
-    Case "x": ; xray, test
+    Case "x": ; #xray
         view := "r" ; default repository
         Loop, Parse, % Trim(sInput), %A_Space%
         {
@@ -281,14 +273,18 @@ Atlasy(sInput:="-g"){
         Xray_Open(view,pj)
         return
     
-    Case "c": ; Confluence
+    Case "c": ; #Confluence
 
         If (sInput = "") {
             Atlasy_OpenUrl(Confluence_GetRootUrl())
             return
         }
         
-        
+        If InStr(sInput,"order") {
+            Confluence_Reorder()
+            return
+        }
+            
         If RegExMatch(sInput,"^\-?s?\s(.*)",sMatch)  {
             Confluence_QuickSearch(sMatch1)
             Return
@@ -299,8 +295,6 @@ Atlasy(sInput:="-g"){
             Return
         }
         
-        
-        
         FoundPos := InStr(sInput," ")  
         If FoundPos {
             sSpace := SubStr(sInput,1,FoundPos-1)
@@ -308,7 +302,7 @@ Atlasy(sInput:="-g"){
         } Else
             sSpace := sInput
         Confluence_SearchSpace(sSpace,sQuery)
-    Case "bp":  ; BigPicture
+    Case "bp":  ; #BigPicture
         JiraRootUrl := Jira_GetRootUrl()
         If InStr(JiraRootUrl,".atlassian,net") { ; cloud
            sUrl := JiraRootUrl . "/plugins/servlet/ac/eu.softwareplant.bigpicture/bigpicture" ;#!box/ROOT/o/hierarchy"
@@ -316,6 +310,21 @@ Atlasy(sInput:="-g"){
             sUrl := JiraRootUrl . "/plugins/servlet/ac/eu.softwareplant.bigpicture/bigpicture"
         }
         Atlasy_OpenUrl(sUrl)
+        return
+
+    Case "bb":  ; #BitBucket
+        Url := PowerTools_IniRead("BitBucket","BitBucketRootUrl")
+        If (BUrl="ERROR") {
+            MsgBox 0x1010, Error, BitBucketRootUrl key not defined in BitBucket section in PowerTools.ini file!
+	        return
+        }
+        If (sInput = "")
+            defProject := PowerTools_GetSetting("ECProject")
+        Else    
+            defProject := sInput
+        If !(defProject ="")
+            Url := Url . "/projects/" . defProject
+        Atlasy_OpenUrl(Url)
         return
 
     Case "sw": ; switch server <->cloud
@@ -433,6 +442,7 @@ return false
 ; -----------------------------------------
 
 Atlasy_OpenUrl(sUrl) {
+    ;MsgBox % sUrl ; DBG
     If (sUrl="")
         return
     ; Get Browser from PowerTools.ini Settings [Atlasy] section with optional keys Browser and BrowserCloud
@@ -472,8 +482,11 @@ Atlasy_Help(sKeyword:=""){
         sUrl := ""
     Case "f","fav","f+","of": ; favorites
         sUrl := ""
+    Case "cmd":
+        
     } ; end switch
-    Run, "%sUrl%"
+
+    Run, %sUrl%
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -533,7 +546,8 @@ Atlasy_HotkeyActivate(HKid,HK,showTrayTip := False) {
     Hotkey, IfWinActive, ; for all windows/ global hotkey
     Hotkey, $%HK%, Atlasy_%HKid%, On ; use $ to avoid self-referring hotkey if Ctrl+Shift+M is used
     If (showTrayTip) {
-        TipText = Atlasy %HKid% Hotkey set to %HK%
+        HKrev := Hotkey_ParseRev(HK)
+        TipText = Atlasy %HKid% Hotkey set to %HKrev%
         TrayTipAutoHide("Atlasy " . HKid . " Hotkey On",TipText,2000)
     }
 } ; eofun
@@ -541,42 +555,116 @@ Atlasy_HotkeyActivate(HKid,HK,showTrayTip := False) {
 ; -------------------------------------------------------------------------------------------------------------------
 Atlasy_OpenIssueDoc() {
 ; ^+v:: ; <--- Open Issue in R4J Document
-    If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-        PowerTools_OpenDoc("atlasy_openissuedoc") 
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+    PowerTools_OpenDoc("atlasy_openissuedoc") 
+    return
+}
+If WinActive("ahk_exe EXCEL.EXE") {
+    sKey := Jira_Excel_GetIssueKeys()
+    If (sKey="")
         return
-    }
-    If WinActive("ahk_exe EXCEL.EXE") {
-        sKey := Jira_Excel_GetIssueKeys()
-        If (sKey="")
-            return
-        R4J_OpenIssues(sKey)
-    } Else {
-        R4J_OpenIssueSelection()
-    }
+    R4J_OpenIssues(sKey)
+} Else {
+    R4J_OpenIssueSelection()
+}
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 
+
 Atlasy_OpenIssue() {
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	PowerTools_OpenDoc("atlasy_openissue") 
-	return
-}
-
-If R4J_IsWinActive() {
-    R4J_OpenIssueSelection()
+    PowerTools_OpenDoc("jira_openissue") 
     return
 }
-If WinActive("ahk_exe EXCEL.EXE") {
-	sKey := Jira_Excel_GetIssueKeys()
-	If (sKey="")
-		return
-	Jira_OpenIssues(sKey)
-} Else {
-	ik := Jira_OpenIssueSelection()
-    If (ik="") {
-        JiraRootUrl := Jira_GetRootUrl()
-        Atlasy_OpenUrl(JiraRootUrl)
-    }
-}
+Jira_OpenIssues()
 } ; eofun
+
+
+; -------------------------------------------------------------------------------------------------------------------
+Atlasy_DatePicker() {
+    static date
+    DatePicker(date)
+    If !date ; empty= cancel
+        return
+    If Browser_IsWinActive() {
+        Url := Browser_GetUrl()
+        If Confluence_IsUrl(Url) {
+            FormatTime, date, %date%, M/dd/yyyy
+            SendInput /
+            Sleep 200
+            SendInput /
+            Sleep 200
+            SendInput {Enter}
+            Sleep 200
+            SendInput %date%
+            SendInput {Esc}
+            return
+        } Else If Jira_IsUrl(Url) {
+            FormatTime, date, %date%, M/dd/yyyy
+            Clipboard := date
+            TrayTipAutoHide("Atlasy","Date copied to clipboard!")
+            return
+        } 
+    } ; eif browser
+   
+    DateFormat := PowerTools_IniRead("General","DateFormat")
+    If (DateFormat="ERROR") 
+        DateFormat := ""
+    FormatTime, date, %date%, %DateFormat%
+    SendInput %date%
+
+} ; eofun
+; -------------------------------------
+DatePicker(ByRef DatePicker){
+    ;static DatePicker
+    Gui, +LastFound 
+    gui_hwnd := WinExist()
+    Gui, Add, MonthCal, 4 vDatePicker
+    Gui, Add, Button, Default , &OK
+    Gui Add, Button, x+0, Cancel
+    Gui, Show , , Date Picker
+    WinWaitClose, AHK_ID %gui_hwnd%
+    return
+    
+    ButtonOK:
+    Gui, submit ;, nohide
+    Gui, Destroy
+    ;Gui, Hide
+    return 
+    
+    GuiEscape:
+    ButtonCancel:
+    GuiClose:
+    Gui, Destroy
+    return
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+Atlasy_CurrentDate() {
+If Browser_IsWinActive() {
+    Url := Browser_GetUrl()
+    If Confluence_IsUrl(Url) {
+        SendInput /
+        Sleep 200
+        SendInput /
+        Sleep 200
+        SendInput {Enter} 
+        Sleep 200
+        SendInput {Esc}
+        return
+    } Else If Jira_IsUrl(Url) {
+        FormatTime, date, , M/dd/yyyy
+        SendInput %date%
+        return
+    } 
+} ; eif browser
+
+DateFormat := PowerTools_IniRead("General","DateFormat")
+If (DateFormat="ERROR") 
+    DateFormat := ""
+FormatTime, date, %date%, %DateFormat%
+SendInput %date%
+
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+    
