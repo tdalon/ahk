@@ -1,5 +1,5 @@
-#Include <Jira>
-#Include <Confluence>
+;#Include <Jira>
+;#Include <Confluence>
 
 ; Launcher for Atlassian related Tools: Jira, Confluence, Bitbucket, BigPicture, R4J, Xray 
 ; See documentation of commands in Atlasy.md
@@ -13,7 +13,6 @@
 Atlasy(sInput:="-g"){
     
     FoundPos := InStr(sInput," ")  
-
     If FoundPos {
         sKeyword := SubStr(sInput,1,FoundPos-1)
         sInput := SubStr(sInput,FoundPos+1)
@@ -118,7 +117,6 @@ Atlasy(sInput:="-g"){
             Atlasy_OpenUrl(sUrl)
             Return
         }
-
       
         ; dp; default project  
         If (sInput = "-dp") or (sInput = "dp") {
@@ -324,6 +322,7 @@ Atlasy(sInput:="-g"){
             defProject := sInput
         If !(defProject ="")
             Url := Url . "/projects/" . defProject
+        
         Atlasy_OpenUrl(Url)
         return
 
@@ -347,7 +346,7 @@ Atlasy(sInput:="-g"){
 
         Atlasy_OpenUrl(sUrl)
         return
-    } ; end case keyword
+    } ; end switch/case keyword
     
 } ; eofun  
 ; -----------------------------------------
@@ -570,8 +569,6 @@ If WinActive("ahk_exe EXCEL.EXE") {
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-
-
 Atlasy_OpenIssue() {
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
     PowerTools_OpenDoc("jira_openissue") 
@@ -579,7 +576,6 @@ If GetKeyState("Ctrl") and !GetKeyState("Shift") {
 }
 Jira_OpenIssues()
 } ; eofun
-
 
 ; -------------------------------------------------------------------------------------------------------------------
 Atlasy_DatePicker() {
@@ -667,4 +663,15 @@ SendInput %date%
 
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
-    
+Atlasy_Redirect(sUrl) {
+    If R4J_IsUrl(sUrl)
+		sUrl := R4J_Redirect(sUrl)
+	Else If BigPicture_IsUrl(sUrl)
+		sUrl := BigPicture_Redirect(sUrl)
+	Else If Jira_IsUrl(sUrl)
+		sUrl := Jira_Redirect(sUrl)	
+	Else If Confluence_IsUrl(sUrl)
+		sUrl := Confluence_Redirect(sUrl)
+	
+	Atlasy_OpenUrl(sUrl)
+} ;eofun
