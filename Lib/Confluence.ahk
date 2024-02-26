@@ -1,8 +1,5 @@
-#Include <IntelliPaste>
-#Include <Clip>
-; for CleanUrl
-
-
+;#Include <IntelliPaste>
+;#Include <Clip>
 
 ; ----------------------------------------------------------------------
 Confluence_BasicAuth(sUrl:="",sToken:="") {
@@ -13,7 +10,7 @@ Confluence_BasicAuth(sUrl:="",sToken:="") {
 	; Calls: b64Encode
 	
 	If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-		sUrl := Jira_GetRootUrl() . sUrl
+		sUrl := Jira_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 	
 	If (sToken = "") {
 	
@@ -168,7 +165,7 @@ If RegExMatch(sUrl,"#([^?&]*)",sSection) {
 sLinkText := sLinkText . " - Confluence"
 sUrl := sRootUrl . "/pages/viewpage.action?pageId=" . sMatch3 . sSection
 return [sUrl, sLinkText]
-}
+} ; eofun
 
 ; ----------------------------------------------------------------------
 Confluence_CleanUrl(sUrl){
@@ -198,7 +195,7 @@ Confluence_Get(sUrl){
 ; Calls: Confluence_BasicAuth
 
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-	sUrl := Confluence_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+	sUrl := Confluence_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 
 sAuth := Confluence_BasicAuth(sUrl,sPassword)
 If (sAuth="") {
@@ -222,7 +219,7 @@ Confluence_Post(sUrl,sBody:="",sPassword:=""){
 ; Syntax: sResponseText := Confluence_Post(sUrl,sBody,sPassword*)
 ; Calls: Confluence_BasicAuth
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-	sUrl := Confluence_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+	sUrl := Confluence_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 
 sAuth := Confluence_BasicAuth(sUrl,sPassword)
 If (sAuth="") {
@@ -252,7 +249,7 @@ Confluence_WebRequest(sReqType,sUrl,sBody:="",sPassword:=""){
 ; Calls: Confluence_BasicAuth
 		
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-	sUrl := Confluence_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+	sUrl := Confluence_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 sAuth := Confluence_BasicAuth(sUrl,sPassword)
 If (sAuth="") {
 	TrayTip, Error, Confluence Authentication failed!,,3
@@ -376,6 +373,16 @@ Confluence_ViewAttachments(sUrl :=""){
 	Run, %sUrl%
 } ; eofun
 	
+; -------------------------------------------------------------------------------------------------------------------
+
+Confluence_GetSpace(sUrl) {
+If InStr(sUrl,".atlassian.net")  ; cloud
+	If RegExMatch(sUrl, "\.atlassian\.net/wiki/spaces/([^/]*)/pages/",sMatch)
+		return sMatch1
+Else
+	TrayTipAutoHide("Confluence Error!","GetSpace not implemented for server/datacenter!")  	
+return
+} ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
 Confluence_GetPageId(sUrl) {
@@ -753,6 +760,11 @@ Query2Param(sSearch,sSpace) {
 Query2CQL(sSearch,sSpace) {
 	sQuote = "
 
+	; Shortcuts for labels
+	sSearch := RegExReplace(sSearch,"#t(\s?)","#tool$1")
+	sSearch := RegExReplace(sSearch,"#pt(\s?)","#powertool$1")
+	sSearch := RegExReplace(sSearch,"#m(\s?)","#method$1")
+
 	; Convert labels to CQL
 	sPat := "#([^#\s]*)" 
 	Pos=1
@@ -945,6 +957,23 @@ return link
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
+
+Confluence_Reorder(sUrl:="") {
+	If (sUrl="")
+		sUrl:= Browser_GetUrl()
+	If (sUrl="")
+		return
+	spaceKey := Confluence_GetSpace(sUrl)
+	If (spaceKey="")
+		return
+	RegExMatch(sUrl,"https?://[^/]*",rootUrl)
+	rootUrl := RegExReplace(rootUrl,"\.atlassian\.net$",".atlassian.net/wiki") ; append wiki to Cloud root url if no
+	
+	sUrl := rootUrl . "/pages/reorderpages.action?key=" . spaceKey
+	Atlasy_OpenUrl(sUrl)
+} ; eofun
+
+; -------------------------------------------------------------------------------------------------------------------
 Confluence_Redirect(sUrl,tgtRootUrl:="") {
 If (tgtRootUrl = "") { ; read from Ini file Cloud JiraRootUrls
 
@@ -981,7 +1010,7 @@ If (tgtRootUrl = "") { ; read from Ini file Cloud JiraRootUrls
 
 } Else {
 	tgtRootUrl := RegExReplace(tgtRootUrl,"/$") ; remove trailing sep
-	tgtRootUrl := RegExReplace(tgtRootUrl,"\.atlassian\.net$","\.atlassian\.net\wiki") ; append wiki to Cloud root url if no
+	tgtRootUrl := RegExReplace(tgtRootUrl,"\.atlassian\.net$",".atlassian.net/wiki") ; append wiki to Cloud root url if no
 }
 
 ; https://community.atlassian.com/t5/Confluence-questions/Post-migration-to-the-cloud-Redirection/qaq-p/1118935
@@ -1021,7 +1050,29 @@ return sUrl
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-
+Confluence_GetVerLink(url:="") { ; @fun_Confluence_GetVerLink@
+; Get Link information from current page Url
+; sHtml := Confluence_GetVerLink(url:="")
+If (url="")
+	url := Browser_GetUrl()
+If (url="")
+	return
+; Get current pageId
+pageId := Confluence_GetPageId(url)
+rootUrl := Confluence_GetRootUrl()
+pageInfo := Confluence_GetPageInfo(pageId,rootUrl)
+; If Confluence Document History page, get parentId
+If RegExMatch(pageInfo["title"],"i)^(Document|Work Product) History") {
+	pageId := pageInfo["parentId"]
+	pageInfo := Confluence_GetPageInfo(pageId,rootUrl)
+}
+;MsgBox % Jxon_Dump(pageInfo) ; DBG
+version := pageInfo["version"]
+sText := version["createdAt"] . " (v." . version["number"] . ")"
+sLink :=  rootUrl . "/pages/viewpage.action?pageId=" . pageId . "&pageVersion=" . version["number"]
+sHtml := "<a href=""" . sLink . """>" . sText . "</a>"
+return sHtml
+}
 	
 ; -------------------------------------------------------------------------------------------------------------------
 ; -------------------------------------------------------------------------------------------------------------------
