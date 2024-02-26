@@ -578,7 +578,7 @@ Jira_OpenIssues()
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Atlasy_DatePicker() {
+Atlasy_DatePicker() { ; @fun_Atlassy_DatePicker@
     static date
     DatePicker(date)
     If !date ; empty= cancel
@@ -636,7 +636,7 @@ DatePicker(ByRef DatePicker){
     return
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
-Atlasy_CurrentDate() {
+Atlasy_CurrentDate() { ; @fun_Atlassy_CurrentDate@
 If Browser_IsWinActive() {
     Url := Browser_GetUrl()
     If Confluence_IsUrl(Url) {
