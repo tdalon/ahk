@@ -1,12 +1,26 @@
 ; Jira Lib
-; Includes Jira_Search, Jira_IsUrl, Jira_CleanLink
-; for GetPassword
-#Include <Login> 
 #Include <IntelliPaste>
 #Include <Clip>
 
-
 ; ----------------------------------------------------------------------
+Jira_IsCloud(JiraRootUrl:=""){
+	If (JiraRootUrl ="")
+		JiraRootUrl := Jira_GetRootUrl()
+	return  InStr(JiraRootUrl,".atlassian.net") 
+} ;eofun
+; ----------------------------------------------------------------------
+Jira_IsUrl(sUrl){
+return  (InStr(sUrl,"jira.") or InStr(sUrl,".atlassian.net") or RegExMatch(sUrl,"/(servicedesk|desk)/.*/portal/")) ; TODO: edit according your need/ add setting
+} ;eofun
+; ----------------------------------------------------------------------
+Jira_IsWinActive(){
+	If Not Browser_WinActive()
+		return False
+	sUrl := Browser_GetUrl()
+	return Jira_IsUrl(sUrl)
+} ; eofun
+; ----------------------------------------------------------------------
+
 Jira_BasicAuth(sUrl:="",sToken:="") {
 ; Get Auth String for basic authentification
 ; sAuth := Jira_BasicAuth(sUrl:="",sToken:="")
@@ -15,10 +29,9 @@ Jira_BasicAuth(sUrl:="",sToken:="") {
 ; Calls: b64Encode
 
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-	sUrl := Jira_GetRootUrl() . sUrl
+	sUrl := Jira_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 
 If (sToken = "") {
-
 	; If Cloud
 	If InStr(sUrl,".atlassian.net") {
 		; Read Jira PowerTools.ini setting
@@ -60,7 +73,7 @@ If (sToken = "") {
 	}
 }
 If (UserName ="")
-	UserName :=  Jira_GetUserName()
+	UserName := Jira_GetUserName()
 If (UserName ="")
 	return
 sAuth := b64Encode(UserName . ":" . ApiToken)
@@ -81,12 +94,11 @@ If (sAuth="") {
 }
 
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-	sUrl := Jira_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+	sUrl := Jira_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 WebRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 WebRequest.Open("GET", sUrl, false) ; Async=false
 
 ; https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
-
 
 sAuth := "Basic " . sAuth
 WebRequest.setRequestHeader("Authorization", sAuth) 
@@ -101,7 +113,7 @@ Jira_Post(sUrl,sBody:="",sPassword:=""){
 ; Calls: Jira_BasicAuth
 	
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-	sUrl := Jira_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+	sUrl := Jira_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 sAuth := Jira_BasicAuth(sUrl,sPassword)
 If (sAuth="") {
 	TrayTip, Error, Jira Authentication failed!,,3
@@ -131,7 +143,7 @@ Jira_WebRequest(sReqType,sUrl,sBody:="",sPassword:=""){
 ; Calls: Jira_BasicAuth
 	
 If !RegExMatch(sUrl,"^http")  ; missing root url or default url
-	sUrl := Jira_GetRootUrl() . "/" RegExReplace(sUrl,"^/")
+	sUrl := Jira_GetRootUrl() . "/" . RegExReplace(sUrl,"^/")
 sAuth := Jira_BasicAuth(sUrl,sPassword)
 If (sAuth="") {
 	TrayTip, Error, Jira Authentication failed!,,3
@@ -149,26 +161,6 @@ Else
 WebRequest.WaitForResponse()
 return WebRequest
 } ; eofun
-
-; ----------------------------------------------------------------------
-Jira_IsCloud(JiraRootUrl:=""){
-	If (JiraRootUrl ="")
-		JiraRootUrl := Jira_GetRootUrl()
-	return  InStr(JiraRootUrl,".atlassian.net") 
-} ;eofun
-; ----------------------------------------------------------------------
-Jira_IsUrl(sUrl){
-return  (InStr(sUrl,"jira.") or InStr(sUrl,".atlassian.net") or RegExMatch(sUrl,"/(servicedesk|desk)/.*/portal/") ) ; TODO: edit according your need/ add setting
-} ;eofun
-; ----------------------------------------------------------------------
-
-Jira_IsWinActive(){
-If Not Browser_WinActive()
-    return False
-sUrl := Browser_GetUrl()
-return Jira_IsUrl(sUrl)
-} ; eofun
-
 ; ----------------------------------------------------------------------
 
 Jira_ServerType(sUrl:=""){
@@ -188,7 +180,7 @@ return serverType
 Jira_Url2IssueKey(sUrl) {
 sUrl := RegExReplace(sUrl,"\?.*$","") ; remove optional arguments after ? in url
 If RegExMatch(sUrl,"i)/([A-Z\d]*\-\d{1,})$",sMatch) {  ; url ending with Issue Key
-	StringUpper,sIssueKey, sMatch1	
+	StringUpper,issueKey, sMatch1	
 	return issueKey
 }
 } ; eofun
@@ -471,6 +463,10 @@ return [sUrl, sLinkText]
 ; -------------------------------------------------------------------------------------------------------------------
 
 Jira_CreateIssue(Json := "", projectKey := ""){
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+	PowerTools_OpenDoc("Jira_CreateIssue") 
+	return
+}
 If (Json = "") {
 	jiraRootUrl := Jira_GetRootUrl()
 	sUrl := jiraRootUrl . "/secure/CreateIssue!default.jspa"
@@ -604,7 +600,15 @@ Jira_GetUserName() {
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Jira_GetPassword() {
-	return Login_GetPassword()
+	static sPassword
+	If !(sPassword = "")
+		return sPassword
+	hWin := WinExist("A")
+	InputBox, sPassword, Password, Enter Password for Login, Hide, 200, 125
+	WinActivate, ahk_id %hWin% ; required because active window looses focus after the Gui closes
+	If ErrorLevel
+		return
+	return sPassword
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -766,7 +770,6 @@ If (sSelection = "")
 	; Does not work in Outlook
 	Send, ^c			;Copy (Ctrl+C)	
 	Click ; Remove word selection
-	
 }
 
 sSelection := Clipboard
@@ -794,7 +797,7 @@ JsonIssues := Json["issues"]
 
 For i, issue in JsonIssues 
 {
-	MsgBox % Jxon_Dump(issue)
+	;MsgBox % Jxon_Dump(issue)
 	issueJson := Jxon_Load(issue)
 	key := issueJson["key"]
 }
@@ -806,13 +809,12 @@ Jira_GetIssueKeys(sIssueKeys :=""){ ; @fun_Jira_GetIssueKeys@
 ; KeyArray := Jira_GetIssueKeys()
 ; returns a String Array which each element containing an IssueKey (string)
 
-KeyArray := []
-
 If !(sIssueKeys = "") {
 	sSelection := sIssueKeys
 	GoTo GetIssueKeysFromSelection
 }
 
+KeyArray := []
 If Browser_WinActive() { 
 	sUrl := Browser_GetUrl()
 	If R4J_IsUrl(sUrl) {
@@ -826,7 +828,8 @@ If Browser_WinActive() {
 				
 	If Jira_IsUrl(sUrl) {
 		KeyArray := Jira_Url2IssueKeys(sUrl)
-		return KeyArray
+		If !(KeyArray="")
+			return KeyArray
 	} ; end if Jira_IsUrl
 	
 } Else If WinActive("ahk_exe EXCEL.EXE") {
@@ -836,11 +839,9 @@ If Browser_WinActive() {
 
 GetIssueKeysFromSelection:
 return Jira_Selection2IssueKeys(sSelection)
-
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-
 Jira_Url2IssueKeys(sUrl) {
 	
 	KeyArray := []
@@ -889,7 +890,6 @@ Jira_Selection2IssueKeys(sSelection :="") {
 		sSelection := Clip_GetSelection()
 	If (sSelection = "")
 		return []
-
 	KeyArray := []
 	; Loop on issue keys
 	sKeyPat := "i)([A-Z\d]{3,}\-[\d]{1,})"
@@ -949,7 +949,7 @@ Jira_OpenIssues(IssueArray:="") {
 If (IssueArray ="")
 	IssueArray := Jira_GetIssueKeys()
 If IsObject(IssueArray) {
-	for index, element in IssueArray 
+	For index, element in IssueArray 
 	{
 		Jira_OpenIssue(element)
 	}
@@ -958,16 +958,19 @@ If IsObject(IssueArray) {
 } ; eofun
 ; ---------------------------------------------------------------------------------
 
-Jira_OpenIssuesNav(IssueArray:="") {
+Jira_OpenIssuesNav(IssueArray:="") { ; @fun_Jira_OpenIssuesNav@
 ; Open Issues in issue navigator
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-    PowerTools_OpenDoc("jira_openissue") 
+    PowerTools_OpenDoc("Jira_OpenIssuesNav") 
     return
 }
-If (IssueArray ="")
+
+If (IssueArray ="") {
 	IssueArray := Jira_GetIssueKeys()
+}
+
 If IsObject(IssueArray) {
-	for index, key in IssueArray 
+	For index, key in IssueArray 
 	{
 		If (index=1)
 			jql := "key in (" . key
@@ -993,6 +996,11 @@ Atlasy_OpenUrl(Url)
 Jira_BulkEdit(IssueArray:="") {
 ; Open Issues in Bulk Edit
 ; $root/secure/views/bulkedit/BulkEdit1!default.jspa?issueKeys=RDMO-16%2CRDMO-18&reset=true
+
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+    PowerTools_OpenDoc("Jira_BulkEdit") 
+    return
+}
 If (IssueArray ="")
 	IssueArray := Jira_GetIssueKeys()
 
@@ -1169,6 +1177,10 @@ return sLog
 
 
 Jira_ViewLinkedIssues(IssueKey:="",sLinkName:="") {
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+	PowerTools_OpenDoc("Jira_ViewLinkedIssues") 
+	return
+}
 If (IssueKey="") {
 	InputBox, IssueKey , Input Key, Input issue Key:,, 300, 125
 	If ErrorLevel ; user cancelled
@@ -1177,19 +1189,25 @@ If (IssueKey="") {
 
 ; Input linkName
 If (sLinkName = "") {
-	InputBox, sLinkName , Input Link, Input (inward or outward) Link name(s) (separate by `,):,, 640, 125
+	Prompt := "
+	(
+		Input (inward or outward) shortened* Link name(s) (separate multiple links by `,)
+		Leave empty or Cancel for all links.
+	)"
+	InputBox, sLinkName , Input Link(s), %Prompt%:,, 640, 150
 	If ErrorLevel ; user cancelled
-		return
+		sLinkName := ""
 }
 
-; Get Link definition
-sRootUrl := Jira_IssueKey2RootUrl(IssueKey)
-sUrl := sRootUrl . "/rest/api/2/issueLinkType"	
-sResponse:= Jira_Get(sUrl)
-Json := Jxon_Load(sResponse)
-JsonLinks := Json["issueLinkTypes"]
+If ! (sLinkName = "") {
+	; Get Link definition
+	sRootUrl := Jira_IssueKey2RootUrl(IssueKey)
+	sUrl := sRootUrl . "/rest/api/2/issueLinkType"	
+	sResponse:= Jira_Get(sUrl)
+	Json := Jxon_Load(sResponse)
+	JsonLinks := Json["issueLinkTypes"]
 
-Loop, Parse, sLinkName,`,
+	Loop, Parse, sLinkName,`,
 	{
 		; Shorten LinkName matching
 		sPat:= StrReplace(A_LoopField," ","[^\s]*\s")
@@ -1207,7 +1225,7 @@ Loop, Parse, sLinkName,`,
 				linkName := li
 				Break
 			}
-	
+
 			li := link["outward"]
 			If RegExMatch(li,sPat,sMatch) {
 				If !(StrLen(sMatch) = StrLen(li)) ; full match only
@@ -1217,21 +1235,34 @@ Loop, Parse, sLinkName,`,
 				linkName := li
 				Break
 			}
-		}  
-	
-		If (linkName ="") {
+		}  ; end For JsonLiks
+
+		If (linkName = "") {
 			TrayTip, Error, No link found matching input name '%A_LoopField%'!,,3
 			return
 		}
-	
+
 		linkNames :=  linkNames . ",'" . linkName . "'"
+
+	} ; End For sLinkName
+
+
+	linkNames := RegExReplace(linkNames, "^,","") ; remove first ,
 	
-	} ; End Loop
+} ; end if sLinkName not empty
 
+If Jira_IsCloud(sRootUrl) {
+	If (sLinkName ="")
+		sJql := "issue in linkedIssues(" . IssueKey . ")"
+	Else
+		sJql := "issue in linkedIssues(" . IssueKey . "'," . linkNames . ")"
 
-linkNames := RegExReplace(linkNames, "^,","") ; remove first ,
-
-sJql := "issueFunction in linkedIssuesOf('key =" . IssueKey . "'," . linkNames . ")"
+} Else {
+	If (sLinkName ="")
+		sJql := "issueFunction in linkedIssuesOf('key =" . IssueKey  . ")"
+	Else
+		sJql := "issueFunction in linkedIssuesOf('key =" . IssueKey . "'," . linkNames . ")"
+}
 Jira_OpenJql(sJql)
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------

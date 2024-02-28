@@ -270,9 +270,12 @@ return WebRequest
 ; -------------------------------------------------------------------------------------------------------------------
 
 
-Confluence_ViewInHierachy(sUrl :=""){
+Confluence_ViewInHierachy(sUrl :=""){ ; @fun_Confluence_ViewInHierachy@
 ; Confluence_ViewInHierachy(sUrl*)
-	
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+	PowerTools_OpenDoc("Confluence_ViewInHierachy") 
+	return
+}	
 If (sUrl="")
 	sUrl:= Browser_GetUrl()
 
@@ -304,9 +307,12 @@ Atlasy_OpenUrl(sUrl)
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-Confluence_ViewPageInfo(sUrl :=""){
+Confluence_ViewPageInfo(sUrl :=""){ ; @fun_Confluence_ViewPageInfo@
 ; Confluence_ViewPageInfo(sUrl*)
-		
+If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+	PowerTools_OpenDoc("Confluence_ViewPageInfo") 
+	return
+}		
 If (sUrl="")
 	sUrl:= Browser_GetUrl()
 
@@ -323,9 +329,12 @@ Atlasy_OpenUrl(sUrl)
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-Confluence_ViewPageHistory(sUrl :=""){
+Confluence_ViewPageHistory(sUrl :=""){ ; @fun_Confluence_ViewPageHistory@
 	; Confluence_ViewPageHistory(sUrl*)
-			
+	If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+		PowerTools_OpenDoc("Confluence_ViewPageHistory") 
+		return
+	}		
 	If (sUrl="")
 		sUrl:= Browser_GetUrl()
 
@@ -358,8 +367,12 @@ Confluence_ViewPageHistory(sUrl :=""){
 
 ; -------------------------------------------------------------------------------------------------------------------
 
-Confluence_ViewAttachments(sUrl :=""){
+Confluence_ViewAttachments(sUrl :=""){ ; @fun_Confluence_ViewAttachments@
 	; Confluence_ViewAttachments(sUrl*)
+	If GetKeyState("Ctrl") and !GetKeyState("Shift") {
+		PowerTools_OpenDoc("Confluence_ViewAttachments") 
+		return
+	}	
 			
 	If (sUrl="")
 		sUrl:= Browser_GetUrl()

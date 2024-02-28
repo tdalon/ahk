@@ -73,6 +73,7 @@ Key | Open Project or Issue
 -b <searchString> | Open Boards
 -f <searchString> | Open Filters
 -l or l | Add Link
+-vl or vl | View Linked Issues
 b | bulk edit selected or current issues
 n | open selected or current issues in Navigator / Filter view
 -c or c <projectKey>* | Open Full window Create Issue Screen. Project Key will be prefilled if passed as optional argument
@@ -102,9 +103,13 @@ Launcher Keyword: 'c'
 Keywords  |  Action
 --|--
 | Open Confluence Root Url
-<space> | Open Confluence Space at Home
-<space> <search> | Search in Space for query
-o or -o | [Quick Open](#Quick Open)
+$space | Open Confluence Space at Home
+$space $query | Search in Space for query
+o or -o $query | [Quick Open](#Quick Open)
+o  | Re_order, View in Hierarchy
+a  | view attachments
+h  | view page history
+i  | view page info
 
 <a name="confluence-quick-open"></a>
 #### Confluence Quick Open
@@ -123,8 +128,8 @@ Main keyword 'r'
 Second Keyword or Command  |  Action
 --|--
 |  from Jira issue detailed view-> Open issue in R4J Tree
- ProjectKey or IssueKey <view>| Open Issue or Project R4J view
- <view>: d (document, tree) or c (coverage) or t (traceability)
+ ProjectKey or IssueKey $view| Open Issue or Project R4J view
+ $view: d (document, tree) or c (coverage) or t (traceability)
 -cp or cp | Copy Path Jql
 -cc or cc | Copy Children Jql
 -p or p | Transform and paste server Jql to Cloud Jql

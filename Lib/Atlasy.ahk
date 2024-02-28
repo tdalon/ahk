@@ -72,6 +72,12 @@ Atlasy(sInput:="-g"){
             return
         }
 
+        If (sInput = "-vl") or (sInput = "vl") { ; ViewLinkedIssue
+            ;IssueKeys := Jira_GetIssueKeys()
+            Jira_ViewLinkedIssues(Atlasy_GetIssueKey()) 
+            return
+        }
+
         If (sInput = "-c") or (sInput = "c") or RegExMatch(sInput,"^\-?c\s(.*)",sMatch) { ; create issue
             Jira_CreateIssue("",sMatch1)
             return
@@ -292,6 +298,24 @@ Atlasy(sInput:="-g"){
             Confluence_QuickOpen(sMatch1)
             Return
         }
+
+        If (sInput = "va") or (sInput = "a") { ; view attachments
+            Confluence_ViewAttachments()
+            return
+        }
+        If (sInput = "vh") or (sInput = "h") { ; view history
+            Confluence_ViewPageHistory()
+            return
+        }
+
+        If (sInput = "vi") or (sInput = "c i") { ; view page info
+            Confluence_ViewPageInfo()
+            return
+        }
+        If (sInput = "o")  { ; view in hierarchy / reOrder
+            Confluence_ViewInHierarchy()
+            return
+        }
         
         FoundPos := InStr(sInput," ")  
         If FoundPos {
@@ -415,14 +439,14 @@ Atlasy_Fav(){
     Else
         sProfile := "Default"
     BookmarksFile := RegExReplace(A_AppData,"[^\\]*$","") . "Local\Google\Chrome\User Data\" . sProfile . "\Bookmarks"
-    MsgBox % BookmarksFile ; DBG
+    ;MsgBox % BookmarksFile ; DBG
     If !FileExist(BookmarksFile) {
         MsgBox 0x1010, Error, Bookmarks file %BookmarksFile% not found!
         return
     }
 
     FileRead, Bookmarks, %BookmarksFile%
-    MsgBox %Bookmarks%
+    ; MsgBox %Bookmarks% ; DBG
     BookmarksJson := Jxon_Load(Bookmarks)
 
 
@@ -437,6 +461,27 @@ If Confluence_IsUrl(sUrl)
     return true
 return false
 
+} ; eofun
+; -----------------------------------------
+Atlasy_Url2IssueKey(sUrl) {
+   return R4J_Url2IssueKey(sUrl)
+} ; eofun
+; -----------------------------------------
+Atlasy_GetIssueKey() {
+; IssueKey := Atlasy_GetIssueKey()
+; Get IssueKey from current url or text selection
+
+; From Browser Url
+If Browser_WinActive() {
+    sUrl := Browser_GetUrl()
+    If Jira_IsUrl(sUrl) {
+        IssueKey := Atlasy_Url2IssueKey(sUrl)
+        If (IssueKey <> "")
+            return IssueKey
+    }
+}
+return Jira_Selection2IssueKey()
+    
 } ; eofun
 ; -----------------------------------------
 
@@ -477,6 +522,9 @@ Atlasy_Help(sKeyword:=""){
     
     Switch sKeyword 
     {
+    Case "vl": ; View Linked Issues
+        PowerTools_OpenDoc("Jira_ViewLinkedIssues")
+        return
     Case "2c","oc":
         sUrl := ""
     Case "f","fav","f+","of": ; favorites
@@ -485,7 +533,7 @@ Atlasy_Help(sKeyword:=""){
         
     } ; end switch
 
-    Run, %sUrl%
+    Atlasy_OpenUrl(sUrl)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
