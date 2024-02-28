@@ -209,12 +209,68 @@ If !(issueKey="") {
 Jira_QuickSearch(searchString){
 
 jiraRootUrl := Jira_GetRootUrl()
+sJql := Query2Jql(searchString)
+Jira_OpenJql(sJql,jiraRootUrl)
+} ; eofun
 
+; ----------------------------------------------------------------------
+; Jira Search - Search within current Jira Project
+; Called by: NWS.ahk Quick Search (Win+F Hotkey)
+Jira_Search(sUrl){
+static S_JiraSearch, S_ProjectKey	
+
+RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
+ReRootUrl := StrReplace(sRootUrl,".","\.")
+; issue detailed view
+If RegExMatch(sUrl,ReRootUrl . "/browse/([^/]*)",sNewProjectKey) {
+    sNewProjectKey := RegExReplace(sNewProjectKey1,"-.*","")
+	If (sNewProjectKey = %S_ProjectKey%) and (!S_JiraSearch)
+		sDefSearch := S_JiraSearch
+	Else {
+		S_ProjectKey := sNewProjectKey
+		sDefSearch := "project=" . S_ProjectKey . " AND summary ~"
+	}
+; filter view	
+} Else If  RegExMatch(sUrl,ReRootUrl . "/issues/\?jql=(.*)",sJql) { ; <root>/issues/?jql=project%20%3D%20TPI%20AND%20summary%20~%20reuse
+	sJql := StrReplace(sJql1,"%20"," ")
+	sJql := StrReplace(sJql,"%3D","=")
+	sDefSearch := sJql
+} 
+
+InputBox, sQuery , Search string, Enter Query string:,,640,125,,,,,%sDefSearch% 
+if ErrorLevel
+	return
+sJql := Query2Jql(sQuery)
+S_JiraSearch := sJql
+; Convert labels to Jql
+sPat := "#([^#\s]*)" 
+Pos=1
+While Pos :=    RegExMatch(sJql, sPat, label,Pos+StrLen(label)) {
+	sJqlLabels := sJqlLabels . " AND labels = " . label1
+} ; end while
+
+; remove labels from search string
+sJql := RegExReplace(sJql, sPat , "")
+
+sJql := Trim(sJql) 
+S_JiraSearch := sJql
+sSearchUrl := sRootUrl . "/issues/?jql=" . sJql 
+If sJql ; not empty means update search 
+	Send ^l
+Else
+	Send ^n ; New Window
+Sleep 500
+Clip_Paste(sSearchUrl)
+Send {Enter}
+
+} ; eofun
+; ----------------------------------------------------------------------
+Query2Jql(searchString) {
 ; Convert labels to Jql
 sPat := "#([^#\s]*)" 
 Pos=1
 While Pos :=    RegExMatch(searchString, sPat, label,Pos+StrLen(label)) {
-	sJqlLabels := sJqlLabels . " and labels = " . label1
+	sJqlLabels := sJqlLabels . " AND labels = " . label1
 } ; end while
 
 ; remove labels from search string
@@ -228,12 +284,9 @@ sJql := StrReplace(sJql," d~"," description~")
 ; Enclose summary~ description~ with "" if using wildcards ? or * see https://tdalon.blogspot.com/2022/02/jira-partial-text-search.html
 sPat1 = [^(?:\s*AND\s*|\s*OR\s*|"\*\(\))]*
 ;sPat1 = [^"]*
-sRep = summary~"$1"
-sPat = summary\s?~\s*(%sPat1%\*%sPat1%)
-sJql := RegExReplace(sJql,sPat,sRep)
 
-sRep = description~"$1"
-sPat = description\s?~\s*(%sPat1%\*%sPat1%)
+sPat = (summary|description)\s?~\s*(%sPat1%\*%sPat1%)
+sRep = $1~"$2"
 sJql := RegExReplace(sJql,sPat,sRep)
 
 
@@ -272,110 +325,43 @@ If RegExMatch(sJql,needle)
 	sJql := RegExReplace(sJql, needle, " AND resolution = Unresolved")
 
 ; Default Project
-needle := "\s\-?p\s([^\s]*)"
-If RegExMatch(sJql,needle,sMatch) {
-	projectKey := sMatch1
-	sJql := RegExReplace(sJql, needle)
-} Else {
-	defProjectKey := PowerTools_GetSetting("JiraProject")
-	If !(defProjectKey="")
-		projectKey := defProjectKey
-}
-If !(projectKey = "")
-	sDefJql = project = %projectKey%
+If !RegExMatch(sJql,"project\s?=") {
+	needle := "\s\-?p\s([^\s]*)"
+	If RegExMatch(sJql,needle,sMatch) {
+		projectKey := sMatch1
+		sJql := RegExReplace(sJql, needle)
+	} Else {
+		defProjectKey := PowerTools_GetSetting("JiraProject")
+		If !(defProjectKey="")
+			projectKey := defProjectKey
+	}
+	If !(projectKey = "")
+		sDefJql = project = %projectKey%
 
-sJql := RegExReplace(sJql,"^\s?AND ")
-If !(sDefJql = "") {
-	If (sJql ="")
-		sJql := sDefJql
-	Else
-		sJql := sDefJql . " AND " . RegExReplace(sJql,"^\s?AND ")
+	sJql := RegExReplace(sJql,"^\sAND\s")
+	sJql := Trim(sJql)
+	If !(sDefJql = "") {
+		If (sJql ="")
+			sJql := sDefJql
+		Else
+			sJql := sDefJql . " AND " . RegExReplace(sJql,"^\sAND\s")
+	}
 }
-
 ; Default Filter from ini file
 JiraDefJql := PowerTools_IniRead("Jira","JiraDefJql")
 If !(JiraDefJql="ERROR") {
 	If (sJql = "")
 		sJql := JiraDefJql
 	Else
-		sJql := JiraDefJql . " AND " . RegExReplace(sJql,"^\s?AND ")
+		sJql := JiraDefJql . " AND " . RegExReplace(sJql,"^\sAND\s")
 }
 
-sJql := RegExReplace(sJql,"^\s?AND ")
+sJql := RegExReplace(sJql,"^\sAND\s")
 If (sJql ="")
-	sJqlLabels := RegExReplace(sJqlLabels,"^\s?AND ")
-Jira_OpenJql(sJql . sJqlLabels,jiraRootUrl)
+	sJqlLabels := RegExReplace(sJqlLabels,"^\sAND\s")
+
+return sJql . sJqlLabels
 } ; eofun
-
-; ----------------------------------------------------------------------
-; Jira Search - Search within current Jira Project
-; Called by: NWS.ahk Quick Search (Win+F Hotkey)
-Jira_Search(sUrl){
-static S_JiraSearch, S_ProjectKey	
-
-RegExMatch(sUrl,"https?://[^/]*",sRootUrl)
-ReRootUrl := StrReplace(sRootUrl,".","\.")
-; issue detailed view
-If RegExMatch(sUrl,ReRootUrl . "/browse/([^/]*)",sNewProjectKey) {
-    sNewProjectKey := RegExReplace(sNewProjectKey1,"-.*","")
-	If (sNewProjectKey = %S_ProjectKey%) and (!S_JiraSearch)
-		sDefSearch := S_JiraSearch
-	Else {
-		S_ProjectKey := sNewProjectKey
-		sDefSearch := "project=" . S_ProjectKey . " AND summary ~"
-	}
-; filter view	
-} Else If  RegExMatch(sUrl,ReRootUrl . "/issues/\?jql=(.*)",sJql) { ; <root>/issues/?jql=project%20%3D%20TPI%20AND%20summary%20~%20reuse
-	sJql := StrReplace(sJql1,"%20"," ")
-	sJql := StrReplace(sJql,"%3D","=")
-	sDefSearch := sJql
-} 
-
-InputBox, sJql , Search string, Enter Jql string:,,640,125,,,,,%sDefSearch% 
-if ErrorLevel
-	return
-S_JiraSearch := sJql
-; Convert labels to Jql
-sPat := "#([^#\s]*)" 
-Pos=1
-While Pos :=    RegExMatch(sJql, sPat, label,Pos+StrLen(label)) {
-	sJqlLabels := sJqlLabels . " AND labels = " . label1
-} ; end while
-
-; remove labels from search string
-sJql := RegExReplace(sJql, sPat , "")
-
-sJql := Trim(sJql) 
-S_JiraSearch := sJql
-
-; Enclose summary~ description~ with "" if using wildcards ? or * see https://tdalon.blogspot.com/2022/02/jira-partial-text-search.html
-sPat1 = [^(?:\s*AND\s*|\s*OR\s*|"\*\(\))]*
-;sPat1 = [^"]*
-sRep = summary~"$1"
-sPat = summary\s*~\s*(%sPat1%\*%sPat1%)
-sJql := RegExReplace(sJql,sPat,sRep)
-
-sRep = description~"$1"
-sPat = description\s*~\s*(%sPat1%\*%sPat1%)
-sJql := RegExReplace(sJql,sPat,sRep)
-
-; Escape Html
-sJql := StrReplace(sJql," ","%20")
-sJql := StrReplace(sJql,"=","%3D")
-
-sSearchUrl := sRootUrl . "/issues/?jql=" . sJql . sJqlLabels
-
-If sJql ; not empty means update search 
-	Send ^l
-Else
-	Send ^n ; New Window
-Sleep 500
-Clip_Paste(sSearchUrl)
-Send {Enter}
-
-} ; eofun
-; ----------------------------------------------------------------------
-
 
 ; ----------------------------------------------------------------------
 

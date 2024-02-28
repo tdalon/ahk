@@ -202,7 +202,8 @@ If !(DocMap="ERROR") {
         sUrl :="https://tdalon.blogspot.com/2024/02/r4j-bulk-edit-folder.html"
     Case "Jira_ViewLinkedIssues":
     Case "Jira_OpenIssuesNav":
-    Case "Jira_CreateIssue":   
+    Case "Jira_CreateIssue": 
+    Case "Jira_QuickSearch":  
     Case "atlasy_openissue":
     Case "r4j_CV" :
     Case "r4j_CopyPathJql":

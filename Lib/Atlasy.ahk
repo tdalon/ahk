@@ -525,6 +525,9 @@ Atlasy_Help(sKeyword:=""){
     Case "vl": ; View Linked Issues
         PowerTools_OpenDoc("Jira_ViewLinkedIssues")
         return
+    Case "j s": ; Jira Quick Search
+        PowerTools_OpenDoc("Jira_QuickSearch")
+        return
     Case "2c","oc":
         sUrl := ""
     Case "f","fav","f+","of": ; favorites
