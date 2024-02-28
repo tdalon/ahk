@@ -403,9 +403,7 @@ TotalCount := 0
 LoopPage:
 sPageUrl = %sUrl%&ps=%pagesize%&page=%pagecnt%
 
-;sXml_page := BrowserGetPage(sPageUrl) ; will flash a browser window
 sXml_page := CNGet(sPageUrl)
-
 
 If (sXml_page ~= "Error.*") {
 	return sXml_page

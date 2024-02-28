@@ -270,10 +270,10 @@ return WebRequest
 ; -------------------------------------------------------------------------------------------------------------------
 
 
-Confluence_ViewInHierachy(sUrl :=""){ ; @fun_Confluence_ViewInHierachy@
-; Confluence_ViewInHierachy(sUrl*)
+Confluence_ViewInHierarchy(sUrl :=""){ ; @fun_Confluence_ViewInHierachy@
+; Confluence_ViewInHierarchy(sUrl*)
 If GetKeyState("Ctrl") and !GetKeyState("Shift") {
-	PowerTools_OpenDoc("Confluence_ViewInHierachy") 
+	PowerTools_OpenDoc("Confluence_ViewInHierarchy") 
 	return
 }	
 If (sUrl="")

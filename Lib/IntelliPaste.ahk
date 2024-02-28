@@ -276,21 +276,20 @@ IntelliPaste_CleanUrl(url,encode:= False) {
 ; Convert Teams file links to SharePoint links
 ;
 ; Calls: Lib/GetSharepointUrl, GetFileLink, UriDecode
-; Call: SubFunctions: GetGoogleUrl, IsGoogleUrl
+; Call: SubFunctions: Google_IsUrl, Google_CleanUrl
 
 url := Trim(url)
-
 
 ; Teams Beautifier
 url := Teams_FileLinkBeautifier(url) ; will decode url
 
 If Connections_IsUrl(url) 
 	url := Connections_CleanUrl(url)
-Else If (SharePoint_IsUrl(url)) 
+Else If SharePoint_IsUrl(url)
 	url := SharePoint_CleanUrl(url)	
-Else If (IsGoogleUrl(url))
-	url := GetGoogleUrl(url)
-Else If (Confluence_IsUrl(url)) 
+Else If Google_IsUrl(url)
+	url := Google_CleanUrl(url)
+Else If Confluence_IsUrl(url) 
 	url := Confluence_CleanUrl(url)
 
 
@@ -322,22 +321,21 @@ If !(encode) {
 }	
 
 return url
-}
+} ;eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-GetGoogleUrl(url){
-; Calls: IsGoogleUrl
+Google_CleanUrl(url){
 url := uriDecode(url)	
 RegExMatch(url,"&url=(.*)&usg=",newurl) ; exclude & escape ?		
 return newurl1
 } ;eofun
 ; -------------------------------------------------------------------------------------------------------------------
-IsGoogleUrl(url){
+Google_IsUrl(url){
 If RegExMatch(url,"https://www\.google\.[a-z]{2,3}/url\?.*") = 0 
 	return false
 Else 
 	return true
-}
+} ;eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 OnIntelliPasteMultiStyleMsgBox() {
@@ -416,6 +414,7 @@ If FileExist("Lib/Connections.ahk") {
 */
 
 If !InStr(sClipboard,"`n") { ; single input
+
 	If InStr(sClipboard,"https://github.com/") {
 		sFile := StrReplace(sClipboard,"/blob/","/raw/")
 		sFullText =<script src="http://gist-it.appspot.com/%sFile%"></script>
@@ -435,18 +434,35 @@ If !InStr(sClipboard,"`n") { ; single input
 		}
 	} ; eif Text editors
 
+	
+	; Confluence Web Images
+	If Confluence_IsWinActive() {
+		If RegExMatch(sClipboard, "^http.*\.(png|jpg|jpeg|gif)$") {
+			imglink = ![ALT TEXT](%sClipboard%)
+			Clip_Paste2(imglink) 
+			; Clip_Paste(imglink) ; does not work
+			return
+		}
+	}
+	
 	sLink := sClipboard
 
-	If (Confluence_IsUrl(sLink)) {
+	If Confluence_IsUrl(sLink) {
 		link := Confluence_CleanLink(sLink)
 		Clip_PasteLink(link[1],link[2])
 		return
-	} Else If (Jira_IsUrl(sLink)) {
+	} Else If Jira_IsUrl(sLink) {
 		link := Jira_CleanLink(sLink)
 		Clip_PasteLink(link[1],link[2])
 		return
-	} Else If (Connections_IsUrl(sLink)) {
+	} Else If Connections_IsUrl(sLink) {
 		link := Connections_CleanLink(sLink)
+		Clip_PasteLink(link[1],link[2]) 
+		return
+	}
+
+	link := BitBucket_CleanLink(sLink)
+	If !(link="") {
 		Clip_PasteLink(link[1],link[2]) 
 		return
 	}

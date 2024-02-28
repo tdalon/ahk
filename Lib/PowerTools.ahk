@@ -1,23 +1,25 @@
 ; PowerTools Lib
 
-#Include <AHK>
+;#Include <AHK>
 
-AppList = ConnectionsEnhancer,MO,NWS,OutlookShortcuts,PeopleConnector,TeamsShortcuts
+; ---------------------------------------------------------------------- 
 
 PowerTools_CheckForUptate(ToolName :="") {
 If !a_iscompiled {
-	Run, https://github.com/tdalon/ahk ; no direct link because of Lib dependencies
+    Run, https://github.com/tdalon/ahk ; no direct link because of Lib dependencies
     return
 } 
 
+/*   
 ; warning if connected via VPN
 If (Login_IsVPN()) {
 MsgBox, 0x1011, CheckForUpdate with VPN?,It seems you are connected with VPN.`nCheck for update might not work. Consider disconnecting VPN.`nContinue now?
 IfMsgBox Cancel
     return
-}
+} 
+*/
 
-If !ToolName    
+If (ToolName ="")   
     ScriptName := A_ScriptName
 Else
     ScriptName = %ToolName%.exe
@@ -37,7 +39,7 @@ If Not FileExist(guExe)
     
 sCmd = %guExe% %ScriptName%
 RunWait, %sCmd%,,Hide
-} ; eof
+} ; eofun
 
 ; ---------------------------------------------------------------------- 
 PowerTools_Help(ScriptName,doOpen := True){
@@ -69,7 +71,7 @@ Case "Chromy":
 Case "Edgy":
     sUrl = https://tdalon.github.io/ahk/Edgy
 Case "Atlasy":
-    sUrl = https://tdalon.github.io/ahk/Atlasy
+    sUrl := "https://tdalon.github.io/ahk/Atlasy"
 Case "all":
 Default:
     sUrl := "https://tdalon.github.io/ahk/PowerTools"	
@@ -77,6 +79,7 @@ Default:
 
 If doOpen
     Run, %sUrl%
+
 return sUrl
 } ; eofun
 
@@ -93,6 +96,8 @@ Case "PeopleConnector":
     sFileName = People-Connector-Changelog
 Case "NWS":
     sFileName = NWS-PowerTool-Changelog
+Case "Atlasy":
+    sFileName = Atlasy-Changelog
 Case "Mute":
     sFileName = Mute-PowerTool-Changelog
 Case "Bundler":
@@ -114,7 +119,6 @@ If Not doOpen {
     return sUrl
 }
     
-
 If !A_IsCompiled {
     sFile = %A_ScriptDir%\docs\_pages\%sFileName%.md
     If FileExist(sFile) {
@@ -146,6 +150,8 @@ Case "OutlookShortcuts":
     sUrl := sUrl . "%20%23MicrosoftOutlook"
 Case "Teamsy":
     sUrl := sUrl . "%20%23MicrosoftTeams"
+Case "Atlasy":
+    sUrl := sUrl . "%20%23Atlasy"
 }
 Run, %sUrl%
 
@@ -155,46 +161,61 @@ Run, %sUrl%
 
 PowerTools_RunBundler(){
 If a_iscompiled {
-  ExeFile = %A_ScriptDir%\PowerToolsBundler.exe
-  If Not FileExist(ExeFile) {
+    ExeFile = %A_ScriptDir%\PowerToolsBundler.exe
+    If Not FileExist(ExeFile) {
     sUrl = https://raw.githubusercontent.com/tdalon/ahk/main/PowerTools/PowerToolsBundler.exe
-		UrlDownloadToFile, %sUrl%, PowerToolsBundler.exe
-  }
-  Run %ExeFile%
-} Else
-  Run %A_AHKPath% "%A_ScriptDir%\PowerToolsBundler.ahk"
-
+        UrlDownloadToFile, %sUrl%, PowerToolsBundler.exe
+    }
+    Run %ExeFile%
+} Else {
+    Run %A_AHKPath% "%A_ScriptDir%\PowerToolsBundler.ahk"
+}
 } ; eofun
 ; ---------------------------------------------------------------------- 
-
-
-
 
 ; ---------------------------------------------------------------------- 
 
 PowerTools_OpenDoc(key:=""){
-    IniRead, DocRootUrl, PowerTools.ini,Doc,DocRootUrl
-    If (DocRootUrl="ERROR") { 
-        PowerTools_ErrDlg("DocRootUrl key not found in PowerTools.ini file [Doc] section!")
-        return
-    }
-    If (key ="") {
-        sUrl := "https://github.com/tdalon/ahk"
-        Run,  "%sUrl%"
-        return
-    }
+IniRead, DocRootUrl, PowerTools.ini,Doc,DocRootUrl
+If (DocRootUrl="ERROR") { 
+    PowerTools_ErrDlg("DocRootUrl key not found in PowerTools.ini file [Doc] section!")
+    return
+}
 
-    IniRead, DocMap, PowerTools.ini,Doc,DocMap
-    If (DocMap="ERROR") { 
-        PowerTools_ErrDlg("DocMap key not found in PowerTools.ini file [Doc] section!")
-        return
-    }
-
+IniRead, DocMap, PowerTools.ini,Doc,DocMap
+If !(DocMap="ERROR") { 
     JsonObj := Jxon_Load(DocMap)
     sUrl := JsonObj[key]
     If !(sUrl)
         sUrl := DocRootUrl
-    Run,  "%sUrl%"
+    ;PowerTools_ErrDlg("DocMap key not found in PowerTools.ini file [Doc] section!")
+    ;return
+} Else {
+    sUrl := "https://github.com/tdalon/ahk"
+    Switch key ; TODO
+    {
+    Case "r4j_CopyChildrenJql": ; gui/ launcher 
+        sUrl:= "https://tdalon.blogspot.com/2024/02/r4j-copy-children-jql.html"
+    Case "atlasy":
+        sUrl := "https://tdalon.github.io/ahk/Atlasy"
+    Case "R4J_OpenPathJql":
+        sUrl :="https://tdalon.blogspot.com/2024/02/r4j-bulk-edit-folder.html"
+    Case "Jira_ViewLinkedIssues":
+    Case "Jira_OpenIssuesNav":
+    Case "Jira_CreateIssue":   
+    Case "atlasy_openissue":
+    Case "r4j_CV" :
+    Case "r4j_CopyPathJql":
+    Case "Jira_BulkEdit":
+    Case "Confluence_ViewInHierachy":
+    Case "Confluence_ViewAttachments":
+    Case "Confluence_PageInfo":
+    Case "Confluence_ViewPageHistory":
+    Default:
+        
+    } ; end Switch
+}
+Run,  "%sUrl%"
 } ; eofun
 
 
@@ -222,7 +243,7 @@ return Setting
 } ; eofun
 
 ; ----------------------------------------------------------------------
-PowerTools_GetConfig(){
+PowerTools_GetConfig() {
 RegRead, Config, HKEY_CURRENT_USER\Software\PowerTools, Config
 If (Config=""){
     Config := PowerTools_LoadConfig()
@@ -230,59 +251,56 @@ If (Config=""){
 return Config
 }
 ; ----------------------------------------------------------------------
-PowerTools_SetConfig(){
+PowerTools_SetConfig() {
 ; Config := PowerTools_SetConfig()
-    RegRead, Config, HKEY_CURRENT_USER\Software\PowerTools, Config
-    DefListConfig := "Default|Ini"
-    If FileExist("Lib/ET.ahk")
-        DefListConfig := DefListConfig . "|ET"
-    If FileExist("Lib/Conti.ahk")
-        DefListConfig := DefListConfig . "|Conti|Vitesco"
-    Select := 0
-    Loop, parse, DefListConfig, | 
-    {
-        If (A_LoopField = Config) {
-            Select := A_Index
-            break
-        }
+RegRead, Config, HKEY_CURRENT_USER\Software\PowerTools, Config
+DefListConfig := "Default|Ini"
+If FileExist("Lib/ET.ahk")
+    DefListConfig := DefListConfig . "|ET"
+If FileExist("Lib/Conti.ahk")
+    DefListConfig := DefListConfig . "|Conti|Vitesco"
+Select := 0
+Loop, parse, DefListConfig, | 
+{
+    If (A_LoopField = Config) {
+        Select := A_Index
+        break
     }
-    Config := ListBox("PowerTools Config","Select your configuration:",DefListConfig,Select)
-    If (Config="")
-        return
-    PowerTools_RegWrite("Config",Config)
-    return Config
+}
+Config := ListBox("PowerTools Config","Select your configuration:",DefListConfig,Select)
+If (Config="")
+    return
+PowerTools_RegWrite("Config",Config)
+return Config
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_IniRead(Section,Key) {
-    ; PowerTools_IniRead(Section,Key)
-    ; return "ERROR" if key was not found in PowerTools.ini File
-    IniRead, OutputVar, PowerTools.ini,%Section%,%Key%
-    return OutputVar
-    } ; eofun
-    ; -------------------------------------------------------------------------------------------------------------------
-    ; -------------------------------------------------------------------------------------------------------------------
-    PowerTools_IniWrite(Var,Section,Key) {
-        ; PowerTools_IniWrite(Var,Section,Key)
-        ; ErrorLevel is returned
-        IniWrite, %Var%, PowerTools.ini, %Section%, %Key%
-    } ; eofun
+; PowerTools_IniRead(Section,Key)
+; return "ERROR" if key was not found in PowerTools.ini File
+IniRead, OutputVar, PowerTools.ini,%Section%,%Key%
+return OutputVar
+} ; eofun
+; -------------------------------------------------------------------------------------------------------------------
+PowerTools_IniWrite(Var,Section,Key) {
+    ; PowerTools_IniWrite(Var,Section,Key)
+    ; ErrorLevel is returned
+    IniWrite, %Var%, PowerTools.ini, %Section%, %Key%
+} ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 
 
 ; -------------------------------------------------------------------------------------------------------------------
-PowerTools_RegRead(Prop){
+PowerTools_RegRead(Prop) {
 RegRead, OutputVar, HKEY_CURRENT_USER\Software\PowerTools, %Prop%
 return OutputVar
 } ; eofun
-
 ; -------------------------------------------------------------------------------------------------------------------
-PowerTools_RegWrite(Prop, Value){
+PowerTools_RegWrite(Prop, Value) {
 RegWrite, REG_SZ, HKEY_CURRENT_USER\Software\PowerTools, %Prop%, %Value%    
 }
-
 ; -------------------------------------------------------------------------------------------------------------------
-PowerTools_RegGet(Prop,sPrompt :=""){
+PowerTools_RegGet(Prop,sPrompt :="") {
 Prop := StrReplace(Prop," ","") ; remove blanks
 RegRead, Value, HKEY_CURRENT_USER\Software\PowerTools, %Prop% 
 If (sPrompt = "")
@@ -295,144 +313,140 @@ return Value
 } ;eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-PowerTools_RegSet(Prop,sPrompt :=""){
-
+PowerTools_RegSet(Prop,sPrompt :="") {
 If (sPrompt = "")
     sPrompt = Enter value for %Prop%:
-
 Prop := StrReplace(Prop," ","")
 RegRead, Value, HKEY_CURRENT_USER\Software\PowerTools, %Prop%
 InputBox, Value, %Prop%, %sPrompt%, , 200, 150, , , , , %Value%
 If ErrorLevel
     return
 PowerTools_RegWrite(Prop,Value)
-
 return Value
 } ;eofun
 
 ; ----------------------------------------------------------------------
-PowerTools_LoadConfig(Config :=""){
+PowerTools_LoadConfig(Config :="") {
 If (Config=""){
     Config := PowerTools_SetConfig()
 }
-
 IniFile = %A_ScriptDir%\PowerTools.ini
-
 Switch Config
 {
-    Case "Default": ; Global default settings
-        sEmpty=
-        PowerTools_RegWrite("Domain","")
-        IniWrite,%sEmpty% , %IniFile%, Main, Domain
+Case "Default": ; Global default settings
+    sEmpty=
+    PowerTools_RegWrite("Domain","")
+    IniWrite,%sEmpty% , %IniFile%, Main, Domain
 
-        PowerTools_RegWrite("TenantName","")
-        IniWrite, %sEmpty%, %IniFile%, Main, TenantName
+    PowerTools_RegWrite("TenantName","")
+    IniWrite, %sEmpty%, %IniFile%, Main, TenantName
 
-        PowerTools_RegWrite("ProxyServer","n/a")
-        IniWrite, n/a, %IniFile%, Main, ProxyServer
+    PowerTools_RegWrite("ProxyServer","n/a")
+    IniWrite, n/a, %IniFile%, Main, ProxyServer
 
+    PowerTools_RegWrite("ConnectionsRootUrl","")
+    IniWrite, %sEmpty%, %IniFile%, Connections, ConnectionsRootUrl
+
+    PowerTools_RegWrite("TeamsOnly",1)
+    IniWrite, 1, %IniFile%, Teams, TeamsOnly
+
+    IniWrite, https://tdalon.blogspot.com/, %IniFile%, Doc, DocRootUrl
+
+
+    ; Load Parameters
+    ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay
+    ; FindText
+    TeamsFindTextList = Mute,Muted,Leave,Resume,MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
+    Loop, Parse,TeamsFindTextList, `,
+    {
+        ParamList = %ParamList%,TeamsFindText%A_LoopField%
+    }
+
+    Loop, Parse, ParamList, `,
+    {
+        If RegExMatch(A_LoopField,"[A-Z][a-z]*",sMatch)
+        {
+            IniVal := PowerTools_GetParam(A_LoopField)
+            IniWrite, %IniVal%, %IniFile%, %sMatch%, %A_LoopField%
+        } 
+    }
+
+    ; Teams Global Hotkeys
+    HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk 
+    Loop, Parse, HotkeyIDList, `,
+    {
+        HKid := A_LoopField
+        HKid := StrReplace(HKid," ","")
+        Param = TeamsHotkey%HKid%
+        RegRead, HK, HKEY_CURRENT_USER\Software\PowerTools, %Param%
+        IniWrite, %HK%, %IniFile%, Teams, %Param%
+    }
+
+
+Case "Ini":
+    If !FileExist(IniFile) {
+        MSgBox 0x10, PowerTools: Error, PowerTools.ini can not be found!
+        return
+    }
+
+    IniRead, IniVal, %IniFile%, Main, Domain
+    PowerTools_RegWrite("Domain",IniVal)
+    IniRead, IniVal, %IniFile%, Teams, TeamsOnly
+    PowerTools_RegWrite("TeamsOnly",IniVal)
+    IniRead, IniVal, %IniFile%, Connections, ConnectionsRootUrl
+    If (IniVal != "ERROR")
+        PowerTools_RegWrite("ConnectionsRootUrl",IniVal)
+    Else
         PowerTools_RegWrite("ConnectionsRootUrl","")
-        IniWrite, %sEmpty%, %IniFile%, Connections, ConnectionsRootUrl
+    
+    IniRead, IniVal, %IniFile%, Jira, JiraUserName
+    If (IniVal != "ERROR")
+        PowerTools_RegWrite("JiraUserName",IniVal)
+    IniRead, IniVal, %IniFile%, Confluence, ConfluenceUserName
+    If (IniVal != "ERROR")
+        PowerTools_RegWrite("ConfluenceUserName",IniVal)
+    
+    ; Load Parameters
+    ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay
+    ; FindText
+    TeamsFindTextList = MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
+    Loop, Parse,TeamsFindTextList, `,
+    {
+        ParamList = %ParamList%,TeamsFindText%A_LoopField%
+    }
 
-        PowerTools_RegWrite("TeamsOnly",1)
-        IniWrite, 1, %IniFile%, Teams, TeamsOnly
-
-        IniWrite, https://tdalon.blogspot.com/, %IniFile%, Doc, DocRootUrl
-
-
-        ; Load Parameters
-        ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay
-        ; FindText
-        TeamsFindTextList = Mute,Muted,Leave,Resume,MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
-        Loop, Parse,TeamsFindTextList, `,
+    Loop, Parse, ParamList, `,
+    {
+        If RegExMatch(A_LoopField,"[A-Z][a-z]*",sMatch)
         {
-            ParamList = %ParamList%,TeamsFindText%A_LoopField%
-        }
-
-        Loop, Parse, ParamList, `,
-        {
-            If RegExMatch(A_LoopField,"[A-Z][a-z]*",sMatch)
-            {
-                IniVal := PowerTools_GetParam(A_LoopField)
-                IniWrite, %IniVal%, %IniFile%, %sMatch%, %A_LoopField%
-            } 
-        }
-
-        ; Teams Global Hotkeys
-        HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk 
-        Loop, Parse, HotkeyIDList, `,
-        {
-            HKid := A_LoopField
-            HKid := StrReplace(HKid," ","")
-            Param = TeamsHotkey%HKid%
-            RegRead, HK, HKEY_CURRENT_USER\Software\PowerTools, %Param%
-            IniWrite, %HK%, %IniFile%, Teams, %Param%
-        }
-
-
-    Case "Ini":
-        If !FileExist(IniFile) {
-            MSgBox 0x10, PowerTools: Error, PowerTools.ini can not be found!
-            return
-        }
-
-        IniRead, IniVal, %IniFile%, Main, Domain
-        PowerTools_RegWrite("Domain",IniVal)
-        IniRead, IniVal, %IniFile%, Teams, TeamsOnly
-        PowerTools_RegWrite("TeamsOnly",IniVal)
-        IniRead, IniVal, %IniFile%, Connections, ConnectionsRootUrl
-        If (IniVal != "ERROR")
-            PowerTools_RegWrite("ConnectionsRootUrl",IniVal)
-        Else
-            PowerTools_RegWrite("ConnectionsRootUrl","")
-        
-        IniRead, IniVal, %IniFile%, Jira, JiraUserName
-        If (IniVal != "ERROR")
-            PowerTools_RegWrite("JiraUserName",IniVal)
-        IniRead, IniVal, %IniFile%, Confluence, ConfluenceUserName
-        If (IniVal != "ERROR")
-            PowerTools_RegWrite("ConfluenceUserName",IniVal)
-        
-
-        ; Load Parameters
-        ParamList = TeamsMentionDelay,TeamsCommandDelay,TeamsClickDelay
-        ; FindText
-        TeamsFindTextList = MeetingActions,MeetingReactions,MeetingReactionHeart,MeetingReactionLaugh,MeetingReactionApplause,MeetingReactionLike,MeetingActionFullScreen,MeetingActionTogetherMode,MeetingActionBackgrounds,MeetingActionShare,MeetingActionUnShare
-        Loop, Parse,TeamsFindTextList, `,
-        {
-            ParamList = %ParamList%,TeamsFindText%A_LoopField%
-        }
-
-        Loop, Parse, ParamList, `,
-        {
-            If RegExMatch(A_LoopField,"[A-Z][a-z]*",sMatch)
-            {
-                IniRead, IniVal, %IniFile%, %sMatch%, %A_LoopField%
-                If (IniVal != "ERROR")
-                    PowerTools_RegWrite(A_LoopField,IniVal)
-            } 
-        }
-
-        ; Teams Global Hotkeys
-        HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk 
-        Loop, Parse, HotkeyIDList, `,
-        {
-            HKid := A_LoopField
-            HKid := StrReplace(HKid," ","")
-            Param = TeamsHotkey%HKid%
-
-            IniRead, IniVal, %IniFile%, Teams, %Param%
+            IniRead, IniVal, %IniFile%, %sMatch%, %A_LoopField%
             If (IniVal != "ERROR")
-                PowerTools_RegWrite(Param,IniVal)
-        }
-    Case "ET":
-	    If FileExist("Lib/ET.ahk") 
-            FunStr := "ET_LoadConfig"
-			%FunStr%()
-    Case "Conti","Vitesco":        
-	    If FileExist("Lib/Conti.ahk")
-            FunStr := "Conti_LoadConfig"
-			%FunStr%(Config)
+                PowerTools_RegWrite(A_LoopField,IniVal)
+        } 
+    }
+
+    ; Teams Global Hotkeys
+    HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk 
+    Loop, Parse, HotkeyIDList, `,
+    {
+        HKid := A_LoopField
+        HKid := StrReplace(HKid," ","")
+        Param = TeamsHotkey%HKid%
+
+        IniRead, IniVal, %IniFile%, Teams, %Param%
+        If (IniVal != "ERROR")
+            PowerTools_RegWrite(Param,IniVal)
+    }
+Case "ET":
+    If FileExist("Lib/ET.ahk") {
+        FunStr := "ET_LoadConfig"
+        %FunStr%()
+    } 
+Case "Conti","Vitesco":        
+    If FileExist("Lib/Conti.ahk") {
+        FunStr := "Conti_LoadConfig"
+        %FunStr%(Config)
+    }
 } ; end switch
 
 } ; eofun
@@ -440,7 +454,7 @@ Switch Config
 ; ----------------------------------------------------------------------
 
 ; ----------------------------------------------------------------------
-PowerTools_CursorHighlighter(){
+PowerTools_CursorHighlighter() {
     CHFile= %A_ScriptDir%\Cursor Highlighter
     If a_iscompiled
         CHFile = %CHFile%.exe
@@ -456,39 +470,39 @@ PowerTools_CursorHighlighter(){
 
 PowerTools_MenuTray(){
 ; SubMenuSettings := PowerTools_MenuTray()
-    Menu, Tray, NoStandard
-    Menu, Tray, Add, &Help, MenuCb_PTHelp
-    Menu, Tray, Add, Tweet for support, MenuCb_PowerTools_Tweet
-    Menu, Tray, Add, Check for update, MenuCb_PTCheckForUpdate
-    Menu, Tray, Add, Changelog, MenuCb_PTChangelog
-    Menu, Tray, Add, News, MenuCb_PTNews
+Menu, Tray, NoStandard
+Menu, Tray, Add, &Help, MenuCb_PTHelp
+Menu, Tray, Add, Tweet for support, MenuCb_PowerTools_Tweet
+Menu, Tray, Add, Check for update, MenuCb_PTCheckForUpdate
+Menu, Tray, Add, Changelog, MenuCb_PTChangelog
+Menu, Tray, Add, News, MenuCb_PTNews
 
 
-    If !a_iscompiled {
-        IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
-        If (FileExist(IcoFile)) 
-            Menu,Tray,Icon, %IcoFile%
-    }
+If !a_iscompiled {
+    IcoFile  := PathX(A_ScriptFullPath, "Ext:.ico").Full
+    If (FileExist(IcoFile)) 
+        Menu,Tray,Icon, %IcoFile%
+}
 
-    If (A_ScriptName = "Teamsy.exe") or (A_ScriptName = "Teamsy.ahk")
-        return
+If (A_ScriptName = "Teamsy.exe") or (A_ScriptName = "Teamsy.ahk")
+    return
 
-    ; -------------------------------------------------------------------------------------------------------------------
-    ; SETTINGS
-    Menu, SubMenuSettings, Add, Launch on Startup, MenuCb_ToggleSettingLaunchOnStartup
-    SettingLaunchOnStartup := ToStartup(A_ScriptFullPath)
-    If (SettingLaunchOnStartup) 
-        Menu,SubMenuSettings,Check, Launch on Startup
-    Else 
-        Menu,SubMenuSettings,UnCheck, Launch on Startup
+; -------------------------------------------------------------------------------------------------------------------
+; SETTINGS
+Menu, SubMenuSettings, Add, Launch on Startup, MenuCb_ToggleSettingLaunchOnStartup
+SettingLaunchOnStartup := ToStartup(A_ScriptFullPath)
+If (SettingLaunchOnStartup) 
+    Menu,SubMenuSettings,Check, Launch on Startup
+Else 
+    Menu,SubMenuSettings,UnCheck, Launch on Startup
 
-    Menu, Tray, Add, Settings, :SubMenuSettings
+Menu, Tray, Add, Settings, :SubMenuSettings
 
-    Menu,Tray,Add
-    Menu,Tray,Standard
-    Menu,Tray,Default,&Help
+Menu,Tray,Add
+Menu,Tray,Standard
+Menu,Tray,Default,&Help
 
-    return SubMenuSettings
+return SubMenuSettings
 } ; eofun
 
 ; ---------------------------------------------------------------------- STARTUP -------------------------------------------------
@@ -530,149 +544,147 @@ MenuCb_PTCheckForUpdate(ItemName, ItemPos, MenuName){
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_TweetPush(ScriptName){
-    sLogUrl := PowerTools_Changelog(ScriptName,False)
-    ;sToolUrl := PowerTools_Help(ScriptName,False)
+sLogUrl := PowerTools_Changelog(ScriptName,False)
+;sToolUrl := PowerTools_Help(ScriptName,False)
 
-    If (ScriptName ="NWS")
-        ScriptName = NWSPowerTool
+If (ScriptName ="NWS")
+    ScriptName = NWSPowerTool
 
-    sText = New version of #%ScriptName%. See changelog %sLogUrl%
+sText = New version of #%ScriptName%. See changelog %sLogUrl%
 
-    sUrl:= uriEncode(sUrl)
-    sText := uriEncode(sText)
-    sTweetUrl = https://twitter.com/intent/tweet?text=%sText%  ;&hashtags=%ScriptName%&url=%sToolUrl%
-    Run, %sTweetUrl%
+sUrl:= uriEncode(sUrl)
+sText := uriEncode(sText)
+sTweetUrl = https://twitter.com/intent/tweet?text=%sText%  ;&hashtags=%ScriptName%&url=%sToolUrl%
+Run, %sTweetUrl%
 } ;eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 
 PowerTools_TweetMe(ScriptName){
-    sLogUrl := PowerTools_Changelog(ScriptName,False)
-    ;sToolUrl := PowerTools_Help(ScriptName,False)
+sLogUrl := PowerTools_Changelog(ScriptName,False)
+;sToolUrl := PowerTools_Help(ScriptName,False)
 
-    If (ScriptName ="NWS")
-        ScriptName = NWSPowerTool
+If (ScriptName ="NWS")
+    ScriptName := "NWSPowerTool"
 
-    sText = @tdalon
+sText := "@tdalon"
 
-    sText := uriEncode(sText)
-    sTweetUrl = https://twitter.com/intent/tweet?text=%sText%&hashtags=%ScriptName%
-    Run, %sTweetUrl%
+sText := uriEncode(sText)
+sTweetUrl = https://twitter.com/intent/tweet?text=%sText%&hashtags=%ScriptName%
+Run, "%sTweetUrl%"
 } ;eofun
 
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_GetParam(Param) {
-    ParamVal := PowerTools_RegRead(Param)
-    If !(ParamVal="") 
-        return ParamVal
+ParamVal := PowerTools_RegRead(Param)
+If !(ParamVal="") 
+    return ParamVal
 
-    Switch Param
-    {
-        Case "TeamsMentionDelay":
-            return 1300
-        Case "TeamsCommandDelay":
-            return 800
-        Case "TeamsClickDelay":
-            return 500
-        Case "TeamsShareDelay":
-            return 1500
-    }
+Switch Param
+{
+    Case "TeamsMentionDelay":
+        return 1300
+    Case "TeamsCommandDelay":
+        return 800
+    Case "TeamsClickDelay":
+        return 500
+    Case "TeamsShareDelay":
+        return 1500
+}
 } ;eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
 PowerTools_SetParam(Param) {
-    sPrompt = Enter value for %Param%:
-    Param := StrReplace(Param," ","")
-    ParamVal := PowerTools_GetParam(Param)
-    InputBox, Value, %Param%, %sPrompt%, , 200, 150, , , , ,%ParamVal%
-    If ErrorLevel
-        return
-    PowerTools_RegWrite(Param,ParamVal)
-    return ParamVal
+sPrompt = Enter value for %Param%:
+Param := StrReplace(Param," ","")
+ParamVal := PowerTools_GetParam(Param)
+InputBox, Value, %Param%, %sPrompt%, , 200, 150, , , , ,%ParamVal%
+If ErrorLevel
+    return
+PowerTools_RegWrite(Param,ParamVal)
+return ParamVal
 } ;eofun
 
-
+; -------------------------------------------------------------------------------------------------------------------
 PowerTools_ErrDlg(Text,sUrl:=""){
-    If !sUrl {
-        MsgBox 0x10, %A_ScriptName%: Error, %Text% ; OK|Cancel
-        Return
-    }
-    SetTimer, ChangeButtonNames, 50 
+If !sUrl {
+    MsgBox 0x10, %A_ScriptName%: Error, %Text% ; OK|Cancel
+    Return
+}
+SetTimer, ChangeButtonNames, 50 
 
-    MsgBox 0x11, %A_ScriptName%: Error, %Text% ; OK|Cancel
+MsgBox 0x11, %A_ScriptName%: Error, %Text% ; OK|Cancel
 
-    IfMsgBox, Cancel ; Help
-        Run, %sUrl%
-    return
+IfMsgBox, Cancel ; Help
+    Run, %sUrl%
+return
 
-    ChangeButtonNames: 
-    SetTitleMatchMode, RegEx
-    IfWinNotExist, .*: Error$
-        return  ; Keep waiting.
-    SetTimer, ChangeButtonNames, Off 
-    WinActivate 
-    ControlSetText, Button1, &OK 
-    ControlSetText, Button2, &Help 
-    return
-
+ChangeButtonNames: 
+SetTitleMatchMode, RegEx
+IfWinNotExist, .*: Error$
+    return  ; Keep waiting.
+SetTimer, ChangeButtonNames, Off 
+WinActivate 
+ControlSetText, Button1, &OK 
+ControlSetText, Button2, &Help 
+return
 } ; eofun
 
 
 ; -------------------------------------------------------------------------------------------------------------------
 ; Open Link in Default browser - See https://tdalon.blogspot.com/2023/06/ahk-browser-link-redirector.html
 PowerTools_OpenLink(sUrl) { ; @fun_open_link@
-    ; Based on PowerTools.ini files [Browsers] and [BrowserRules] definition
-    
-    ;sUrl := IntelliPaste_CleanUrl(sUrl) 
-    
-    If InStr(sUrl,"teams.microsoft.com") { ; remove browser leftover window
-        Try { ; in case Teams library is not provided with this OpenLink function
-            FunStr := "Teams_OpenUrl" ; hide function from compiler
-            %FunStr%(sUrl)
-            Return
-        }
+; Based on PowerTools.ini files [Browsers] and [BrowserRules] definition
+
+;sUrl := IntelliPaste_CleanUrl(sUrl) 
+
+If InStr(sUrl,"teams.microsoft.com") { ; remove browser leftover window
+    Try { ; in case Teams library is not provided with this OpenLink function
+        FunStr := "Teams_OpenUrl" ; hide function from compiler
+        %FunStr%(sUrl)
+        Return
     }
-    
-    If !FileExist("PowerTools.ini") {
-        PowerTools_ErrDlg("OpenLink: No PowerTools.ini file found!")
-        GoTo OpenDefault
-    }
-    
-    ProjectKey := RegExReplace(sKey,"\-.*$")
-    IniRead, BrowserRules, PowerTools.ini,BrowserRules
-    If (BrowserRules="ERROR") { ; Section [BrowserRules] not found
-        PowerTools_ErrDlg("No section [BrowserRules] in PowerTools.ini file was found!")
-        GoTo OpenDefault
-    }
-    
-    Loop Parse, BrowserRules,`n,`r
+}
+
+If !FileExist("PowerTools.ini") {
+    PowerTools_ErrDlg("OpenLink: No PowerTools.ini file found!")
+    GoTo OpenDefault
+}
+
+ProjectKey := RegExReplace(sKey,"\-.*$")
+IniRead, BrowserRules, PowerTools.ini,BrowserRules
+If (BrowserRules="ERROR") { ; Section [BrowserRules] not found
+    PowerTools_ErrDlg("No section [BrowserRules] in PowerTools.ini file was found!")
+    GoTo OpenDefault
+}
+
+Loop Parse, BrowserRules,`n,`r
+{
+    RegExMatch(A_LoopField,"(.*)=(.*)",sMatch)
+    Loop Parse, sMatch2, CSV 
     {
-        RegExMatch(A_LoopField,"(.*)=(.*)",sMatch)
-        Loop Parse, sMatch2, CSV 
-            {
-                If InStr(sUrl,A_LoopField) {
-                    BrowserName := sMatch1
-                    break
-                }	
-            }
-        If BrowserName
+        If InStr(sUrl,A_LoopField) {
+            BrowserName := sMatch1
             break
+        }	
     }
-    
-    If BrowserName { ; not empty 
-        IniRead, BrowserCmd, PowerTools.ini,Browsers,%BrowserName%
-        If (BrowserCmd="ERROR") { ; Section [BrowserRules] not found
-            PowerTools_ErrDlg("OpenLink: No Browser Key matching BrowserName=" . BrowserName . " found in section [Browsers] in PowerTools.ini file!")
-            return
-        }
-        sCmd = "%BrowserCmd%" "%sUrl%" ; Reading String in Ini files removes trailing quotes
-        Run, %sCmd%
+    If BrowserName
+        break
+}
+If !(BrowserName="") { ; not empty 
+    IniRead, BrowserCmd, PowerTools.ini,Browsers,%BrowserName%
+    If (BrowserCmd="ERROR") { ; Section [BrowserRules] not found
+        PowerTools_ErrDlg("OpenLink: No Browser Key matching BrowserName=" . BrowserName . " found in section [Browsers] in PowerTools.ini file!")
         return
-    } 
-        
-    OpenDefault:
-    Run, "%sUrl%" ; Default Browser
+    }
+    sCmd = "%BrowserCmd%" "%sUrl%" ; Reading String in Ini files removes trailing quotes
+    Run, %sCmd%
     return
+} 
     
-    } ; eofun End Function OpenLink
+OpenDefault:
+Run, "%sUrl%" ; Default Browser
+return
+    
+} ; eofun End Function OpenLink

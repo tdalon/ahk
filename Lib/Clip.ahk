@@ -6,14 +6,26 @@ GroupAdd, PlainEditor, ahk_exe Notepad.exe
 GroupAdd, PlainEditor, ahk_exe notepad++.exe
 GroupAdd, PlainEditor, ahk_exe atom.exe
 ; -------------------------------------------------------------------------------------------------------------------
-Clip_Paste(sText,restore := True) {
+Clip_Paste(sText) {
 ; Syntax: Clip_Paste(sText)
 WinClip.Paste(sText)
+} ; eofun
+
+Clip_Paste2(sText,restore:=true) {
+    If restore
+        ClipBackup:= ClipboardAll
+    Clipboard := sText
+    clipwait 0
+    SendInput ^v
+    If restore {
+        Clip_Wait()
+        Clipboard := ClipBackup
+    }
+        
 } ; eofun
 ; -------------------------------------------------------------------------------------------------------------------
 Clip_Set(sText){
 ; Syntax: Clip_Set(sText)
-; 
 Clipboard := sText
 Clip_Wait()
 } ; eofun
@@ -224,6 +236,18 @@ If (restore)
     Clipboard := ClipBackup 
 return sSelection 
 } 
+
+/* 
+Clip_GetSelection1() {
+;#Include UIA.ahk
+el := UIA.GetFocusedElement()
+if el.IsTextPatternAvailable {
+    selectionRange := el.GetSelection()[2]
+    If txt:= selectionRange.GetText()
+        return txt
+}
+} ; eofun 
+*/
 ; -------------------------------------------------------------------------------------------------------------------
 
 Clip_ReplaceSelection(sNeedle, sReplace:=""){

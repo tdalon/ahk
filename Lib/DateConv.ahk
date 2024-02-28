@@ -3,7 +3,7 @@ RegTimeZones := GetTimeZones()
 
 DateConvZ(sDate){
 global RegTimeZones
-; Convert ConNext Event date to standard Format 2020-01-31T23:30:00.000Z -> 2020-01-31 23:00:00
+; Convert Connections Event date to standard Format 2020-01-31T23:30:00.000Z -> 2020-01-31 23:00:00
 
 ; Convert Zulu date to Date format
 sUTCDate := RegExReplace(sDate,"\.000.*","") ; independent of time zone
