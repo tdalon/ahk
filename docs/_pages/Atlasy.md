@@ -1,6 +1,14 @@
+---
+permalink: /Atlasy
+title: "Atlasy"
+excerpt: "Atlasy is a tool that extends Atlassian-based tools (like Jira, Confluence, R4J) capability."
+redirect_from:
+  - /atlasy
+---
+
+
 - [About](#about)
 - [Main Tool Page](#main-tool-page)
-- [Prerequisites](#prerequisites)
 - [Commands/ Keywords](#commands-keywords)
   - [Main Keywords](#main-keywords)
   - [Jira](#jira)
@@ -12,7 +20,6 @@
     - [Doc](#doc)
   - [BigPicture](#bigpicture)
   - [BitBucket](#bitbucket)
-  - [e.CoSys](#ecosys)
 - [Changelog](#changelog)
 
 
@@ -30,12 +37,8 @@ Short Feature highlights include:
  * ...
 
 
-## [Main Tool Page](https://etelligent.atlassian.net/wiki/spaces/PMT/pages/105914745/Atlasy+-+Atlassian+Launcher+and+Commander)
+## [Main Tool Page](https://tdalon.blogspot.com/2023/09/atlasy-new-powertool.html)
 
-
-## Prerequisites
-
-Atlasy is included with the [e.CoSys PowerTool](https://etelligent.atlassian.net/wiki/spaces/PMT/pages/105913155/e.CoSys+PowerTool)
 
 ## Commands/ Keywords
 
@@ -53,7 +56,6 @@ r   |  [R4J](#r4j)
 x | [Xray](#xray)
 bb | [BitBucket](#bitbucket)
 sw | switch between server and cloud (bidirectional)
-e  |  [e.CoSys](ecosys)
 
 <a name="jira"></a>
 ### Jira
@@ -180,19 +182,6 @@ Opens BigPicture.
 ### BitBucket
 
 Main keyword: 'bb'
-
-Will use default EC Project
-
-<a name="ecosys"></a>
-### e.CoSys
-
-Main keyword 'e'
-
-2nd Keyword  |  Action
---|--
-p or -p | Edit e.CoSys Project
-pl or -pl | Edit e.CoSys Project List
-
 
 <hr>
 
