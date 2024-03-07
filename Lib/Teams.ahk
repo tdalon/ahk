@@ -2470,56 +2470,67 @@ If (showInfo) {
 UIA := UIA_Interface()
 TeamsEl := UIA.ElementFromHandle(WinId)
 
-Lang := Teams_GetLang()
+; The button's name does not change on my Teams,
+; and getting the name is only used to determine
+; the mute state, so this is not relevant anymore.
 
-MuteName := Teams_GetLangName("Mute","Mute",Lang) 
-If (MuteName="") 
-    return
-UnmuteName := Teams_GetLangName("Unmute","Unmute",Lang)
-If (UnmuteName ="")
-    return
+;Lang := Teams_GetLang()
+;
+;MuteName := Teams_GetLangName("Mute","Mute",Lang)
+;If (MuteName="")
+;    return
+;UnmuteName := Teams_GetLangName("Unmute","Unmute",Lang)
+;If (UnmuteName ="")
+;    return
 
 El:=TeamsEl.FindFirstBy("AutomationId=microphone-button")
 If !El {
-    TrayTip TeamsShortcuts: ERROR, Microphone button UIA Element not found!,,0x2
+    TrayTip, TeamsShortcuts: ERROR, Microphone button UIA Element not found!,,0x2
     Return
 }
 
-If RegExMatch(El.Name,"^" . MuteName) {
-    If (State = 0) {
-        If (showInfo)
-            Tooltip("Teams Mic is already on.")
-        return
-    } Else {
-        If (showInfo) {
-            Tooltip("Teams Mute Mic...",displayTime)
-            TrayIcon_Mic_Off := "HBITMAP:*" . Create_Mic_Off_ico()
-            TrayIcon(TrayIcon_Mic_Off,displayTime)
-        }
-        El.Click() ; activates the window
-        If (restoreWin) 
-            WinActivate, ahk_id %curWinId%
-        return
-    }
-}
+El.Click() ; activates the window
+If (restoreWin)
+    WinActivate, ahk_id %curWinId%
 
-If RegExMatch(El.Name,"^" . UnmuteName) {
-    If (State = 1) {
-        If (showTooltip)
-            Tooltip("Teams Mic is already off.")
-        return
-    } Else {
-        If (showInfo) {
-            Tooltip("Teams Unmute Mic...",displayTime)
-            TrayIcon_Mic_On := "HBITMAP:*" . Create_Mic_On_ico()
-            TrayIcon(TrayIcon_Mic_On,displayTime)
-        }            
-        El.Click()
-        If (restoreWin) 
-            WinActivate, ahk_id %curWinId%
-        return
-    }
-}
+; We can only toggle, unless another way to know
+; the state can be found.
+
+;If RegExMatch(El.Name,"^" . MuteName) {
+;    If (State = 0) {
+;        If (showInfo)
+;            Tooltip("Teams Mic is already on.")
+;        return
+;    } Else {
+;        If (showInfo) {
+;            Tooltip("Teams Mute Mic...",displayTime)
+;            TrayIcon_Mic_Off := "HBITMAP:*" . Create_Mic_Off_ico()
+;            TrayIcon(TrayIcon_Mic_Off,displayTime)
+;        }
+;        El.Click() ; activates the window
+;        If (restoreWin)
+;            WinActivate, ahk_id %curWinId%
+;        return
+;    }
+;}
+;
+;If RegExMatch(El.Name,"^" . UnmuteName) {
+;    If (State = 1) {
+;        If (showTooltip)
+;            Tooltip("Teams Mic is already off.")
+;        return
+;    } Else {
+;        If (showInfo) {
+;            Tooltip("Teams Unmute Mic...",displayTime)
+;            TrayIcon_Mic_On := "HBITMAP:*" . Create_Mic_On_ico()
+;            TrayIcon(TrayIcon_Mic_On,displayTime)
+;        }
+;        El.Click()
+;        If (restoreWin)
+;            WinActivate, ahk_id %curWinId%
+;        return
+;    }
+;}
 } ; eofun
 
 
