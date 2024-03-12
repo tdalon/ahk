@@ -2485,7 +2485,7 @@ If !El {
     Return
 }
 
-If RegExMatch(El.Name,"^" . MuteName) {
+If RegExMatch(El.FullDescription,"^" . MuteName) {
     If (State = 0) {
         If (showInfo)
             Tooltip("Teams Mic is already on.")
@@ -2503,7 +2503,7 @@ If RegExMatch(El.Name,"^" . MuteName) {
     }
 }
 
-If RegExMatch(El.Name,"^" . UnmuteName) {
+If RegExMatch(El.FullDescription,"^" . UnmuteName) {
     If (State = 1) {
         If (showTooltip)
             Tooltip("Teams Mic is already off.")
@@ -2774,7 +2774,11 @@ If !TeamsEl.FindFirstBy("AutomationId=microphone-button") {
     MsgBox Microphone button is not accessible!
     MsgBox % TeamsEl.DumpAll()
 }
-return !TeamsEl.FindFirstBy("Name=Mute (Ctrl+Shift+M)") 
+
+MuteName := Teams_GetLangName("Mute","Mute",Lang) 
+If (MuteName="") 
+    return
+return !RegExMatch(TeamsEl.FullDescription,"^" . MuteName)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
