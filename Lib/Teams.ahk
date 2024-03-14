@@ -3162,17 +3162,44 @@ If !WinId
     WinId := Teams_GetMeetingWindow()
 If !WinId ; empty
     return
+
+If Teams_IsNew() {
+    UIA := UIA_Interface()  
+    TeamsEl := UIA.ElementFromHandle(WinId)
+
+    El :=  TeamsEl.FindFirstBy("AutomationId=view-mode-button")
+    El.Click() 
+    El :=  TeamsEl.WaitElementExist("AutomationId=ViewModeMoreOptionsMenuControl-id",,,,1000)  
+    El.ControlClick() ; Click does not work see https://github.com/Descolada/UIAutomation/issues/45
+    El :=  TeamsEl.WaitElementExist("AutomationId=fullscreen-button",,,,1000)  
+    El.Click()
+    return
+
+}
+
+; For Legacy/ Classic Teams
 ; Needs to activate the Meeting Window because F11 Hotkey is not working even with ControlSend,,{F11}, ahk_id %WinId%
 If (restore)
     WinGet, curWinId, ID, A
 
 WinActivate, ahk_id %WinId% 
 Send {F11}
+
+
+ ; Click on View -> Video Effects
+ El :=  TeamsEl.FindFirstBy("AutomationId=callingButtons-showMoreBtn")  
+ El.Click() 
+ El :=  TeamsEl.WaitElementExist("AutomationId=video-effects-and-avatar-button",,,,1000)  
+ El.Click() 
+
+
+
 ; restore previous window
 If (restore)
     WinActivate, ahk_id %curWinId%
 }
 
+; -------------------------------------------------------------------------------------------------------------------
 
 Teams_MeetingAction(id){
 ; id: recording, fullscreen, device-settings, incoming-video

@@ -8,6 +8,8 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2024-03-14
+  * Full Screen Shortcut update for New Teams (without F11)
 * 2024-01-30
   * Teams Meeting Share: fix. Move FocusAssist to the end because of interaction with Sharing Bar hide. Add pause after maximize.
 * 2023-11-24
