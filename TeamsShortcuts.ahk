@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20231026154345
+LastCompiled = 20240426103903
 
 #Include <Teams>
 #Include <PowerTools>
@@ -59,7 +59,7 @@ Loop, Parse, ParamList, `,
 Menu, SubMenuSettings, Add, Parameters, :SubMenuParams
 
 
-HotkeyIDList = Launcher,Mute,Video,Mute App,Share,Raise Hand,Push To Talk,Clear Cache,Activate Meeting Window 
+HotkeyIDList = Launcher,Mute,Video,Mute App,Meeting Share,Raise Hand,Push To Talk,Clear Cache,Activate Meeting Window 
 MeetingToggleList = Mute,Video,Mute App,Share,Raise Hand,Push To Talk
 
 ; Hotkeys: Activate, Meeting Action Menus and Settings Menus
@@ -172,8 +172,6 @@ return
 
 
 ; ##########################   Hotkeys   ##########################################
-;#IfWinActive,ahk_exe Teams.exe
-
 #If Teams_IsWinActive()
 
 ; -------------------------------------------------------------------------------------------------------------------
@@ -400,8 +398,13 @@ WinClip.Paste()
 return
 
 ; ######################################################################
+NotifyTrayClick_202:   ; Left click (Button up)
+; Show Tray Menu
+Menu_Show(MenuGetHandle("Tray"), False, Menu_TrayParams()*)
+Return
+
 NotifyTrayClick_207:   ; Middle click (Button down)
-;Teams_MuteCb:
+; Activate Main Window or PushToTalk in a meeting
 SendInput, !{Esc} ; for call from system tray - get active window
 If Teams_GetMeetingWindow(true,false)
 	Teams_PushToTalk()
@@ -409,17 +412,16 @@ Else
 	Teams_ActivateMainWindow()
 Return 
 
-NotifyTrayClick_202:   ; Left click (Button up)
-; Show Tray Menu
-Menu_Show(MenuGetHandle("Tray"), False, Menu_TrayParams()*)
-Return
+
 
 NotifyTrayClick_205:   ; Right click (Button up)
 ; Activate Main or Meeting Window
 SendInput, !{Esc} ; for call from system tray - get active window
 hMeetWin := Teams_GetMeetingWindow(false,false)
 If (hMeetWin) 
-	Teams_Video()
+	WinActivate, ahk_id %hMeetWin%
+Else
+	Teams_ActivateMainWindow()
 Return 
 
 NotifyTrayClick_206:   ; Right double click 
@@ -427,9 +429,10 @@ NotifyTrayClick_206:   ; Right double click
 SendInput, !{Esc} ; for call from system tray - get active window
 hMeetWin := Teams_GetMeetingWindow(false,false)
 If (hMeetWin) 
-	WinActivate, ahk_id %hMeetWin%
+	Teams_Video()	
 Return 
 
+; ######################################################################
 Teams_RaiseHandCb:
 SendInput, !{Esc} ; for call from system tray - get active window
 Teams_RaiseHand()
