@@ -5,7 +5,7 @@
 ; Source : https://github.com/tdalon/ahk/blob/main/TeamsShortcuts.ahk
 ;
 
-LastCompiled = 20240426103903
+LastCompiled = 20240501173751
 
 #Include <Teams>
 #Include <PowerTools>
