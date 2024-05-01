@@ -8,6 +8,8 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2024-03-12
+  * Fix Teams Mute: Property Name not changed. Moved to FullDescription
 * 2024-01-30
   * Teams Meeting Share: fix. Move FocusAssist to the end because of interaction with Sharing Bar hide. Add pause after maximize.
 * 2023-11-22
