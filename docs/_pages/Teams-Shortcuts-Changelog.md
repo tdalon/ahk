@@ -8,6 +8,7 @@ excerpt: "Release notes for Teams Shortcuts PowerTool."
 
 Some changes listed here also impact the [Teamsy Launcher](Teamsy-Launcher) features.
 
+* 2024-10-17 [Teams Favorites for Chat Group or Meeting from Message Link](https://tdalon.blogspot.com/2024/10/teams-chat-link.html) 
 * 2024-05-01
   * Fix: Global Hotkey for Meeting share can not be set
 * 2024-03-12

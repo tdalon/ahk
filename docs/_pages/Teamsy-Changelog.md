@@ -8,6 +8,7 @@ excerpt: "Release notes for Teamsy and Teamsy Launcher PowerTools."
 
 See also [Teams Shortcuts Changelog](Teams-Shortcuts-Changelog) for other relevant changes.
 
+* 2024-10-17 [Teams Favorites for Chat Group or Meeting from Message Link](https://tdalon.blogspot.com/2024/10/teams-chat-link.html) 
 * 2024-03-14
   * Full Screen Shortcut update for New Teams (without F11)
 * 2024-01-30

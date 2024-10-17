@@ -87,10 +87,11 @@ Teams_BackgroundImport(srcDir:=""){
         
     If (srcDir = "") { ; prompt user to select directory
         srcDir = %A_AppData%\Microsoft\Teams\Backgrounds\Uploads
-        SelectFolder(srcDir,"Select folder from which to import background images:") 
         ;FileSelectFolder, srcDir , ,0 , Select folder from which to import background images:
+        sf := SelectFolder(srcDir,"Select folder from which to import background images:") 
         If ErrorLevel
             return
+        srcDir := sf.SelectedDir
     }
 
     EnvGet, LOCALAPPDATA, LOCALAPPDATA
@@ -125,6 +126,7 @@ Teams_BackgroundImport(srcDir:=""){
         BgCount +=1
         ; Check if file already exist
         srcMD5 := HashFile(A_LoopFileFullPath,"MD5")
+        
         If HasVal(MD5Array,srcMD5) 
             Continue
         BgCopiedCount +=1    
@@ -517,7 +519,7 @@ Teams_OpenUrl(sLink)
 } ; eofun
 
 ; -------------------------------------------------------------------------------------------------------------------
-Teams_Link2Fav(sUrl:="",FavsDir:="",sFileName :="") {
+Teams_Link2Fav(sUrl:="",FavsDir:="",sFileName :="") { ; @fun_teams_link2fav@
 ; Called by Email2TeamsFavs
 ; Create Shortcut file
 If GetKeyState("Ctrl") {
@@ -532,7 +534,7 @@ If (sUrl="") {
 If (sUrl="") or !(sUrl ~= "https://teams.microsoft.com/*") {
 	
     ; TODO Def Team name
-    If RegExMatch(sLink,"https://teams.microsoft.com/l/channel/[^/]*/([^/]*)\?.*",sChannelName) 
+    If RegExMatch(sUrl,"https://teams.microsoft.com/l/channel/[^/]*/([^/]*)\?.*",sChannelName) 
 	    linktext = %sChannelName1% (Channel)
     Else
         linktext = Team Name (Team)
@@ -542,7 +544,7 @@ If (sUrl="") or !(sUrl ~= "https://teams.microsoft.com/*") {
 		return
 }
 
-; folder does not end with filesep
+; FavsDir (folder does not end with filesep)
 If !(FavsDir) {
     sKeyName := "TeamsFavsDir"
     RegRead, StartingFolder, HKEY_CURRENT_USER\Software\PowerTools, %sKeyName%
@@ -551,14 +553,26 @@ If !(FavsDir) {
         return
 }
 
+; For Message Link, choose if you want to link to the message or the containing Chat
+If (RegExMatch(sUrl,"(https|msteams)://teams\.microsoft\.com/l/message/(.*)@thread\.v2/",sMatch)) {
+    ; https://teams.microsoft.com/l/team/19:c1471a18bae04cf692b8da7e9738df3e@thread.skype/conversations?groupId=56bc81d8-db27-487c-8e4f-8d5ea9058663&tenantId=xxx    
+    OnMessage(0x44, "OnTeamsLinkTypeMessageMsgBox")
+		MsgBox 0x24, Message Link, Select to what you want to link:
+		OnMessage(0x44, "")
+		IfMsgBox, No
+			sUrl := StrReplace(sMatch,"/l/message/","/l/chat/")
+}
+
+; FileName
 If !(sFileName) {
-    sFileName := Teams_Link2Text(sUrl)
+    sFileName := Teams_Link2Text(sUrl,silent:=true)
     InputBox, sFileName , Teams Fav File name, Enter the File name:, , 300, 125,,,,, %sFileName%
     If ErrorLevel
         return
 }
 
 sFile := FavsDir . "\" . sFileName . ".url"
+
 
 ;FileDelete %sFile%
 IniWrite, %sUrl%, %sFile%, InternetShortcut, URL
@@ -575,6 +589,17 @@ IniWrite, 0, %sFile%, InternetShortcut, IconIndex
 SplitPath, sFile, sFileName, FavsDir
 PowerTools_RegWrite("TeamsFavsDir",FavsDir)
 } ; eofun
+
+
+; -------------------------------------------------------------------------------------------------------------------
+OnTeamsLinkTypeMessageMsgBox() {
+    DetectHiddenWindows, On
+    Process, Exist
+    If (WinExist("ahk_class #32770 ahk_pid " . ErrorLevel)) {
+		ControlSetText Button1, Message
+		ControlSetText Button2, Parent Chat
+    }
+}
 
 ; -------------------------------------------------------------------------------------------------------------------
 Teams_FavsSetDir(){
@@ -722,7 +747,7 @@ StringUpper, sName, sName , T
 
 ; 1. Create Chat Shortcut
 sUrl = https://teams.microsoft.com/l/chat/0/0?users=%sEmail% 
-Teams_Link2Fav(sUrl,FavsDir,"Chat " + sName)
+Teams_Link2Fav(sUrl,FavsDir,"Chat " . sName)
 
 ; 2. Create Call shortcut
 sFile := FavsDir . "\Call " . sName . ".vbs"
@@ -1614,14 +1639,17 @@ SendInput {Backspace}{Backspace}{Space} ; remove final ,
 
 
 
-Teams_Link2Text(sLink){
-sLink := StrReplace(sLink,"%2520"," ") ; spaces in Channel Link
-sPat = [https|msteams]://teams.microsoft.com/[^>"]*
-RegExMatch(sLink,sPat,sLink)
-sLink := uriDecode(sLink)
+Teams_Link2Text(sLink,silent:= false){
+
+; Link clean-up
+;sLink := StrReplace(sLink,"%2520"," ") ; spaces in Channel Link
+;sPat = (?:https|msteams)://teams.microsoft.com/[^>"]*
+;RegExMatch(sLink,sPat,sLink)
+;sLink := uriDecode(sLink)
+
 ; Link to Teams Channel
 ; example: https://teams.microsoft.com/l/channel/19%3a16ff462071114e31bd696aa3a4e34500%40thread.skype/DOORS%2520Attributes%2520List?groupId=cd211b48-2e8b-4b60-b5b0-e584a0cf30c0&tenantId=xxx
-If (RegExMatch(sLink,"U)[https|msteams]://teams\.microsoft\.com/l/channel/[^/]*/([^/]*)\?groupId=(.*)&",sMatch)) {
+If (RegExMatch(sLink,"U)(?:https|msteams)://teams\.microsoft\.com/l/channel/[^/]*/([^/]*)\?groupId=(.*)&",sMatch)) {
     sChannelName := sMatch1
     sTeamName := Teams_GetTeamName(sMatch2)
     If (!sTeamsName)
@@ -1632,17 +1660,41 @@ If (RegExMatch(sLink,"U)[https|msteams]://teams\.microsoft\.com/l/channel/[^/]*/
 	;linktext := StrReplace(linktext,"%2520"," ")		
 ; Link to Teams
 ; example: https://teams.microsoft.com/l/team/19%3a12d90de31c6e44759ba622f50e3782fe%40thread.skype/conversations?groupId=640b2f00-7b35-41b2-9e32-5ce9f5fcbd01&tenantId=xxx
-} Else If (RegExMatch(sLink,"[https|msteams]://teams\.microsoft\.com/l/team/.*groupId=(.*)&",sMatch)) {
+} Else If (RegExMatch(sLink,"(?:https|msteams)://teams\.microsoft\.com/l/team/.*groupId=([^&]*)",sMatch)) {
 ; https://teams.microsoft.com/l/team/19:c1471a18bae04cf692b8da7e9738df3e@thread.skype/conversations?groupId=56bc81d8-db27-487c-8e4f-8d5ea9058663&tenantId=xxx    
     sTeamName := Teams_GetTeamName(sMatch1)
     If (!sTeamsName)
-        sDefText = %sTeamName% Team
+        sDefText = %sTeamName% (Team)
     Else
         sDefText = Link to Teams Team
+    If silent
+        return sDefText  
     InputBox, linktext , Display Link Text, Enter Team name:,,640,125,,,,, %sDefText%
 	If ErrorLevel ; Cancel
 		return
-}
+
+} Else If (RegExMatch(sLink,"(https|msteams)://teams\.microsoft\.com/l/message/",sMatch)) {
+; https://teams.microsoft.com/l/team/19:c1471a18bae04cf692b8da7e9738df3e@thread.skype/conversations?groupId=56bc81d8-db27-487c-8e4f-8d5ea9058663&tenantId=xxx    
+    linktext = Message (Message)
+    If silent
+        return linktext 
+    InputBox, linktext , Display Link Text, Enter Text:,,640,125,,,,, %linktext%
+    If ErrorLevel ; Cancel
+        return
+
+} Else If (RegExMatch(sLink,"(?:https|msteams)://teams\.microsoft\.com/l/chat/(.*)",sMatch)) {
+    ; https://teams.microsoft.com/l/team/19:c1471a18bae04cf692b8da7e9738df3e@thread.skype/conversations?groupId=56bc81d8-db27-487c-8e4f-8d5ea9058663&tenantId=xxx    
+        If InStr(sMatch1,"19:meeting")
+            sDefText = MeetingName (Meeting Chat)
+        Else
+            sDefText = GroupName (Group Chat)
+        If silent
+            return sDefText 
+        InputBox, linktext , Display Link Text, Enter Text:,,640,125,,,,, %sDefText%
+        If ErrorLevel ; Cancel
+            return
+    }
+
 return linktext  
 } ; eofun
 
@@ -2579,7 +2631,7 @@ WinActivate ahk_id %WinId%
 SendInput ^+h ; Ctrl+Shift+H
 
 ; Reset FocusAssistant
-FocusAssist(-)
+FocusAssist("-")
 } ; eofun
 
 
@@ -2643,8 +2695,7 @@ Teams_MeetingLeave(mode:="?") { ; @fun_teams_meetingleave@
     
     Finish:
     ; Reset FocusAssistant
-    FocusAssist(-)
-
+    FocusAssist("-")
     ; Restore previous window
     WinActivate, ahk_id %curWinId%
 
